@@ -98,7 +98,7 @@ Documentations are available in multiple languages:
 
 ## License
 
-This project is licensed under the [GNU General Public License v3.0](LICENSE).
+This project is licensed under the [GNU General Public License v3.0](LICENSE). 
 
 ### 🔗 Third-Party Licenses
 - **OpenSSL** - [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
