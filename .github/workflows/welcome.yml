@@ -1,0 +1,66 @@
+name: Welcome New Community Members
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      # Repo'yu çekmek (bazı durumlarda context verisi için faydalı olabilir)
+      - uses: actions/checkout@v4
+
+      - name: Welcome new community member
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const { context, github } = globalThis;
+            const { owner, repo } = context.repo;
+            const number = context.issue.number;
+
+            if (context.eventName === 'issues') {
+              // Yeni issue mesajı
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: number,
+                body: `
+**Thank you for your feedback!**
+
+Welcome to the mobi-core community! We appreciate you taking the time to share this with us.
+
+**While you wait:**
+- Browse our [Documentation](https://github.com/${owner}/${repo}/blob/main/README/en.md)
+- Join [Discussions](https://github.com/${owner}/${repo}/discussions)
+- Check our [Installation Guide](https://github.com/${owner}/${repo}/blob/main/README/docs/this_en.md)
+
+**Need a license?** Contact us at mobicore.io@gmail.com
+
+A maintainer will review your issue soon.
+                `
+              });
+            } 
+            else if (context.eventName === 'pull_request') {
+              // Yeni PR mesajı
+              await github.rest.pulls.createReview({
+                owner,
+                repo,
+                pull_number: number,
+                body: `
+**Thank you for your contribution!**
+
+Welcome to the mobi-core community! We appreciate your documentation/configuration contribution.
+
+**Review process:**
+- [ ] Documentation clarity and accuracy
+- [ ] Links and examples work correctly
+- [ ] Formatting and grammar
+
+A maintainer will review your PR soon.
+                `,
+                event: 'COMMENT'
+              });
+            }

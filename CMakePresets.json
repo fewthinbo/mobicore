@@ -1,0 +1,259 @@
+{
+	"version": 3,
+	"cmakeMinimumRequired": {
+		"major": 3,
+		"minor": 20,
+		"patch": 0
+	},
+	"configurePresets": [
+		{
+			"name": "windows-base",
+			"hidden": true,
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"installDir": "${sourceDir}/out/install/${presetName}",
+			"architecture": {
+				"strategy": "external"
+			},
+			"cacheVariables": {
+				"CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+				"VCPKG_TARGET_TRIPLET": "x64-windows",
+				"VCPKG_INSTALLED_DIR": "D:/git.zyf/vcpkg_projects/${sourceDirName}_vcpkg_installed",
+				"PLATFORM_WINDOWS": "ON"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "Windows"
+			}
+		},
+		{
+			"name": "windows-debug",
+			"displayName": "Windows Debug",
+			"inherits": "windows-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "windows-rel",
+			"displayName": "Windows Release",
+			"inherits": "windows-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "windows-dist",
+			"displayName": "Windows Distribute",
+			"inherits": "windows-base",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Dist"
+			}
+		},
+
+		{
+			"name": "bsd-ninja",
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"installDir": "${sourceDir}/out/install/${presetName}",
+			"architecture": {
+				"strategy": "external"
+			},
+			"cacheVariables": {
+				"PLATFORM_FREEBSD": "ON"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "FreeBSD"
+			}
+		},
+		{
+			"name": "bsd-ninja-debug",
+			"displayName": "FreeBSD Ninja Debug",
+			"inherits": "bsd-ninja",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug",
+				"TEST_EXECUTABLE": "ON"
+			}
+		},
+		{
+			"name": "bsd-ninja-release",
+			"displayName": "FreeBSD Ninja Release",
+			"inherits": "bsd-ninja",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+
+
+		{
+			"name": "bsd-gmake",
+			"generator": "Unix Makefiles",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"installDir": "${sourceDir}/out/install/${presetName}",
+			"architecture": {
+				"strategy": "external"
+			},
+			"cacheVariables": {
+				"PLATFORM_FREEBSD": "ON"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "FreeBSD"
+			}
+		},
+		{
+			"name": "bsd-gmake-debug",
+			"displayName": "FreeBSD GMake Debug",
+			"inherits": "bsd-gmake",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "bsd-gmake-release",
+			"displayName": "FreeBSD GMake Release",
+			"inherits": "bsd-gmake",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+
+		{
+			"name": "freebsd-remote-base",
+			"hidden": true,
+			"generator": "Ninja",
+			"binaryDir": "${sourceDir}/out/build/${presetName}",
+			"installDir": "${sourceDir}/out/install/${presetName}",
+			"architecture": {
+				"strategy": "external"
+			},
+			"cacheVariables": {
+				"PLATFORM_FREEBSD": "ON",
+				"BUILD_PORTABLE_LIBS": "OFF"
+			},
+			"condition": {
+				"type": "equals",
+				"lhs": "${hostSystemName}",
+				"rhs": "FreeBSD"
+			}
+		},
+		{
+			"name": "freebsd-remote",
+			"hidden": true,
+			"displayName": "FreeBSD Remote",
+			"inherits": "freebsd-remote-base",
+			"vendor": {
+				"microsoft.com/VisualStudioSettings/CMake/1.0": {
+					"remoteCopySourcesExclusionList": [
+						".vs",
+						".git",
+						"out",
+						"build",
+						"tmpLogs"
+					],
+					"remoteCMakeListsRoot": "$env{HOME}/.vs/remote-sources/${sourceDirName}",
+					"remoteBuildRoot": "$env{HOME}/.vs/remote-build/${sourceDirName}/out/build/${presetName}",
+					"remoteInstallRoot": "$env{HOME}/.vs/remote-install/${sourceDirName}/out/install/${presetName}",
+					"remoteCopySources": true,
+					"rsyncCommandArgs": "-t --delete --delete-excluded",
+					"remoteCopyBuildOutput": false,
+					"remoteCopySourcesMethod": "rsync",
+					"remoteMachineName": "192.168.1.169"
+				}
+			}
+		},
+		{
+			"name": "freebsd-remote-debug",
+			"displayName": "FreeBSD Remote Debug",
+			"inherits": "freebsd-remote",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Debug"
+			}
+		},
+		{
+			"name": "freebsd-remote-release",
+			"displayName": "FreeBSD Remote Release",
+			"inherits": "freebsd-remote",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Release"
+			}
+		},
+		{
+			"name": "freebsd-remote-dist",
+			"displayName": "FreeBSD Remote Dist",
+			"inherits": "freebsd-remote",
+			"cacheVariables": {
+				"CMAKE_BUILD_TYPE": "Dist"
+			}
+		}
+	],
+	"buildPresets": [
+		{
+			"name": "windows-debug",
+			"displayName": "Windows Debug",
+			"configurePreset": "windows-debug",
+			"configuration": "Debug"
+		},
+		{
+			"name": "windows-release",
+			"displayName": "Windows Release",
+			"configurePreset": "windows-rel",
+			"configuration": "Release"
+		},
+		{
+			"name": "windows-dist",
+			"displayName": "Windows Dist",
+			"configurePreset": "windows-dist",
+			"configuration": "Dist"
+		},
+		{
+			"name": "bsd-ninja-debug",
+			"displayName": "FreeBSD Ninja Debug",
+			"configurePreset": "bsd-ninja-debug",
+			"configuration": "Debug"
+		},
+		{
+			"name": "bsd-ninja-release",
+			"displayName": "FreeBSD Ninja Release",
+			"configurePreset": "bsd-ninja-release",
+			"configuration": "Release"
+		},
+
+		{
+			"name": "bsd-gmake-debug",
+			"displayName": "FreeBSD GMake Debug",
+			"configurePreset": "bsd-gmake-debug",
+			"configuration": "Debug"
+		},
+		{
+			"name": "bsd-gmake-release",
+			"displayName": "FreeBSD GMake Release",
+			"configurePreset": "bsd-gmake-release",
+			"configuration": "Release"
+		},
+
+
+		{
+			"name": "freebsd-remote-debug",
+			"displayName": "FreeBSD Remote Debug",
+			"configurePreset": "freebsd-remote-debug",
+			"configuration": "Debug"
+		},
+		{
+			"name": "freebsd-remote-release",
+			"displayName": "FreeBSD Remote Release",
+			"configurePreset": "freebsd-remote-release",
+			"configuration": "Release"
+		},
+		{
+			"name": "freebsd-remote-dist",
+			"displayName": "FreeBSD Remote Dist",
+			"configurePreset": "freebsd-remote-dist",
+			"configuration": "Dist"
+		}
+	]
+} 

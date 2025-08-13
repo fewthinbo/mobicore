@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Community Support
+    url: https://github.com/fewthinbo/mobicore/discussions
+    about: Ask questions, get help from community, share experiences
+  - name: 📧 Commercial Support
+    url: mailto:mobicore.io@gmail.com
+    about: Licensing, commercial support, bridge server access, partnerships
+  - name: 📖 Documentation
+    url: https://github.com/fewthinbo/mobicore/blob/main/README/en.md
+    about: Read installation and configuration guides before reporting issues
+  - name: 🚀 Get License
+    url: mailto:mobicore.io@gmail.com?subject=License%20Request
+    about: Request bridge server license for full functionality 
