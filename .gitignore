@@ -1,0 +1,13 @@
+*.pdb
+*.pch
+*.zip
+*.7z
+*.rar
+*.tmp
+
+.vs
+out/
+build/
+vcpkg**/
+Scripts/
+tmpLogs**/
