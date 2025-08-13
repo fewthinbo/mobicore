@@ -103,7 +103,7 @@ FLUSH PRIVILEGES;
 ## Core Yetkilendirme Sistemi
 
 ### 🎯 Akıllı Yönetim
-- **Tek Core Okuma**: Tüm core'larınıza farklı yetkiler atanır
+- **Tek Core Okuma**: Tüm core'larınıza farklı yetkiler atanır 
 - **Yetki Dağılımı**: Her core kendi yetkisi dahilindeki görevleri üstlenir
 
 ### 🔄 Güncelleme Süreci
