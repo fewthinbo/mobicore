@@ -51,7 +51,7 @@ ninja install
 ## Bu kütüphaneyi kullanma
 
 Derleme & kurulum sonrası:
-- [← SQL kullanıcı ayarlama](./tech_tr.md) belgesini okuyun.
+- [SQL kullanıcı ayarlama](./tech_tr.md) belgesini okuyun.
 - MT'nizi derleyin ve çalıştırın.
 - Eğer bridge server'ınız (mobileServer) başka bir uzak VDS'de çalışıyorsa ve lisansınız varsa, MT'niz otomatik olarak bridgeServer'a bağlanır.
 - Her şey otomatik olarak hazır olacaktır.

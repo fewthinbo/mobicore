@@ -91,7 +91,7 @@ Documentations are available in multiple languages:
 - 💡 **Suggest** features in [Discussions](https://github.com/fewthinbo/mobicore/discussions)
 
 ### 📞 Support
-- 📧 **Email**: mobicore.io@gmail.com
+- 📧**Email**: mobicore.io@gmail.com
 - 🐛 **Bug Reports**: [Issues](https://github.com/fewthinbo/mobicore/issues)
 - 💬 **General Chat**: [Discussions](https://github.com/fewthinbo/mobicore/discussions)
 
