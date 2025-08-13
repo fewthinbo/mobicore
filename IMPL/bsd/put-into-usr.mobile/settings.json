@@ -1,0 +1,36 @@
+{
+	"settings": {
+		"mobile": {
+			"security": {
+				"max_active_sessions": 1000000,
+				"max_missed_heartbeats": 5,
+				"ip_blocklist": [
+					"123.54.76.891",
+					"123.54.76.892"
+				],
+				"login_policy": {
+					"max_attempts": 6,
+					"block_duration_minutes": 5
+				},
+				"rate_limit": {
+					"per_second": 20,
+					"max_overflows": 5,
+					"block_duration_minutes": 5
+				}
+			},
+			"online_counter": {
+				"enabled": true,
+				"refresh_interval_seconds": 5
+			},
+			"maintenance_mode": {
+				"enabled": false,
+				"duration": 15,
+				"message": "Currently working on something big."
+			}
+		},
+		"disabled_packets": {
+			"to_mt": [],
+			"to_mobile": []
+		}
+	}
+}

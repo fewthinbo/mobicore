@@ -1,0 +1,11 @@
+{
+	"db": {
+		"host": "localhost:3306",
+		"user": "mobicore",
+		"password": "123456789"
+	},
+	"server_bridge": {
+		"host": "mobicore-test.com",
+		"port_tcp": 32000
+	}
+}

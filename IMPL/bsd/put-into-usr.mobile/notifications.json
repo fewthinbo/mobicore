@@ -1,0 +1,40 @@
+{
+	"notifications": [
+		{
+			"title": "baslik burada",
+			"subtitle": "subtitle burada",
+			"details": "detaylar...........",
+			"admin_name": "Yazar burada"
+		},
+		{
+			"title": "duyuru baslik 2",
+			"subtitle": "subtitle deneme",
+			"details": "detay detay 112312312",
+			"admin_name": "ZyfInfo"
+		},
+		{
+			"title": "duyuru baslik 3",
+			"subtitle": "subtitle deneme",
+			"details": "detay detay 112312312",
+			"admin_name": "ZyfInfo"
+		},
+		{
+			"title": "duyuru baslik 4",
+			"subtitle": "subtitle deneme",
+			"details": "detay detay 112312312",
+			"admin_name": "ZyfInfo"
+		},
+		{
+			"title": "duyuru baslik 5",
+			"subtitle": "subtitle deneme",
+			"details": "detay detay 112312312",
+			"admin_name": "ZyfInfo"
+		},
+		{
+			"title": "duyuru baslik 6",
+			"subtitle": "subtitle deneme",
+			"details": "detay detay 112312312",
+			"admin_name": "ZyfInfo"
+		}
+	]
+}
