@@ -110,7 +110,7 @@ FLUSH PRIVILEGES;
 }
 ```
 
-## 🏗️ Core Authorization System
+## Core Authorization System
 
 ### 🎯 Smart Management
 - **Single Core Reading**: Different authorities are assigned to all your cores.

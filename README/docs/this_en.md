@@ -51,6 +51,7 @@ ninja install
 ## Using this library
 
 After compiling & installation:
+- Read [← Creating SQL user](./tech_tr.md).
 - Build your mt and run.
 - If you don't have license you don't need to add implementation.
 - If your bridge server(a.k.a mobileServer) running on another remote vds and you've license then your mt automatically connect to bridgeServer.

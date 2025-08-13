@@ -1,5 +1,3 @@
-# 🌟 mobicore
-
 <div align="center">
 
 <img src="demo.gif" height="600" />
@@ -16,7 +14,7 @@ Transform your MT server experience with seamless mobile integration
 
 </div>
 
-## 🚀 What is mobicore?
+## What is mobicore?
 
 **mobicore** is an advanced bridge server system that connects your MT server with mobile devices, revolutionizing the player experience. Your players can now stay connected to the MT world even after leaving the game!
 

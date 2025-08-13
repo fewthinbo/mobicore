@@ -100,7 +100,7 @@ FLUSH PRIVILEGES;
 }
 ```
 
-## 🏗️ Core Yetkilendirme Sistemi
+## Core Yetkilendirme Sistemi
 
 ### 🎯 Akıllı Yönetim
 - **Tek Core Okuma**: Tüm core'larınıza farklı yetkiler atanır
