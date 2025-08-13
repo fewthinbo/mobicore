@@ -8,7 +8,6 @@
 
 Transform your MT server experience with seamless mobile integration
 
-[![GitHub stars](https://img.shields.io/github/stars/fewthinbo/mobicore?style=social)](https://github.com/fewthinbo/mobicore)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Platform](https://img.shields.io/badge/Platform-FreeBSD-red)](https://www.freebsd.org/)
 [![C++](https://img.shields.io/badge/C%2B%2B-17-00599C.svg)](https://isocpp.org/)
@@ -118,9 +117,6 @@ Ready to transform your MT server?
 <div align="center">
 
 **🌟 Transform your MT server experience today!**
-
-[![GitHub stars](https://img.shields.io/github/stars/fewthinbo/mobicore?style=social)](https://github.com/fewthinbo/mobicore)
-[![GitHub forks](https://img.shields.io/github/forks/fewthinbo/mobicore?style=social)](https://github.com/fewthinbo/mobicore)
 
 *Made with ❤️ for the MT community*
 
