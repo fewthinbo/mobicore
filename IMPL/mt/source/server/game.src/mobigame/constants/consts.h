@@ -47,7 +47,6 @@ namespace mobi_game {
 			static constexpr const char* MAX_ACTIVE_SESSIONS = "max_active_sessions";
 			static constexpr const char* IP_BLOCKLIST = "ip_blocklist";
 			static constexpr const char* HEARTBEAT = "heartbeat";
-			static constexpr const char* INTERVAL_SECONDS = "interval_seconds";
 			static constexpr const char* MAX_MISSED_HEARTBEATS = "max_missed_heartbeats";
 			static constexpr const char* LOGIN_POLICY = "login_policy";
 			static constexpr const char* MAX_ATTEMPTS = "max_attempts";

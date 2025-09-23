@@ -73,15 +73,16 @@ namespace mobi_game {
 
 		THEADER header = data[0];
 
-		if (!client_->IsConnected()) {
+		/*if (!client_->IsConnected()) {
 			LOG_TRACE("header(?) failed: not connected to server", header);
 			return false;
-		}
+		}*/
 
 		ESendResult res = client_->Send(data, encrypt);
 		switch (res)
 		{
 		case ESendResult::SUCCESS:
+			LOG_TRACE("header(?) sent successfully");
 			return true;
 		case ESendResult::NOT_CONNECTED:
 			LOG_TRACE("header(?) couldn't sent, adding to unprocessed queue", header);

@@ -18,6 +18,7 @@ namespace mobi_game {
         client_->packet_register_dynamic(HEADER_SM_KEY_EXCHANGE, sizeof(TKeyExchange), offsetof(TKeyExchange, size));  
 #endif
 		client_->packet_register_dynamic(HEADER_SM_MESSAGE, sizeof(SMMessage), offsetof(SMMessage, size));
+		client_->packet_register_dynamic(HEADER_SM_FORWARD, sizeof(SMForward), offsetof(SMForward, size));
 
 		//static packets
 		client_->packet_register_fixed(HEADER_SM_CORE_AUTHORITY, sizeof(SMCoreAuthority));
@@ -65,6 +66,10 @@ namespace mobi_game {
 			}
 			case HEADER_SM_CACHE_STATUS: {
 				result = HandleCacheStatus(data);
+				break;
+			}
+			case HEADER_SM_FORWARD: {
+				result = HandleForwardPacket(data);
 				break;
 			}
             default:

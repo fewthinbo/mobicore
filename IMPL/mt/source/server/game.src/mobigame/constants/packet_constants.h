@@ -11,6 +11,15 @@ namespace mobi_game {
 			PASSWORD_MAX_LENGTH = 32,
 		};
 
+		enum EGMAuthorityLevel {
+			GM_PLAYER,
+			GM_LOW_WIZARD,
+			GM_WIZARD,
+			GM_HIGH_WIZARD,
+			GM_GOD,
+			GM_IMPLEMENTOR
+		};
+
 		enum class ENotificationSubHeader : uint8_t {
 			ADD,
 			REMOVE,

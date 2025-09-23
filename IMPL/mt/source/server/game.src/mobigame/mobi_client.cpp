@@ -36,6 +36,34 @@ namespace mobi_game {
 		};
 	}
 
+	//Sunucudan cevap beklenilen hicbir paket gonderilmez, amac: gonderim yogunlugunu test etmektir.
+	bool GameClient::spamTest(uint8_t intensity) {
+		using namespace test_constants;
+
+		constexpr uint32_t receiver_pid = 116;
+		constexpr std::array<uint32_t, 4> pid_arr{ 1, 114, 115, 116 };
+
+		auto time_start = std::chrono::steady_clock::now();
+		auto total_budget = intensity_part_budget * intensity;
+		size_t write_counter = 0;
+
+		LOG_WARN("Waiting other tasks to finish");
+		{
+			STimer timer("Write Part");
+
+			while (std::chrono::steady_clock::now() - time_start < total_budget) {
+				for (size_t i = 0; i < pid_arr.size(); ++i) {
+					const auto& pid = pid_arr[i];
+					sendShout(pid, one_hundred_bytes, test_code_page);
+					sendMessage(pid, receiver_pid, one_hundred_bytes, test_code_page);
+				}
+				write_counter += 8;
+			}
+		}
+		LOG_WARN("Total bytes written(~?)", write_counter * 100);
+		return true;
+	}
+
 	GameClient::~GameClient() noexcept = default;
 
 	bool GameClient::sendLogin(uint32_t pid, uint32_t map_idx) {
@@ -497,33 +525,19 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	//Sunucudan cevap beklenilen hicbir paket gonderilmez, amac: gonderim yogunlugunu test etmektir.
-	bool GameClient::spamTest(uint8_t intensity) {
-		using namespace test_constants;
+	bool GameClient::sendMobileNotification(uint32_t pid, const std::string& message, ENotificationChannels channel) {
+		if (pid == 0 || message.empty()) return false;
 
-		constexpr uint32_t receiver_pid = 116;
-		constexpr std::array<uint32_t, 4> pid_arr{ 1, 114, 115, 116 };
+		MSMobileNotification packet{};
+		packet.header = HEADER_MS_MOBILE_NOTIFY;
+		packet.size = message.size() + 1;
+		packet.pid = pid;
+		packet.type = static_cast<uint8_t>(channel);
 
-		auto time_start = std::chrono::steady_clock::now();
-		auto total_budget = intensity_part_budget * intensity;
-		size_t write_counter = 0;
+		TMP_BUFFER buf(sizeof(MSMobileNotification) + packet.size);
+		buf.write(&packet, sizeof(packet));
+		buf.write(message.data(), packet.size);
 
-		LOG_WARN("Waiting other tasks to finish");
-		{
-			STimer timer("Write Part");
-
-			while (std::chrono::steady_clock::now() - time_start < total_budget) {
-				for (size_t i = 0; i < pid_arr.size(); ++i) {
-					const auto& pid = pid_arr[i];
-					sendShout(pid, one_hundred_bytes, test_code_page);
-					sendMessage(pid, receiver_pid, one_hundred_bytes, test_code_page);
-				}
-				write_counter += 8;
-			}
-		}
-		LOG_WARN("Total bytes written(~?)", write_counter * 100);
-		return true;
+		return SendPacket(buf.get());
 	}
 }
-
-

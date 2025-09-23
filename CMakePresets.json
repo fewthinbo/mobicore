@@ -18,7 +18,7 @@
 			"cacheVariables": {
 				"CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
 				"VCPKG_TARGET_TRIPLET": "x64-windows",
-				"VCPKG_INSTALLED_DIR": "D:/git.zyf/vcpkg_projects/${sourceDirName}_vcpkg_installed",
+				"VCPKG_INSTALLED_DIR": "D:/zyfluxor/development/vcpkg_projects/${sourceDirName}_vcpkg_installed",
 				"PLATFORM_WINDOWS": "ON"
 			},
 			"condition": {

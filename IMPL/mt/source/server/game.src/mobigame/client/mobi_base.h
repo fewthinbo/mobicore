@@ -38,6 +38,7 @@ namespace mobi_game {
 		bool HandleMobileLogout(TDataRef data) const;
 		bool HandleCacheStatus(TDataRef data);
 		bool HandleKeyExchange(TDataRef data);
+		bool HandleForwardPacket(TDataRef data);
 	public: //util
 		void GetSyncData(std::vector<uint8_t>& data) const noexcept;
 		void SendSync();

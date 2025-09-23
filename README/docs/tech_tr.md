@@ -46,7 +46,6 @@ FLUSH PRIVILEGES;
         "max_active_sessions": 1000000,
         "ip_blocklist": ["***.**.**.***"],
         "heartbeat": {
-          "interval_seconds": 60,
           "max_missed_heartbeats": 5
         },
         "login_policy": {

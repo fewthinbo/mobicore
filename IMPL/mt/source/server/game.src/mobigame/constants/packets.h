@@ -5,7 +5,6 @@
 using namespace network;
 
 namespace mobi_game {
-
 	// SM: Server(Bridge) to mt
 	// MS : mt to Server
 
@@ -60,6 +59,10 @@ namespace mobi_game {
 		HEADER_MS_SYNC,
 
 		HEADER_SM_CACHE_STATUS, //bridge'teki cache durumu
+
+		HEADER_SM_FORWARD, //custom admin panel packets with parameters
+
+		HEADER_MS_MOBILE_NOTIFY, //mt -> mobile notification
 
 		HEADER_MAX
 	};
@@ -354,6 +357,19 @@ namespace mobi_game {
 	struct SMCacheStatus {
 		THEADER header = HEADER_SM_CACHE_STATUS;
 		bool is_ready{};
+	};
+
+	struct SMForward {
+		THEADER header = HEADER_SM_FORWARD;
+		TSIZE size{};
+		uint16_t sub_header{};
+	};
+
+	struct MSMobileNotification {
+		THEADER header = HEADER_MS_MOBILE_NOTIFY;
+		TSIZE size{};
+		uint8_t type{};
+		uint32_t pid{};
 	};
 
 #pragma pack(pop) 

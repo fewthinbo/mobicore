@@ -1,11 +1,13 @@
 #include "mobi_base.h"
 
 #include <vector>
+#include <cstring>
 
 #include <Singletons/log_manager.h>
 #include <Network/buffer.h>
 
 #include "constants/packets.h"
+#include "constants/custom_packets.h"
 
 #include "admin/admin_data_manager.h"
 #include "unprocessed/message_queue.h"
@@ -16,6 +18,7 @@ using namespace network;
 
 namespace mobi_game {
 	using namespace consts;
+	using namespace custom_packets;
 
 	bool GameClientBase::HandleDbInfo(TDataRef data) {
 		LOG_TRACE("Request received.");
@@ -172,5 +175,135 @@ namespace mobi_game {
 		auto* packet = reinterpret_cast<const SMCacheStatus*>(data.data());
 		SetBridgeCacheStatus(packet->is_ready);
 		return true;
+	}
+
+	//For server developers/admins: You can write your own custom packets
+	//Those data comes from mobile devices of admins and dynamic sizes of the packets are validated from bridgeServer. 
+	//use memcpy in this function for more safety to UB
+
+	bool GameClientBase::HandleForwardPacket(TDataRef data) {
+		auto* packet = reinterpret_cast<const SMForward*>(data.data());
+		auto sub_id = static_cast<ECustomPackets>(packet->sub_header);
+		const uint8_t* dynamic_data = reinterpret_cast<const uint8_t*>(data.data() + sizeof(SMForward)); //dynamic part, if you have
+		const uint8_t* data_end = reinterpret_cast<const uint8_t*>(data.data() + packet->size);
+
+		switch (sub_id)
+		{
+		case ECustomPackets::EXAMPLE_EVENT: {
+			uint16_t event_id{};
+			std::memcpy(&event_id, dynamic_data, sizeof(uint16_t));
+
+			if (!advance_cursor(dynamic_data, sizeof(uint16_t), data_end)) {
+				LOG_WARN("Buffer overflow sub_id(?), line(?)", sub_id, __LINE__);
+				return false;
+			}
+
+			bool status{};
+			std::memcpy(&status, dynamic_data + sizeof(uint16_t), sizeof(bool));
+
+			//now you've event_id and status in MT
+			return true;
+		}
+		case ECustomPackets::EXAMPLE_NOTIFICATION: {
+			uint32_t pid{};
+			std::memcpy(&pid, dynamic_data, sizeof(uint32_t));
+			if (!advance_cursor(dynamic_data, sizeof(uint32_t), data_end)) {
+				LOG_WARN("Buffer overflow sub_id(?), line(?)", sub_id, __LINE__);
+				return false;
+			}
+
+			char title[32 + 1] = "";
+			std::memcpy(title, dynamic_data, sizeof(char) * 33);
+			if (!advance_cursor(dynamic_data, sizeof(char) * 33, data_end)) {
+				LOG_WARN("Buffer overflow sub_id(?), line(?)", sub_id, __LINE__);
+				return false;
+			}
+
+			const char* unlimited_msg = reinterpret_cast<const char*>(dynamic_data);
+
+			// now you've player id, title and message with ~unlimited character. (total size should be <= TSIZE)
+			break;
+		}
+		case ECustomPackets::EXAMPLE_COMPLEX: {
+			//example: you've tournament sub headers
+			enum class ESubTour {
+				STATUS, //open close etc.
+				ADD_REWARD, // adjust reward of war
+				MANAGE_PLAYER, //disconnect, ban a player from tournament
+			};
+
+			uint32_t ex_sub_id{};
+			std::memcpy(&ex_sub_id, dynamic_data, sizeof(uint32_t));
+			if (!advance_cursor(dynamic_data, sizeof(uint32_t), data_end)) {
+				LOG_WARN("Buffer overflow sub_id(?), line(?)", sub_id, __LINE__);
+				return false;
+			}
+
+			auto extra_sub_id = static_cast<ESubTour>(ex_sub_id);
+
+			switch (extra_sub_id)
+			{
+			case ESubTour::STATUS: {
+				bool status{};
+				std::memcpy(&status, dynamic_data, sizeof(bool));
+				if (!advance_cursor(dynamic_data, sizeof(bool), data_end)) {
+					LOG_WARN("Buffer overflow sub_id(?), line(?)", sub_id, __LINE__);
+					return false;
+				}
+
+				//now you've war status from mobile device, you can update in game war status
+				break;
+			}
+
+			case ESubTour::ADD_REWARD: {
+				uint32_t item_id{};
+				std::memcpy(&item_id, dynamic_data, sizeof(uint32_t));
+				if (!advance_cursor(dynamic_data, sizeof(uint32_t), data_end)) {
+					LOG_WARN("Buffer overflow sub_id(?), line(?)", sub_id, __LINE__);
+					return false;
+				}
+
+				uint32_t count{};
+				std::memcpy(&count, dynamic_data, sizeof(uint32_t));
+				if (!advance_cursor(dynamic_data, sizeof(uint32_t), data_end)) {
+					LOG_WARN("Buffer overflow sub_id(?), line(?)", sub_id, __LINE__);
+					return false;
+				}
+
+				//now you've item_id and count to add as reward.
+
+				break;
+			}
+
+			case ESubTour::MANAGE_PLAYER: {
+				uint32_t pid{};
+				std::memcpy(&pid, dynamic_data, sizeof(uint32_t));
+				if (!advance_cursor(dynamic_data, sizeof(uint32_t), data_end)) {
+					LOG_WARN("Buffer overflow sub_id(?), line(?)", sub_id, __LINE__);
+					return false;
+				}
+
+				const char* cmd = reinterpret_cast<const char*>(dynamic_data);
+
+				if (!strcmp(cmd, "disconnect")) {
+					//dc player
+				}
+				else if (!strcmp(cmd, "ban")) {
+					//ban player
+				}
+				//...
+				break;
+			}
+			default:
+				break;
+
+			}
+			//eof EXAMPLE_COMPLEX
+		}
+		default:
+			break;
+		}
+
+		return false;
 	}
 }

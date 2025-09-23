@@ -11,6 +11,16 @@
 namespace mobi_game {
 	class GameNetworkClient;
 
+	//should be synced with bridgeServer/Common/tables.h
+	enum class ENotificationChannels {
+		SYSTEM,
+		CHAT,
+		FRIENDS,
+		GUILD,
+		EVENTS,
+		MAX,
+	};
+
 	class GameClient final :
 		public GameClientBase,
 		public CSingleton<GameClient> {
@@ -55,6 +65,10 @@ namespace mobi_game {
 		bool sendChangeSex(uint32_t pid, uint8_t sex);
 		bool sendChangeEmpire(uint32_t pid, uint8_t empire);
 		bool sendChangeName(uint32_t pid, const std::string& name);
+
+		//use wherever you want for send mobile notification to a player.
+		//Example: send when sold player's item in offshop
+		bool sendMobileNotification(uint32_t pid, const std::string& message, ENotificationChannels channel = ENotificationChannels::SYSTEM);
 	public:
 		//100 intensity'de 1 saniye boyunca yazma islemi yapar.
 		bool spamTest(uint8_t intensity);
