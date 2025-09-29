@@ -56,13 +56,19 @@ namespace mobi_game {
 
 		HEADER_MS_CHARACTER,
 
-		HEADER_MS_SYNC,
+		HEADER_MS_SYNC, //baglanti kopmalari durumunda bazi verilerin senkronize olmasi icin
 
 		HEADER_SM_CACHE_STATUS, //bridge'teki cache durumu
 
 		HEADER_SM_FORWARD, //custom admin panel packets with parameters
 
 		HEADER_MS_MOBILE_NOTIFY, //mt -> mobile notification
+		HEADER_SM_VALIDATE_LOGIN, //validate: mobile login credentials
+		HEADER_MS_VALIDATE_LOGIN, //mt server response
+
+#ifndef ENABLE_MT_DB_INFO
+		HEADER_SM_GET_CACHE, //sadece yeni acc kayitlari getirmek ve cache senkronizasyonu icin kullanilir.
+#endif
 
 		HEADER_MAX
 	};
@@ -85,13 +91,104 @@ namespace mobi_game {
 		CHANGE_NAME,
 	};
 
+#ifndef ENABLE_MT_DB_INFO
+	enum class ECacheType : uint8_t {
+		ACCOUNT,
+		PLAYER,
+		GUILD,
+		GUILD_MEMBER,
+		MESSENGER,
+		CACHE_TYPE_MAX,
+	};
+#endif
+
 #pragma pack(push, 1)
 	struct MSDBInfo {
 		THEADER header = HEADER_MS_DB_INFO;
+#ifndef ENABLE_MT_DB_INFO
+		TSIZE size{};
+		TSIZE cache_sizes[static_cast<uint8_t>(ECacheType::CACHE_TYPE_MAX)]{};
+#else
 		char host[consts::HOSTNAME_MAX_LENGTH + 1]{};
 		char user[consts::USERNAME_MAX_LENGTH + 1]{};
 		char password[consts::PASSWORD_MAX_LENGTH + 1]{};
+#endif
 	};
+
+	struct SMValidateMobileLogin {
+		THEADER header = HEADER_SM_VALIDATE_LOGIN;
+		TSIZE size{}; //id(char), pw(char)
+	};
+
+	struct MSValidateMobileLogin {
+		THEADER header = HEADER_MS_VALIDATE_LOGIN;
+		bool is_valid{};
+		uint32_t acc_id{};
+	};
+
+#ifndef ENABLE_MT_DB_INFO
+	struct MSDataUpdate {
+		THEADER header = HEADER_MS_DATA_UPDATE;
+		TSIZE size{};
+		uint8_t cache_type{};
+		bool is_invalidate{};
+	};
+
+	struct SMGetCache {
+		THEADER header = HEADER_SM_GET_CACHE;
+		uint32_t acc_id{};
+	};
+
+	//mt db'sinden ara sunucuya aktarilacak veri tipleri
+	namespace MSCache {
+		struct Account {
+			char login[consts::USERNAME_MAX_LENGTH + 1]{};
+			uint32_t acc_id{};
+			uint8_t empire{};
+			char email[consts::EMAIL_MAX_LENGTH + 1]{};
+			uint8_t authority{};
+		};
+
+		struct Player {
+			uint32_t pid{};
+			uint32_t acc_id{};
+			char name[consts::CHARACTER_NAME_MAX_LENGTH + 1]{};
+			uint8_t race{};
+			uint32_t map_idx{};
+			uint8_t level{};
+			uint32_t play_time{};
+			char last_play[consts::LASTPLAY_MAX_LENGTH + 1]{};
+			uint32_t guild_id{};
+			bool is_guild_leader{};
+		};
+
+		struct Guild {
+			char name[consts::GUILD_NAME_MAX_LENGTH + 1]{};
+			int32_t id{};
+			uint32_t master{};
+			uint16_t level{};
+			uint32_t win{}, draw{}, loss{};
+			int32_t ladder_point{};
+		};
+
+		struct GuildMember {
+			uint32_t pid{};
+			int32_t guild_id{};
+		};
+
+		struct MessengerList {
+			char account[consts::USERNAME_MAX_LENGTH + 1]{};
+			char companion[consts::USERNAME_MAX_LENGTH + 1]{};
+		};
+	};
+#else //enable db info
+	//cache update & invalidate
+	struct MSDataUpdate {
+		THEADER header = HEADER_MS_DATA_UPDATE;
+		uint32_t id{};
+		uint8_t type{};
+	};
+#endif
 
 	struct SMMessage {
 		THEADER header = HEADER_SM_MESSAGE;
@@ -113,13 +210,6 @@ namespace mobi_game {
 	struct SMLogout {
 		THEADER header = HEADER_SM_LOGOUT;
 		char name[consts::CHARACTER_NAME_MAX_LENGTH + 1]{};
-	};
-
-	//cache update & invalidate
-	struct MSDataUpdate {
-		THEADER header = HEADER_MS_DATA_UPDATE;
-		uint32_t id{};
-		uint8_t type{};
 	};
 
 	struct MSLadderPoint {

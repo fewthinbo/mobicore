@@ -4,20 +4,19 @@
 
 void CInputDB::PlayerCreateSuccess(LPDESC d, const char * data)
 {
-	if (!d)
-		return;
+	...
 
-	TPacketDGCreateSuccess * pPacketDB = (TPacketDGCreateSuccess *) data;
-
-	if (pPacketDB->bAccountCharacterIndex >= PLAYER_PER_ACCOUNT)
-	{
-		d->Packet(encode_byte(HEADER_GC_CHARACTER_CREATE_FAILURE), 1);
-		return;
-	}
+	d->Packet(&pack, sizeof(TPacketGCPlayerCreateSuccess));
 #ifdef MOBICORE
+#ifdef ENABLE_MT_DB_INFO
 	if (pPacketDB) {
 		mobileInstance.sendCharacterCreate(pPacketDB->player.dwID);
 	}
+#else
+	if (pPacketDB) {
+		mobileInstance.sendCharacterCreate(r_Tab.players[pPacketDB->bAccountCharacterIndex], r_Tab.id);
+	}
+#endif
 #endif
 	...
 }

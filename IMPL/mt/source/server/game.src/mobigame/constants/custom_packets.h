@@ -45,7 +45,7 @@ namespace mobi_game {
 
 		struct TCustomParam final {
 			TSIZE size{};
-			std::variant<bool, char, int, uint8_t, uint16_t, uint32_t, float, double, long, short, std::monostate> type_var;
+			std::variant<bool, char, int8_t, int16_t, int32_t, uint8_t, uint16_t, uint32_t, float, double, std::monostate> type_var;
 			TSIZE step_count{};
 			const char* desc{};
 			EPrimitiveTypeMobile mobile_type{};
@@ -150,7 +150,8 @@ namespace mobi_game {
 					TCustomParam(1, std::in_place_type<bool>, "Open close setting")
 				)
 			).first->second->
-				AdjustDescription("Change event status");
+				AdjustDescription("Change event status")
+				.AdjustMinAuthority(consts::EGMAuthorityLevel::GM_HIGH_WIZARD);
 
 			/*First example brief:
 			* data<unsigned char> = {uint16_t(1) --event_id, bool(1) --open, close };

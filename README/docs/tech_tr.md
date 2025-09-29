@@ -11,19 +11,25 @@ mobi-core, **sadece SELECT yetkisi** olan özel bir SQL kullanıcısı gerektiri
 - ✅ Verileriniz tamamen güvende kalır
 - ✅ Köprü sunucu yazma/değiştirme izni alamaz
 - ✅ Sadece gerekli bilgiler okunabilir
+- ✅ Kullanıcı şifreleri okunmaz (Yetki dahilinde değil).
 
 ### 📊 Performans Avantajı
 Yeni karakterler, hesaplar veya loncalar oluşturulduğunda:
 - ✅ MT sunucusundan köprü sunucuya veri aktarımı olmaz
 - ✅ Network trafiği minimum seviyede tutulur
+- ✅ Yeniden bağlanma durumlarında lag olmadan hızlıca senkronize olur.
 
 ### 🛠️ SQL Kullanıcı Kurulumu
-- 'account.account' ve 'player.' tablolarından sadece veri okuyabilen kullanıcı oluştur.
+- 'account', 'player' ve 'common' veritabanlarından sadece belirli kolonlardaki verileri okuyabilen kullanıcı oluştur.
 - 'RANDOM_STRONG_PASS' uzunluğu PASSWORD_MAX_LENGTH(32)'den az olmalıdır.
 ```sql
 CREATE USER 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP' IDENTIFIED BY 'RANDOM_STRONG_PASS';
-GRANT SELECT ON account.account* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT (id, login, empire, email) ON account.account* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT (mID, mAuthority) ON common.gm_list* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.player* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.guild* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.guild_member* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.messenger_list* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
 FLUSH PRIVILEGES;
 ```
 - "/usr/mobile/info.json" dosyasına bilgileri koyun.

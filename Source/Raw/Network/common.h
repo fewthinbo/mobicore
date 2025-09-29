@@ -3,10 +3,10 @@
 #include <limits>
 
 namespace network {
-	static constexpr uint16_t MAX_SIZE_PACKET = std::numeric_limits<uint16_t>::max();
-
 	typedef uint8_t THEADER;
-	typedef uint16_t TSIZE;
+	typedef uint32_t TSIZE;
+
+	static constexpr auto MAX_SIZE_PACKET = std::numeric_limits<TSIZE>::max();
 
 	inline bool advance_cursor(const uint8_t*& cursor, size_t advance, const uint8_t* end) {
 		if (cursor + advance > end)

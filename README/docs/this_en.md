@@ -31,21 +31,26 @@
 
 You can use two different generator:
 
-### With Unix Makefiles generator:
+### With Ninja generator (Recommended):
 ```bash
-cmake --preset freebsd-remote-debug
-cd out/build/freebsd-remote-debug
-make
-make install
+cmake --preset bsd-ninja-release
+mobi_install_rel
 ```
 
-### With Ninja generator:
+If you've not added alias yet, you can do the same thing with these commands:
 ```bash
-# CMakePresets.json dosyasında generator'ı "Ninja" olarak değiştirin
-cmake --preset freebsd-remote-debug
-cd out/build/freebsd-remote-debug
+cmake --preset bsd-ninja-release
+cd out/build/bsd-ninja-release
 ninja
 ninja install
+```
+
+### With Unix Makefiles generator:
+```bash
+cmake --preset bsd-gmake-release
+cd out/build/bsd-gmake-release
+make
+make install
 ```
 
 ## Using this library

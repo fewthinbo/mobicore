@@ -166,6 +166,10 @@ elseif(PLATFORM_FREEBSD)
 	endif()
 endif()
 
+if(ENABLE_DB_INFO)
+	add_compile_definitions(ENABLE_MT_DB_INFO)
+endif()
+
 add_compile_definitions(_MOBI_PACKET_ENCRYPTION)
 
 # Set output directories

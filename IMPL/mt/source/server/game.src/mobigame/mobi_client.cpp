@@ -3,12 +3,11 @@
 #endif
 #include "mobi_client.h"
 
-#include <array>
-
 #include <Singletons/log_manager.h>
 #include "constants/packets.h"
 #include <Network/buffer.h>
 
+#include "admin/queries.h"
 #include "admin/admin_data_manager.h"
 #include "unprocessed/message_queue.h"
 #include "client/client_core.h"
@@ -63,6 +62,8 @@ namespace mobi_game {
 		LOG_WARN("Total bytes written(~?)", write_counter * 100);
 		return true;
 	}
+
+
 
 	GameClient::~GameClient() noexcept = default;
 
@@ -359,11 +360,10 @@ namespace mobi_game {
 	//end of guild war packets
 
 
+#ifdef ENABLE_MT_DB_INFO
 	bool GameClient::sendCharacterCreate(uint32_t pid) {
 		if (pid == 0) return false;
-
 		MSDataUpdate packet{};
-		packet.header = HEADER_MS_DATA_UPDATE;
 		packet.type = static_cast<uint8_t>(EDataUpdateTypes::CREATE_PLAYER);
 		packet.id = pid;
 
@@ -371,20 +371,70 @@ namespace mobi_game {
 		buf.write(&packet, sizeof(packet));
 		return SendPacket(buf.get());
 	}
+#elif defined(MOBICORE)
+	bool GameClient::sendCharacterCreate(const TSimplePlayer& player, uint32_t acc_id) {
+		if (!d) return false;
+		//TODO: sendAccountCreate de ekle. db bilgilerini aliyorken buna gerek yoktu fakat simdi gerekli.
+		//tODO: Bunlari windows icin test konsola ekle ve paketleri test et.
+		MSCache::Player data{
+			player.dwID,
+			acc_id,
+			player.szName,
+			player.byJob,
+			1, //mapidx
+			player.byLevel,
+			player.dwPlayMinutes,
+			"", //lastplay
+			0, //gld_id
+			false //is guild leader
+		};
+
+		MSDataUpdate packet{};
+		packet.cache_type = static_cast<uint8_t>(ECacheType::PLAYER);
+		packet.is_invalidate = false;
+		packet.size = sizeof(MSDataUpdate) + sizeof(MSCache::Player);
+
+		TMP_BUFFER buf(packet.size);
+		buf.write(&packet, sizeof(MSDataUpdate));
+		buf.write(&data, sizeof(MSCache::Player));
+		return SendPacket(buf.get());
+	}
+#elif defined(PLATFORM_WINDOWS)
+	bool GameClient::sendCharacterCreate(const MSCache::Player& player) {
+		MSDataUpdate packet{};
+		packet.cache_type = static_cast<uint8_t>(ECacheType::PLAYER);
+		packet.is_invalidate = false;
+		packet.size = sizeof(MSDataUpdate) + sizeof(MSCache::Player);
+
+		TMP_BUFFER buf(packet.size);
+		buf.write(&packet, sizeof(MSDataUpdate));
+		buf.write(&player, sizeof(MSCache::Player));
+		return SendPacket(buf.get());
+	}
+#endif
 
 	bool GameClient::sendCharacterDelete(uint32_t pid) {
 		if (pid == 0) return false;
 
 		MSDataUpdate packet{};
 		packet.header = HEADER_MS_DATA_UPDATE;
+#ifdef ENABLE_MT_DB_INFO
 		packet.type = static_cast<uint8_t>(EDataUpdateTypes::DELETE_PLAYER);
 		packet.id = pid;
-
 		TMP_BUFFER buf(sizeof(packet));
 		buf.write(&packet, sizeof(packet));
+#else
+		packet.cache_type = static_cast<uint8_t>(ECacheType::PLAYER);
+		packet.is_invalidate = true;
+		packet.size = sizeof(MSDataUpdate) + sizeof(uint32_t);
+		TMP_BUFFER buf(sizeof(packet) + sizeof(uint32_t));
+		buf.write(&packet, sizeof(packet));
+		buf.write(&pid, sizeof(uint32_t));
+#endif
 		return SendPacket(buf.get());
 	}
 
+#ifdef ENABLE_MT_DB_INFO
 	bool GameClient::sendGuildCreate(uint32_t guild_id) {
 		if (guild_id == 0) return false;
 
@@ -397,17 +447,61 @@ namespace mobi_game {
 		buf.write(&packet, sizeof(packet));
 		return SendPacket(buf.get());
 	}
+#elif defined(MOBICORE)
+	bool GameClient::sendGuildCreate(const CGuild& gld) {
+		MSCache::Guild data{
+			gld.GetName(),
+			gld.GetID(),
+			gld.GetMasterPID(),
+			gld.GetLevel(),
+			gld.GetGuildWarWinCount(),
+			gld.GetGuildWarDrawCount(),
+			gld.GetGuildWarLossCount(),
+			gld.GetLadderPoint()
+		};
+
+		MSDataUpdate packet{};
+		packet.cache_type = static_cast<uint8_t>(ECacheType::GUILD);
+		packet.is_invalidate = false;
+		packet.size = sizeof(MSDataUpdate) + sizeof(MSCache::Guild);
+
+		TMP_BUFFER buf(packet.size);
+		buf.write(&packet, sizeof(MSDataUpdate));
+		buf.write(&data, sizeof(MSCache::Guild));
+		return SendPacket(buf.get());
+	}
+#elif defined(PLATFORM_WINDOWS)
+	bool GameClient::sendGuildCreate(const MSCache::Guild& gld) {
+		MSDataUpdate packet{};
+		packet.cache_type = static_cast<uint8_t>(ECacheType::GUILD);
+		packet.is_invalidate = false;
+		packet.size = sizeof(MSDataUpdate) + sizeof(MSCache::Guild);
+
+		TMP_BUFFER buf(packet.size);
+		buf.write(&packet, sizeof(MSDataUpdate));
+		buf.write(&gld, sizeof(MSCache::Guild));
+		return SendPacket(buf.get());
+	}
+#endif
 
 	bool GameClient::sendGuildDelete(uint32_t guild_id) {
 		if (guild_id == 0) return false;
 
 		MSDataUpdate packet{};
 		packet.header = HEADER_MS_DATA_UPDATE;
+#ifdef ENABLE_MT_DB_INFO
 		packet.type = static_cast<uint8_t>(EDataUpdateTypes::DELETE_GUILD);
 		packet.id = guild_id;
-
 		TMP_BUFFER buf(sizeof(packet));
 		buf.write(&packet, sizeof(packet));
+#else
+		packet.cache_type = static_cast<uint8_t>(ECacheType::GUILD);
+		packet.is_invalidate = true;
+		packet.size = sizeof(MSDataUpdate) + sizeof(uint32_t);
+		TMP_BUFFER buf(sizeof(packet) + sizeof(uint32_t));
+		buf.write(&packet, sizeof(packet));
+		buf.write(&guild_id, sizeof(uint32_t));
+#endif
 		return SendPacket(buf.get());
 	}
 

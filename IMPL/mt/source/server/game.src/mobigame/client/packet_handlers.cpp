@@ -3,6 +3,11 @@
 #include <vector>
 #include <cstring>
 
+#ifdef MOBICORE
+#include "db.h"
+#include "desc_manager.h"
+#endif
+
 #include <Singletons/log_manager.h>
 #include <Network/buffer.h>
 
@@ -22,14 +27,8 @@ namespace mobi_game {
 
 	bool GameClientBase::HandleDbInfo(TDataRef data) {
 		LOG_TRACE("Request received.");
-		MSDBInfo packet{};
-		packet.header = HEADER_MS_DB_INFO;
-
-		if (!admin_data_manager_->WriteDBSettings(packet)) return false;
-
-		TMP_BUFFER buf(sizeof(packet));
-		buf.write(&packet, sizeof(packet));
-		return SendPacket(buf.get());
+		std::vector<uint8_t> db_cache = admin_data_manager_->GetDBCache();
+		return SendPacket(db_cache);
 	}
 
 	bool GameClientBase::HandleKeyExchange(TDataRef data) {
@@ -181,7 +180,7 @@ namespace mobi_game {
 	//Those data comes from mobile devices of admins and dynamic sizes of the packets are validated from bridgeServer. 
 	//use memcpy in this function for more safety to UB
 
-	bool GameClientBase::HandleForwardPacket(TDataRef data) {
+	bool GameClientBase::HandleForwardPacket(TDataRef data) const {
 		auto* packet = reinterpret_cast<const SMForward*>(data.data());
 		auto sub_id = static_cast<ECustomPackets>(packet->sub_header);
 		const uint8_t* dynamic_data = reinterpret_cast<const uint8_t*>(data.data() + sizeof(SMForward)); //dynamic part, if you have
@@ -299,6 +298,7 @@ namespace mobi_game {
 
 			}
 			//eof EXAMPLE_COMPLEX
+			break;
 		}
 		default:
 			break;
@@ -306,4 +306,95 @@ namespace mobi_game {
 
 		return false;
 	}
+
+	bool GameClientBase::HandleValidateLogin(TDataRef data) {
+		auto* login = reinterpret_cast<const char*>(data.data() + sizeof(SMValidateMobileLogin));
+		auto* pw = reinterpret_cast<const char*>(login + strlen(login) + 1);
+		LOG_TRACE("Login credentials of account(id: ?, pw: ?) received", login, pw); //TODO: remove this log
+		
+		uint32_t acc_id{};
+		bool is_valid{false};
+#ifdef MOBICORE
+		auto& db_inst = DBManager::instance();
+		std::string query = loggerInstance.WriteBuf(
+			"SELECT id, login, password FROM account.account WHERE login = ? AND password = PASSWORD(?) LIMIT 1", login, pw);
+
+		std::unique_ptr<SQLMsg> ret(db_inst.DirectQuery(query));
+		if (!ret) {
+			LOG_TRACE("Sql response is nullptr");
+			return false;
+		}
+		SQLResult* sql_res = ret->Get();
+		if (!sql_res) {
+			LOG_TRACE("Weird stuff line(?)", __LINE__);
+			return false;
+		}
+		if (sql_res->uiNumRows == 0)
+		{
+			LOG_TRACE("Login(?): username or pw wrong.", login);
+			return false;
+		}
+
+		MYSQL_ROW row = mysql_fetch_row(sql_res->pSQLResult);
+		str_to_number(acc_id, row[0]);
+		is_valid = true;
+		LOG_TRACE("Login(?) successful", login);
+#else
+
+#endif
+		TMP_BUFFER buf(sizeof(MSValidateMobileLogin));
+
+		MSValidateMobileLogin res{};
+		res.is_valid = is_valid;
+		res.acc_id = acc_id;
+		buf.write(&res, sizeof(MSValidateMobileLogin));
+
+		return SendPacket(buf.get());
+	}
+
+#ifndef ENABLE_MT_DB_INFO
+	bool GameClientBase::HandleGetCache(TDataRef data) {
+		auto* pkt = reinterpret_cast<const SMGetCache*>(data.data());
+#ifdef MOBICORE
+		auto& db_inst = DBManager::instance();
+		std::string query = loggerInstance.WriteBuf(
+			query::ACCOUNT_WITH_EMPIRE + std::string(" WHERE a.id = ? LIMIT 1"), pkt->acc_id);
+		//SELECT Query calistir ve set'i guncelle. : Email ve authority field'leri gerekli ve bunlari TAccount'tan dogrudan alamiyoruz.
+
+		std::unique_ptr<SQLMsg> ret(db_inst.DirectQuery(query));
+		if (!ret) {
+			LOG_TRACE("Sql response is nullptr");
+			return false;
+		}
+		SQLResult* sql_res = ret->Get();
+		if (!sql_res) {
+			LOG_TRACE("Weird stuff line(?)", __LINE__);
+			return false;
+		}
+		if (sql_res->uiNumRows == 0){
+			LOG_TRACE("There is not account with id(?).", pkt->acc_id);
+			return false;
+		}
+		MYSQL_ROW row = mysql_fetch_row(sql_res->pSQLResult);
+
+		MSCache::Account data{
+			//login, id, empire, email, authority
+			row[1], std::stoi(row[0]), std::stoi(row[2]), row[3], std::stoi(row[4])
+		};
+#endif
+
+		MSDataUpdate packet{};
+		packet.cache_type = static_cast<uint8_t>(ECacheType::ACCOUNT);
+		packet.is_invalidate = false;
+		packet.size = sizeof(MSDataUpdate) + sizeof(MSCache::Account);
+
+		TMP_BUFFER buf(packet.size);
+		buf.write(&packet, sizeof(MSDataUpdate));
+		buf.write(&data, sizeof(MSCache::Account));
+
+		LOG_TRACE("Account(id: ?) cache sent", pkt->acc_id);
+		return SendPacket(buf.get());
+	}
+#endif
+
 }

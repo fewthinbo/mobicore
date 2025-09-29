@@ -31,22 +31,28 @@
 
 İki farklı generator kullanabilirsiniz:
 
+### Ninja generator ile (Tercih edilen):
+```bash
+cmake --preset bsd-ninja-release
+mobi_install_rel
+```
+
+Alias'ı henüz eklemediyseniz bu şekilde de yapabilirsiniz.
+```bash
+cmake --preset bsd-ninja-release
+cd out/build/bsd-ninja-release
+ninja
+ninja install
+```
+
 ### Unix Makefiles generator ile:
 ```bash
-cmake --preset freebsd-remote-debug
-cd out/build/freebsd-remote-debug
+cmake --preset bsd-gmake-release
+cd out/build/bsd-gmake-release
 make
 make install
 ```
 
-### Ninja generator ile:
-```bash
-# CMakePresets.json dosyasında generator'ı "Ninja" olarak değiştirin
-cmake --preset freebsd-remote-debug
-cd out/build/freebsd-remote-debug
-ninja
-ninja install
-```
 
 ## Bu kütüphaneyi kullanma
 

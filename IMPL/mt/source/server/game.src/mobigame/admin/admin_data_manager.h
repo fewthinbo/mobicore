@@ -2,6 +2,7 @@
 #include <memory>
 #include <string>
 #include <cstdint>
+#include <vector>
 
 #include <Utility/flag_wrapper.h>
 #include "constants/packets.h"
@@ -15,6 +16,7 @@ namespace mobi_game {
 	class GameNetworkClient;
 	class GameClientBase;
 
+#ifdef ENABLE_MT_DB_INFO
 	struct TDBInfo {
 		const std::string& host;
 		const std::string& user;
@@ -23,6 +25,7 @@ namespace mobi_game {
 			: host(_host), user(_user), password(_pw) {
 		}
 	};
+#endif
 
 	struct TBridgeInfo {
 		const std::string& host;
@@ -41,7 +44,9 @@ namespace mobi_game {
 		std::unique_ptr<CConfigManager> config_manager_;
 
 		std::unique_ptr<TJsonFile> f_info_;
+#ifdef ENABLE_MT_DB_INFO
 		std::unique_ptr<TDBInfo> db_info_;
+#endif
 		std::unique_ptr<TBridgeInfo> bridge_info_;
 	public:
 		CAdminDataManager(GameNetworkClient* client);
@@ -53,7 +58,7 @@ namespace mobi_game {
 		uint16_t GetBridgePort() const;
 	public:
 		void LoadInfoFile();
-		bool WriteDBSettings(MSDBInfo& packet) const;
+		std::vector<uint8_t> GetDBCache();
 	public:
 		void SetAuthority(uint16_t authority_type) noexcept;
 		bool HasAuthority(uint16_t flag) { return authority_.HasFlag(flag); }

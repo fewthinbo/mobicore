@@ -38,7 +38,11 @@ namespace mobi_game {
 		bool HandleMobileLogout(TDataRef data) const;
 		bool HandleCacheStatus(TDataRef data);
 		bool HandleKeyExchange(TDataRef data);
-		bool HandleForwardPacket(TDataRef data);
+		bool HandleForwardPacket(TDataRef data) const;
+		bool HandleValidateLogin(TDataRef data);
+#ifndef ENABLE_MT_DB_INFO
+		bool HandleGetCache(TDataRef data); //yeni acc kaydini senkronize et
+#endif
 	public: //util
 		void GetSyncData(std::vector<uint8_t>& data) const noexcept;
 		void SendSync();

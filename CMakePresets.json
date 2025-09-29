@@ -19,7 +19,8 @@
 				"CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
 				"VCPKG_TARGET_TRIPLET": "x64-windows",
 				"VCPKG_INSTALLED_DIR": "D:/zyfluxor/development/vcpkg_projects/${sourceDirName}_vcpkg_installed",
-				"PLATFORM_WINDOWS": "ON"
+				"PLATFORM_WINDOWS": "ON",
+				"ENABLE_DB_INFO": "ON"
 			},
 			"condition": {
 				"type": "equals",
@@ -61,7 +62,8 @@
 				"strategy": "external"
 			},
 			"cacheVariables": {
-				"PLATFORM_FREEBSD": "ON"
+				"PLATFORM_FREEBSD": "ON",
+				"ENABLE_DB_INFO": "ON"
 			},
 			"condition": {
 				"type": "equals",

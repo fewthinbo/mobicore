@@ -11,19 +11,25 @@ mobi-core requires a special SQL user with **SELECT privileges only**. This ensu
 - ✅ Your data remains completely secure
 - ✅ Bridge server cannot get write/modify permissions
 - ✅ Only necessary information can be read
+- ✅ Password of users doesn't read from the table (Not allowed by permission).
 
 ### 📊 Performance Advantage
 When new characters, accounts or guilds are created:
 - ✅ No data transfer from MT server to bridge server
 - ✅ Network traffic kept at minimum level
+- ✅ It syncs quickly without lag in reconnect situations.
 
 ### 🛠️ SQL User Setup
-- Create a user which can run select queries on 'account.account' and 'player.' tables.
+- Create a user which can run select queries on spesific columns and tables of 'account', 'player' and 'common' databases.
 - 'RANDOM_STRONG_PASS' length should be lower than PASSWORD_MAX_LENGTH(32)
 ```sql
 CREATE USER 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP' IDENTIFIED BY 'RANDOM_STRONG_PASS';
-GRANT SELECT ON account.account* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT (id, login, empire, email) ON account.account* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT (mID, mAuthority) ON common.gm_list* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.player* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.guild* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.guild_member* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.messenger_list* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
 FLUSH PRIVILEGES;
 ```
 - After that put the infos to db fields in "/usr/mobile/info.json"

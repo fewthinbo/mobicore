@@ -24,7 +24,9 @@ DWORD CGuildManager::CreateGuild(TGuildCreateParameter& gcp)
 	...
 
 #ifdef MOBICORE //Bottom of function
-	mobileInstance.sendGuildCreate(pg->GetID());
+	if (pg) {
+		mobileInstance.sendGuildCreate(*pg);
+	}
 #endif
 	return pg->GetID();
 }

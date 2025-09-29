@@ -19,6 +19,7 @@ namespace mobi_game {
 #endif
 		client_->packet_register_dynamic(HEADER_SM_MESSAGE, sizeof(SMMessage), offsetof(SMMessage, size));
 		client_->packet_register_dynamic(HEADER_SM_FORWARD, sizeof(SMForward), offsetof(SMForward, size));
+		client_->packet_register_dynamic(HEADER_SM_VALIDATE_LOGIN, sizeof(SMValidateMobileLogin), offsetof(SMValidateMobileLogin, size));
 
 		//static packets
 		client_->packet_register_fixed(HEADER_SM_CORE_AUTHORITY, sizeof(SMCoreAuthority));
@@ -27,6 +28,9 @@ namespace mobi_game {
 		client_->packet_register_fixed(HEADER_SM_LOGIN, sizeof(SMLogin));
 		client_->packet_register_fixed(HEADER_SM_LOGOUT, sizeof(SMLogout));
 		client_->packet_register_fixed(HEADER_SM_CACHE_STATUS, sizeof(SMCacheStatus));
+#ifndef ENABLE_MT_DB_INFO
+		client_->packet_register_fixed(HEADER_SM_GET_CACHE, sizeof(SMGetCache));
+#endif
 	}
 
 	bool GameClientBase::HandlePacket(THEADER header, const std::vector<uint8_t>& data) {
@@ -72,6 +76,16 @@ namespace mobi_game {
 				result = HandleForwardPacket(data);
 				break;
 			}
+			case HEADER_SM_VALIDATE_LOGIN: {
+				result = HandleValidateLogin(data);
+				break;
+			}
+#ifndef ENABLE_MT_DB_INFO
+			case HEADER_SM_GET_CACHE: {
+				result = HandleGetCache(data);
+				break;
+			}
+#endif
             default:
                 any_match = false;
                 result = false;
