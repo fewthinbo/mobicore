@@ -2,13 +2,13 @@
 #include <cstdint>
 #include <chrono>
 
-#ifndef PLATFORM_WINDOWS
+#if !PLATFORM_WINDOWS
 #define INVALID_SOCKET -1
 #endif
 
 namespace network {
 	namespace consts {
-#ifndef _DEBUG
+#if !_DEBUG
 		static constexpr auto RECONNECT_INTERVAL = std::chrono::seconds(60);
 		static constexpr auto CONNECT_TIMEOUT = std::chrono::seconds(30);
 #else

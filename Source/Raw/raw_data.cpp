@@ -134,16 +134,16 @@ namespace network {
         }
     
         PostTask([this]() {
-    #ifdef _MOBI_PACKET_ENCRYPTION
+    #if __MOBI_PACKET_ENCRYPTION__
             if (session_is_crypted()) {
-    #ifdef _DEBUG
+    #if _DEBUG
                 LOG_TRACE("Passing to encrypted reading manually.");
     #endif
                 session_read_encrypted();
                 return;
             }
     #endif
-    #ifdef _DEBUG
+    #if _DEBUG
             LOG_TRACE("Passing to reading manually.");
     #endif
             session_read();

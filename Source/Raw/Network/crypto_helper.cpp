@@ -6,7 +6,7 @@
 #include <openssl/aes.h>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
-//#define CRYPTO_DEBUG
+//#define __CRYPTO_DEBUG__
 
 #include <Singletons/log_manager.h>
 #include "common.h"
@@ -44,7 +44,7 @@ namespace network {
     bool CryptoHelper::encrypt(std::vector<uint8_t>& data) {
         if (data.empty()) return false;
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[ENCRYPT] Input data size: %zu\n", data.size());
         printf("[ENCRYPT] Original data bytes: ");
         for (size_t i = 0; i < data.size(); i++) {
@@ -56,13 +56,13 @@ namespace network {
         // Her şifreleme işlemi için yeni bir IV oluştur - cross-version compatible
         std::vector<uint8_t> current_iv(IV_SIZE);
         if (!OPENSSL_RAND_BYTES(current_iv.data(), IV_SIZE)) {
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
             printf("[ENCRYPT] Failed to generate IV: %s\n", OPENSSL_GET_ERROR().c_str());
 #endif
             return false;
         }
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[ENCRYPT] Generated IV (%zu bytes): ", IV_SIZE);
         for (size_t i = 0; i < IV_SIZE; i++) {
             printf("%02X ", current_iv[i]);
@@ -76,7 +76,7 @@ namespace network {
 
         // Encryption context'i yeni IV ile güncelle
         if (EVP_EncryptInit_ex(enc_ctx, EVP_aes_256_cbc(), nullptr, key.data(), current_iv.data()) != 1) {
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
             printf("[ENCRYPT] Failed to initialize encryption context: %s\n", OPENSSL_GET_ERROR().c_str());
 #endif
             return false;
@@ -86,13 +86,13 @@ namespace network {
         // Veriyi şifrele
         if (EVP_EncryptUpdate(enc_ctx, encrypted.data(), &len,
             data.data(), data.size()) != 1) {
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
             printf("[ENCRYPT] Failed during EncryptUpdate: %s\n", OPENSSL_GET_ERROR().c_str());
 #endif
             return false;
         }
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[ENCRYPT] After EncryptUpdate len: %d\n", len);
         printf("[ENCRYPT] Partial encrypted data: ");
         for (int i = 0; i < len; i++) {
@@ -104,7 +104,7 @@ namespace network {
         int final_len = 0;
         // Şifrelemeyi tamamla ve padding ekle
         if (EVP_EncryptFinal_ex(enc_ctx, encrypted.data() + len, &final_len) != 1) {
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
             printf("[ENCRYPT] Failed during EncryptFinal: %s (len=%d, data_size=%zu)\n",
                 OPENSSL_GET_ERROR().c_str(), len, data.size());
 #endif
@@ -114,7 +114,7 @@ namespace network {
             return false;
         }
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[ENCRYPT] After EncryptFinal final_len: %d\n", final_len);
         printf("[ENCRYPT] Final block encrypted data: ");
         for (int i = len; i < len + final_len; i++) {
@@ -129,7 +129,7 @@ namespace network {
         // Final paket formatı: [SIZE][IV][ENCRYPTED_DATA]
         TSIZE total_size = IV_SIZE + encrypted.size();
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[ENCRYPT] Encrypted size: %zu, Total size with IV: %u\n", encrypted.size(), total_size);
 #endif
 
@@ -140,7 +140,7 @@ namespace network {
         final_packet.resize(SIZE_SIZE);
         std::memcpy(final_packet.data(), &total_size, SIZE_SIZE);
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[ENCRYPT] Size bytes: [%02X %02X]\n",
             final_packet[0], final_packet[1]);
 #endif
@@ -151,7 +151,7 @@ namespace network {
         // Şifrelenmiş veriyi ekle
         final_packet.insert(final_packet.end(), encrypted.begin(), encrypted.end());
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[ENCRYPT] Final packet (%zu bytes):\n", final_packet.size());
         printf("Size  [2]: ");
         for (size_t i = 0; i < SIZE_SIZE; i++) printf("%02X ", final_packet[i]);
@@ -169,7 +169,7 @@ namespace network {
     bool CryptoHelper::decrypt(std::vector<uint8_t>& data) {
         // Data should be at least IV size + some encrypted data
         if (data.size() <= IV_SIZE) {
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
             printf("[DECRYPT] Data too small, size: %zu, minimum needed: %zu\n",
                 data.size(), IV_SIZE);
 #endif
@@ -180,7 +180,7 @@ namespace network {
         std::vector<uint8_t> received_iv(data.begin(), data.begin() + IV_SIZE);
         std::vector<uint8_t> encrypted_data(data.begin() + IV_SIZE, data.end());
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[DECRYPT] Extracted IV (%zu bytes): ", received_iv.size());
         for (size_t i = 0; i < IV_SIZE; i++) {
             printf("%02X ", received_iv[i]);
@@ -194,7 +194,7 @@ namespace network {
 
         // Initialize decryption context with received IV
         if (EVP_DecryptInit_ex(dec_ctx, EVP_aes_256_cbc(), nullptr, key.data(), received_iv.data()) != 1) {
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
             printf("[DECRYPT] Failed to initialize decryption context\n");
 #endif
             return false;
@@ -208,13 +208,13 @@ namespace network {
         // Decrypt data
         if (EVP_DecryptUpdate(dec_ctx, decrypted.data(), &len,
             encrypted_data.data(), encrypted_data.size()) != 1) {
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
             printf("[DECRYPT] Failed during DecryptUpdate\n");
 #endif
             return false;
         }
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[DECRYPT] After DecryptUpdate len: %d\n", len);
         printf("[DECRYPT] Partial decrypted data: ");
         for (int i = 0; i < len; i++) {
@@ -226,7 +226,7 @@ namespace network {
         int final_len = 0;
         // Finalize decryption and remove padding
         if (EVP_DecryptFinal_ex(dec_ctx, decrypted.data() + len, &final_len) != 1) {
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
             unsigned long err = ERR_get_error();
             char err_msg[256];
             ERR_error_string_n(err, err_msg, sizeof(err_msg));
@@ -235,7 +235,7 @@ namespace network {
             return false;
         }
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[DECRYPT] After DecryptFinal final_len: %d\n", final_len);
         printf("[DECRYPT] Final block decrypted data: ");
         for (int i = len; i < len + final_len; i++) {
@@ -247,7 +247,7 @@ namespace network {
         // Resize to actual decrypted size
         decrypted.resize(len + final_len);
 
-#if defined(_DEBUG) && defined(CRYPTO_DEBUG)
+#if defined(DEBUG) && defined(__CRYPTO_DEBUG__)
         printf("[DECRYPT] Final decrypted data (%zu bytes): ", decrypted.size());
         for (size_t i = 0; i < decrypted.size(); i++) {
             printf("%02X ", decrypted[i]);

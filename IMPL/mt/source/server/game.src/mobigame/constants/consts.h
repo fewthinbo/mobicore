@@ -5,7 +5,7 @@ namespace mobi_game {
 	extern bool IsBoss(uint32_t id);
 
 	namespace consts {
-#ifdef DEBUG
+#if DEBUG
 		static constexpr uint8_t MESSAGE_TIMEOUT{ 15 };
 #else
 		static constexpr uint8_t MESSAGE_TIMEOUT{ 120 };
@@ -20,14 +20,14 @@ namespace mobi_game {
 
 		static constexpr uint16_t READ_FILE_INTERVAL = 300; // 5 dk
 
-#ifdef PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS
 		static constexpr uint16_t DEFAULT_CODEPAGE = 857; //console
 #else
 		static constexpr uint16_t DEFAULT_CODEPAGE = 1254; //windows-1254
 #endif
 
 		struct JFileNames {
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
 			static constexpr const char* BASE_FOLDER = "/usr/mobile/";
 #else
 			static constexpr const char* BASE_FOLDER = "";

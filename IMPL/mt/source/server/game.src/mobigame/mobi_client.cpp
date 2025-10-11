@@ -1,4 +1,4 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "stdafx.h"
 #endif
 #include "mobi_client.h"
@@ -360,7 +360,7 @@ namespace mobi_game {
 	//end of guild war packets
 
 
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 	bool GameClient::sendCharacterCreate(uint32_t pid) {
 		if (pid == 0) return false;
 		MSDataUpdate packet{};
@@ -371,7 +371,7 @@ namespace mobi_game {
 		buf.write(&packet, sizeof(packet));
 		return SendPacket(buf.get());
 	}
-#elif defined(MOBICORE)
+#elif __MOBICORE__
 	bool GameClient::sendCharacterCreate(const TSimplePlayer& player, uint32_t acc_id) {
 		if (!d) return false;
 		//TODO: sendAccountCreate de ekle. db bilgilerini aliyorken buna gerek yoktu fakat simdi gerekli.
@@ -399,7 +399,7 @@ namespace mobi_game {
 		buf.write(&data, sizeof(MSCache::Player));
 		return SendPacket(buf.get());
 	}
-#elif defined(PLATFORM_WINDOWS)
+#elif PLATFORM_WINDOWS
 	bool GameClient::sendCharacterCreate(const MSCache::Player& player) {
 		MSDataUpdate packet{};
 		packet.cache_type = static_cast<uint8_t>(ECacheType::PLAYER);
@@ -418,7 +418,7 @@ namespace mobi_game {
 
 		MSDataUpdate packet{};
 		packet.header = HEADER_MS_DATA_UPDATE;
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 		packet.type = static_cast<uint8_t>(EDataUpdateTypes::DELETE_PLAYER);
 		packet.id = pid;
 		TMP_BUFFER buf(sizeof(packet));
@@ -434,7 +434,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 	bool GameClient::sendGuildCreate(uint32_t guild_id) {
 		if (guild_id == 0) return false;
 
@@ -447,7 +447,7 @@ namespace mobi_game {
 		buf.write(&packet, sizeof(packet));
 		return SendPacket(buf.get());
 	}
-#elif defined(MOBICORE)
+#elif __MOBICORE__
 	bool GameClient::sendGuildCreate(const CGuild& gld) {
 		MSCache::Guild data{
 			gld.GetName(),
@@ -470,7 +470,7 @@ namespace mobi_game {
 		buf.write(&data, sizeof(MSCache::Guild));
 		return SendPacket(buf.get());
 	}
-#elif defined(PLATFORM_WINDOWS)
+#elif PLATFORM_WINDOWS
 	bool GameClient::sendGuildCreate(const MSCache::Guild& gld) {
 		MSDataUpdate packet{};
 		packet.cache_type = static_cast<uint8_t>(ECacheType::GUILD);
@@ -489,7 +489,7 @@ namespace mobi_game {
 
 		MSDataUpdate packet{};
 		packet.header = HEADER_MS_DATA_UPDATE;
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 		packet.type = static_cast<uint8_t>(EDataUpdateTypes::DELETE_GUILD);
 		packet.id = guild_id;
 		TMP_BUFFER buf(sizeof(packet));

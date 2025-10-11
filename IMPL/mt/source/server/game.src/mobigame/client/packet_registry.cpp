@@ -14,7 +14,7 @@ using namespace network;
 namespace mobi_game {
 	void GameClientBase::RegisterPackets() noexcept {
 		//dynamic packets
-#ifdef _MOBI_PACKET_ENCRYPTION
+#if __MOBI_PACKET_ENCRYPTION__
         client_->packet_register_dynamic(HEADER_SM_KEY_EXCHANGE, sizeof(TKeyExchange), offsetof(TKeyExchange, size));  
 #endif
 		client_->packet_register_dynamic(HEADER_SM_MESSAGE, sizeof(SMMessage), offsetof(SMMessage, size));
@@ -28,7 +28,7 @@ namespace mobi_game {
 		client_->packet_register_fixed(HEADER_SM_LOGIN, sizeof(SMLogin));
 		client_->packet_register_fixed(HEADER_SM_LOGOUT, sizeof(SMLogout));
 		client_->packet_register_fixed(HEADER_SM_CACHE_STATUS, sizeof(SMCacheStatus));
-#ifndef ENABLE_MT_DB_INFO
+#if !__MT_DB_INFO__
 		client_->packet_register_fixed(HEADER_SM_GET_CACHE, sizeof(SMGetCache));
 #endif
 	}
@@ -80,7 +80,7 @@ namespace mobi_game {
 				result = HandleValidateLogin(data);
 				break;
 			}
-#ifndef ENABLE_MT_DB_INFO
+#if !__MT_DB_INFO__
 			case HEADER_SM_GET_CACHE: {
 				result = HandleGetCache(data);
 				break;

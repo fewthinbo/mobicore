@@ -66,7 +66,7 @@ namespace mobi_game {
 		HEADER_SM_VALIDATE_LOGIN, //validate: mobile login credentials
 		HEADER_MS_VALIDATE_LOGIN, //mt server response
 
-#ifndef ENABLE_MT_DB_INFO
+#if !__MT_DB_INFO__
 		HEADER_SM_GET_CACHE, //sadece yeni acc kayitlari getirmek ve cache senkronizasyonu icin kullanilir.
 #endif
 
@@ -91,7 +91,7 @@ namespace mobi_game {
 		CHANGE_NAME,
 	};
 
-#ifndef ENABLE_MT_DB_INFO
+#if !__MT_DB_INFO__
 	enum class ECacheType : uint8_t {
 		ACCOUNT,
 		PLAYER,
@@ -105,7 +105,7 @@ namespace mobi_game {
 #pragma pack(push, 1)
 	struct MSDBInfo {
 		THEADER header = HEADER_MS_DB_INFO;
-#ifndef ENABLE_MT_DB_INFO
+#if !__MT_DB_INFO__
 		TSIZE size{};
 		TSIZE cache_sizes[static_cast<uint8_t>(ECacheType::CACHE_TYPE_MAX)]{};
 #else
@@ -126,7 +126,7 @@ namespace mobi_game {
 		uint32_t acc_id{};
 	};
 
-#ifndef ENABLE_MT_DB_INFO
+#if !__MT_DB_INFO__
 	struct MSDataUpdate {
 		THEADER header = HEADER_MS_DATA_UPDATE;
 		TSIZE size{};
@@ -431,12 +431,12 @@ namespace mobi_game {
 	struct TWarElem {
 		uint32_t gids[2]{};
 		uint32_t scores[2]{};
-#ifdef FIGHTER_SCORE_SYNC
+#if __FIGHTER_SCORE_SYNC__
 		TSIZE team_size[2]{}; //TWar Fighter list
 #endif
 	};
 
-#ifdef FIGHTER_SCORE_SYNC
+#if __FIGHTER_SCORE_SYNC__
 	struct TWarFighter {
 		uint32_t pid{};
 		uint32_t kills{};

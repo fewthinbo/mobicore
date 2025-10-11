@@ -8,7 +8,7 @@
 #include <typeindex>
 #include <string>
 
-//#define _JSON_LOG
+//#define __JSON_LOG__
 
 
 using type_json = nlohmann::json;
@@ -127,7 +127,7 @@ namespace NSingletons {
 			}
 
 			// Debug için tip bilgisi
-#if defined(DEBUG) && defined(_JSON_LOG)
+#if defined(DEBUG) && defined(__JSON_LOG__)
 			LOG_TRACE("valcmp type info - Raw type: ?, Is string literal/const char*: ?, Is std::string: ?, Is decayed std::string: ?",
 				typeid(T).name(),
 				std::is_convertible_v<T, const char*>,
@@ -140,7 +140,7 @@ namespace NSingletons {
 			if constexpr (std::is_convertible_v<T, const char*> || std::is_same_v<clearType, std::string>) {
 				try {
 					if (!j[_field].is_string()) {
-#if defined(DEBUG) && defined(_JSON_LOG)
+#if defined(DEBUG) && defined(__JSON_LOG__)
 						LOG_WARN("Field ? is not a string", _field);
 #endif
 						return false;
@@ -160,7 +160,7 @@ namespace NSingletons {
 						return false;
 					}
 					auto comp = j[_field].get<clearType>();
-#if defined(DEBUG) && defined(_JSON_LOG)
+#if defined(DEBUG) && defined(__JSON_LOG__)
 					LOG_TRACE("int/uint: valcmp comparing - Field: ?, Value in JSON: ?, Expected Value: ?", _field, comp, _value);
 #endif
 					return comp == _value;

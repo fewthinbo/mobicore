@@ -7,7 +7,7 @@ namespace NSingletons {
 	std::string CAbstractLogger::TimeToStr(const std::chrono::system_clock::time_point& _tm) const {
 		time_t nTime = std::chrono::system_clock::to_time_t(_tm);
 		struct tm timeinfo {};
-#ifdef PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS
 		localtime_s(&timeinfo, &nTime);
 #else
 		localtime_r(&nTime, &timeinfo);
@@ -21,7 +21,7 @@ namespace NSingletons {
 		auto now = std::chrono::system_clock::now();
 		time_t now_time = std::chrono::system_clock::to_time_t(now);
 		struct tm timeinfo;
-#ifdef PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS
 		localtime_s(&timeinfo, &now_time);
 #else
 		localtime_r(&now_time, &timeinfo);

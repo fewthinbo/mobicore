@@ -40,7 +40,7 @@ namespace mobi_game {
 		bool HandleKeyExchange(TDataRef data);
 		bool HandleForwardPacket(TDataRef data) const;
 		bool HandleValidateLogin(TDataRef data);
-#ifndef ENABLE_MT_DB_INFO
+#if !__MT_DB_INFO__
 		bool HandleGetCache(TDataRef data); //yeni acc kaydini senkronize et
 #endif
 	public: //util

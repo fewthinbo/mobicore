@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#ifndef MOBICORE
+#if !__MOBICORE__
 typedef struct packet_messenger_list_offline
 {
 	BYTE connected; // always 0
@@ -23,7 +23,7 @@ typedef struct command_chat
 {
 	...
 	BYTE	type;
-#ifdef MOBICORE
+#if __MOBICORE__
 	uint16_t code_page{};
 #endif
 } TPacketCGChat;
@@ -32,7 +32,7 @@ typedef struct command_whisper
 {
 	...
 	char 	szNameTo[CHARACTER_NAME_MAX_LEN + 1];
-#ifdef MOBICORE
+#if __MOBICORE__
 	uint16_t code_page{};
 #endif
 } TPacketCGWhisper;
@@ -40,7 +40,7 @@ typedef struct command_whisper
 enum 
 {
 	MESSENGER_SUBHEADER_GC_LIST,
-#ifndef MOBICORE
+#if !__MOBICORE__
 	MESSENGER_SUBHEADER_GC_LOGIN,
 	MESSENGER_SUBHEADER_GC_LOGOUT,
 #else

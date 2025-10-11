@@ -1,10 +1,10 @@
 #pragma once
-#ifdef MOBICORE
+#if __MOBICORE__
 #include <memory>
 #include "db.h"
 #endif
 namespace mobi_game {
-#if !defined(ENABLE_MT_DB_INFO)
+#if !__MT_DB_INFO__
 	namespace query {
 		static constexpr const char* ACCOUNT_WITH_EMPIRE =
 			"SELECT a.id, a.login, pi.empire, a.email, "
@@ -33,7 +33,7 @@ namespace mobi_game {
 
 		static constexpr const char* MESSENGER_LIST = "SELECT account, companion FROM player.messenger_list";
 	}
-#if defined(MOBICORE)
+#if __MOBICORE__
 	namespace utils {
 		inline std::unique_ptr<SQLMsg> GetResultOfQuery(const char* query) {
 			auto& db_inst = DBManager::instance();

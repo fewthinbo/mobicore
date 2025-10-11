@@ -268,17 +268,17 @@ namespace network {
         }
 
         THEADER header = data[0];
-#ifdef _DEBUG
+#if _DEBUG
         LOG_TRACE("Writing packet: header(?)", header);
 #endif
 
-#ifdef _MOBI_PACKET_ENCRYPTION
+#if __MOBI_PACKET_ENCRYPTION__
         if (encrypt && is_encrypted_ && crypto_) {
             if (!crypto_->encrypt(data)) {
                 session_handle_error("Encryption failed");
                 return ESendResult::ENCRYPTION_FAILED;
             }
-#ifdef _DEBUG
+#if _DEBUG
             else {
                 LOG_TRACE("Data encrypted successfully for header(?)", header);
             }
@@ -287,7 +287,7 @@ namespace network {
 #endif
 
         // Prevent unbounded queue growth
-        #ifdef _DEBUG   
+        #if _DEBUG   
         static constexpr size_t MAX_WRITE_QUEUE_SIZE = 100;
         #else
         static constexpr size_t MAX_WRITE_QUEUE_SIZE = 100000;
@@ -300,7 +300,7 @@ namespace network {
 
         write_queue_.emplace_back(std::move(data));
 
-#ifdef _DEBUG
+#if _DEBUG
         if (write_queue_.size() % 100 == 0) {
             LOG_WARN("Write queue size: ?", write_queue_.size());
         }

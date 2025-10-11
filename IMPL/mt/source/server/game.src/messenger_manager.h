@@ -1,9 +1,9 @@
-#ifndef __INC_MESSENGER_MANAGER_H
+#if !__INC_MESSENGER_MANAGER_H
 #define __INC_MESSENGER_MANAGER_H
 
 #include "db.h"
 
-#ifdef MOBICORE
+#if __MOBICORE__
 #include <string>
 //#include <functional>
 #include <set>
@@ -69,13 +69,13 @@ protected:
 #endif
 
 class MessengerManager : public singleton<MessengerManager>
-#ifdef MOBICORE
+#if __MOBICORE__
 	, public MessengerManagerEnhanced
 #endif
 {
 	...
 
-#ifndef MOBICORE
+#if !__MOBICORE__
 		std::set<keyT>						m_set_loginAccount;
 		std::map<keyT, std::set<keyT> >		m_Relation;
 		std::map<keyT, std::set<keyT> >		m_InverseRelation;

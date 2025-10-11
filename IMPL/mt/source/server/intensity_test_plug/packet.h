@@ -1,4 +1,4 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 HEADER_GG_MOBITEST = *****,
 #endif
 
@@ -6,7 +6,7 @@ HEADER_GG_MOBITEST = *****,
 
 #pragma pack(1)
 
-#ifdef MOBICORE
+#if __MOBICORE__
 struct TMobiTest {
 	uint8_t header = HEADER_GG_MOBITEST;
 	uint8_t intensity{};

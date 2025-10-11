@@ -7,7 +7,7 @@ function(configure_mt)
 	message(STATUS "Configuring for mt")
 	if (NOT TEST_EXECUTABLE)
 		add_compile_definitions(
-			MOBICORE 
+			__MOBICORE__
 		)
 	endif()
 

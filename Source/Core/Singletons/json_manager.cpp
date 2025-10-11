@@ -1,9 +1,9 @@
 #include "json_manager.h"
 
-#ifdef PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS
 #include <windows.h>
 #endif
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
 #include <iconv.h>
 #include <errno.h>
 #endif
@@ -38,7 +38,7 @@ namespace JSONTables {
 
 
 namespace NSingletons {
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
 	// RAII wrapper for iconv to prevent resource leaks
 	class IconvWrapper {
 	private:
@@ -170,7 +170,7 @@ namespace NSingletons {
 			return ""; // Already valid UTF-8
 		}
 
-#ifdef PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS
 		int len = MultiByteToWideChar(code_page, 0, input.c_str(), -1, NULL, 0);
 		if (len <= 0) {
 			return "";
@@ -196,7 +196,7 @@ namespace NSingletons {
 		}
 		return utf8Str;
 #endif
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
 		const char* charset = CharsetFromCodePage(code_page);
 		if (charset == nullptr) {
 			LOG_ERR("Charset of code_page(?) doesn't exists.", code_page);

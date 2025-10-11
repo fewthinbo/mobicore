@@ -90,7 +90,7 @@ if(PLATFORM_WINDOWS)
 	# Set MSVC runtime library
 	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
-		add_compile_definitions(TEST_CONSOLE)
+		add_compile_definitions(TEST_CONSOLE=1)
 	else()
 		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 	endif()
@@ -106,13 +106,13 @@ if(PLATFORM_WINDOWS)
 	)
 	# Define common preprocessor definitions from VCXPROJ
 	add_compile_definitions(
-		"$<$<CONFIG:Debug>:DEBUG;_DEBUG>"
-		"$<$<CONFIG:Release>:NDEBUG;RELEASE>"
-		"$<$<CONFIG:Dist>:NDEBUG;DIST>"
+		"$<$<CONFIG:Debug>:DEBUG=1;_DEBUG=1>"
+		"$<$<CONFIG:Release>:NDEBUG=1;RELEASE=1>"
+		"$<$<CONFIG:Dist>:NDEBUG=1;DIST=1>"
 		NOMINMAX
 		_WIN32_WINNT=0x0601
 		WIN32_LEAN_AND_MEAN
-		PLATFORM_WINDOWS
+		PLATFORM_WINDOWS=1
 	)
 
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -126,7 +126,7 @@ if(PLATFORM_WINDOWS)
 		add_compile_options(-Wall -Wextra)
 	endif()
 elseif(PLATFORM_FREEBSD)
-	add_compile_definitions(PLATFORM_FREEBSD)
+	add_compile_definitions(PLATFORM_FREEBSD=1)
 
 	# FreeBSD için statik bağlama ayarları
 	set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")  # Sadece statik kütüphaneler
@@ -141,13 +141,13 @@ elseif(PLATFORM_FREEBSD)
 	)
 	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 		add_compile_options(-O0 -g)
-		add_compile_definitions(DEBUG _DEBUG)
+		add_compile_definitions(DEBUG=1 _DEBUG=1)
 	elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 		add_compile_options(-O2)
-		add_compile_definitions(NDEBUG RELEASE)
+		add_compile_definitions(NDEBUG=1 RELEASE=1)
 	elseif(CMAKE_BUILD_TYPE STREQUAL "Dist")
 		add_compile_options(-O3)
-		add_compile_definitions(NDEBUG DIST)
+		add_compile_definitions(NDEBUG=1 DIST=1)
 	endif()
 
 	add_compile_options(
@@ -161,16 +161,12 @@ elseif(PLATFORM_FREEBSD)
 		-Wno-invalid-utf8
 	)
 
-	if (TEST_EXECUTABLE)
-		add_compile_definitions(TEST_EXECUTABLE)
-	endif()
+	add_compile_definitions(TEST_EXECUTABLE=1) #dogrudan test executable 
 endif()
 
-if(ENABLE_DB_INFO)
-	add_compile_definitions(ENABLE_MT_DB_INFO)
-endif()
-
-add_compile_definitions(_MOBI_PACKET_ENCRYPTION)
+add_compile_definitions(__MT_DB_INFO__=1)
+add_compile_definitions(__MOBI_PACKET_ENCRYPTION__=1)
+add_compile_definitions(__FIGHTER_SCORE_SYNC__=0)
 
 # Set output directories
 if(PLATFORM_WINDOWS)

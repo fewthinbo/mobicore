@@ -12,7 +12,7 @@
 #include "char_manager.h"
 #include "questmanager.h"
 
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "mobi_client.h"
 
 MessengerManagerEnhanced::~MessengerManagerEnhanced() noexcept = default;
@@ -163,7 +163,7 @@ bool MessengerManagerEnhanced::IsMessageToMobile(keyA companion) const
 
 void MessengerManager::Login(MessengerManager::keyA account)
 {
-#ifdef MOBICORE
+#if __MOBICORE__
 	if (IsAccountInGame(account))
 		return;
 
@@ -186,7 +186,7 @@ void MessengerManager::Login(MessengerManager::keyA account)
 void MessengerManager::LoadList(SQLMsg * msg)
 {
 	...
-#ifdef MOBICORE
+#if __MOBICORE__
 	auto currentStatus = GetUserStatus(account);
 	NotifyStatusChange(account, currentStatus);
 #else
@@ -200,7 +200,7 @@ void MessengerManager::LoadList(SQLMsg * msg)
 
 void MessengerManager::SendLogin(MessengerManager::keyA account, MessengerManager::keyA companion)
 {
-#ifdef MOBICORE
+#if __MOBICORE__
 	if(!companion.size()) return;
 	auto companionStatus = GetUserStatus(companion);
 	SendStatusUpdate(account, companion, companionStatus);
@@ -211,7 +211,7 @@ void MessengerManager::SendLogin(MessengerManager::keyA account, MessengerManage
 
 void MessengerManager::Logout(MessengerManager::keyA account)
 {
-#ifdef MOBICORE
+#if __MOBICORE__
 	if (!IsAccountInGame(account))
 		return;
 
@@ -239,7 +239,7 @@ void MessengerManager::Logout(MessengerManager::keyA account)
 
 void MessengerManager::SendLogout(MessengerManager::keyA account, MessengerManager::keyA companion)
 {
-#ifdef MOBICORE
+#if __MOBICORE__
 	if (!companion.size()) return;
 
 	auto companionStatus = GetUserStatus(companion);
@@ -251,7 +251,7 @@ void MessengerManager::SendLogout(MessengerManager::keyA account, MessengerManag
 
 void MessengerManager::__AddToList(MessengerManager::keyA account, MessengerManager::keyA companion)
 {
-#ifdef MOBICORE
+#if __MOBICORE__
 	m_Relation[account].insert(companion);
 	m_InverseRelation[companion].insert(account);
 
@@ -280,7 +280,7 @@ bool MessengerManager::AuthToAdd(MessengerManager::keyA account, MessengerManage
 	if (!bDeny)
 	{
 		...
-#ifdef MOBICORE
+#if __MOBICORE__
 		mobileInstance.sendMessengerAdd(account, companion);
 #endif
 	}
@@ -291,7 +291,7 @@ void MessengerManager::AddToList(MessengerManager::keyA account, MessengerManage
 {
 	...
 
-#ifdef MOBICORE
+#if __MOBICORE__
 	auto relationIt = m_Relation.find(account);
 	if (relationIt != m_Relation.end() && relationIt->second.find(companion) != relationIt->second.end())
 		return;
@@ -303,10 +303,10 @@ void MessengerManager::AddToList(MessengerManager::keyA account, MessengerManage
 	...
 }
 
-#ifdef ENABLE_PLAYER_BLOCK_SYSTEM
+#if ENABLE_PLAYER_BLOCK_SYSTEM
 void MessengerManager::__RemoveFromList(MessengerManager::keyA account, MessengerManager::keyA companion, bool isComp)
 {
-#ifdef MOBICORE
+#if __MOBICORE__
 	auto relationIt = m_Relation.find(account);
 	if (relationIt != m_Relation.end())
 	{
@@ -328,7 +328,7 @@ void MessengerManager::__RemoveFromList(MessengerManager::keyA account, Messenge
 #else
 void MessengerManager::__RemoveFromList(MessengerManager::keyA account, MessengerManager::keyA companion)
 {
-#ifdef MOBICORE
+#if __MOBICORE__
 	auto relationIt = m_Relation.find(account);
 	if (relationIt != m_Relation.end()){
 		relationIt->second.erase(companion);
@@ -349,7 +349,7 @@ void MessengerManager::__RemoveFromList(MessengerManager::keyA account, Messenge
 
 bool MessengerManager::IsInList(MessengerManager::keyA account, MessengerManager::keyA companion)
 {
-#ifdef MOBICORE
+#if __MOBICORE__
 	auto relationIt = m_Relation.find(account);
 	if (relationIt == m_Relation.end())
 		return false;
@@ -366,7 +366,7 @@ bool MessengerManager::IsInList(MessengerManager::keyA account, MessengerManager
 
 void MessengerManager::RemoveAllList(keyA account)
 {
-#ifdef MOBICORE
+#if __MOBICORE__
 	auto relationIt = m_Relation.find(account);
 	if (relationIt == m_Relation.end())
 		return;
@@ -390,7 +390,7 @@ void MessengerManager::SendList(MessengerManager::keyA account)
 	if (!d)
 		return;
 
-#ifdef MOBICORE
+#if __MOBICORE__
 	auto relationIt = m_Relation.find(account);
 	if (relationIt == m_Relation.end())
 		return;

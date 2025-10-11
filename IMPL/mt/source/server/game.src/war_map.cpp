@@ -1,4 +1,4 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "mobi_client.h"
 #endif
 
@@ -6,7 +6,7 @@ bool CWarMap::SetEnded()
 {
 	if (m_pkEndEvent)
 		return false;
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobileInstance.sendGuildWarEnd(m_TeamData[0].dwID, m_TeamData[1].dwID);
 #endif
 	...
@@ -16,7 +16,7 @@ bool CWarMap::SetEnded()
 void CWarMap::IncMember(LPCHARACTER ch)
 {
 	...
-#ifdef MOBICORE
+#if __MOBICORE__
 	if (ch) {
 		mobileInstance.sendGuildWarPlayerJoin(gid, ch->GetPlayerID());
 	}
@@ -28,7 +28,7 @@ void CWarMap::IncMember(LPCHARACTER ch)
 void CWarMap::DecMember(LPCHARACTER ch)
 {
 	...
-#ifdef MOBICORE
+#if __MOBICORE__
 	if (ch) {
 		mobileInstance.sendGuildWarPlayerLeave(gid, ch->GetPlayerID());
 	}
@@ -40,7 +40,7 @@ void CWarMap::DecMember(LPCHARACTER ch)
 void CWarMap::Notice(const char * psz)
 {
 	...
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobileInstance.sendGuildWarMapNotification(m_TeamData[0].dwID, m_TeamData[1].dwID, psz);
 #endif
 }
@@ -48,7 +48,7 @@ void CWarMap::Notice(const char * psz)
 void CWarMap::OnKill(LPCHARACTER killer, LPCHARACTER ch)
 {
 	...
-#ifdef MOBICORE
+#if __MOBICORE__
 	if (ch && killer) {
 		mobileInstance.sendGuildWarPlayerKill(dwKillerGuild, dwDeadGuild, killer->GetPlayerID(), ch->GetPlayerID());
 	}

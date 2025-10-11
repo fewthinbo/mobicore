@@ -1,5 +1,5 @@
 #pragma once
-//#ifdef PLATFORM_FREEBSD
+//#if PLATFORM_FREEBSD
 //#include <signal.h>
 //#include <sys/types.h>
 //#include <sys/socket.h>

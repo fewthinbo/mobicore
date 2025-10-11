@@ -25,7 +25,7 @@ namespace NSingletons {
 			default: return "";
 			}
 		}
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
 	protected:
 		virtual void DoFileStuff(const LogLevel& level, const std::string& formatted_msg) = 0;
 		//virtual ~CAbstractLogger() = default; //avoiding silence breaks.
@@ -91,10 +91,10 @@ namespace NSingletons {
 
 			formatted_message.shrink_to_fit();
 
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
 			DoFileStuff(level, formatted_message);
 #endif
-#ifdef PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS
 			printf("%s\n", formatted_message.c_str());
 #endif
 		}

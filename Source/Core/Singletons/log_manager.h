@@ -6,13 +6,13 @@
 
 #include <string>
 #include <map>
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
 #include <fstream>
 #endif
 
 namespace NSingletons {
     class CLogManager : public CSingleton<CLogManager>, public CAbstractLogger {
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
         struct LogFile {
             std::ofstream file;
             size_t line_count;
@@ -57,7 +57,7 @@ namespace NSingletons {
 #define LOG_FATAL(message, ...) NSingletons::CLogManager::getInstance().fatal("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 #define LOG_ERR(message, ...) NSingletons::CLogManager::getInstance().error("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 
-#ifdef _DEBUG
+#if _DEBUG
 #define LOG_INFO(message, ...) NSingletons::CLogManager::getInstance().info("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 #define LOG_TRACE(message, ...) NSingletons::CLogManager::getInstance().trace("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 #define LOG_WARN(message, ...) NSingletons::CLogManager::getInstance().warn("? : ?", __FUNCTION__, message, ##__VA_ARGS__)

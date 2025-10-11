@@ -8,7 +8,7 @@ INCDIR += -I.
 LIBDIR += -L/usr/local/lib
 LIBS += -lMobileClient
 #open/close this line
-CFLAGS += -DMOBICORE 
+CFLAGS += -D__MOBICORE__ 
 CPPFILE += $(shell find mobigame -name '*.cpp')
 #======Mobile=========
 

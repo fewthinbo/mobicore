@@ -37,7 +37,7 @@ namespace mobi_game {
 			DB_MANAGER = (1 << 4), //2^4
 		};
 
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 		enum class EDataUpdateTypes/*created for MSDataUpdate::type*/ : uint8_t {
 			CREATE_PLAYER,
 			DELETE_PLAYER,

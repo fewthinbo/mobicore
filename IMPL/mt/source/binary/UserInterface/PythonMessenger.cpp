@@ -1,4 +1,4 @@
-#ifndef MOBICORE
+#if !__MOBICORE__
 void CPythonMessenger::OnFriendLogin(const char * c_szKey/*, const char * c_szName*/)
 {
 	...
@@ -26,7 +26,7 @@ void CPythonMessenger::UpdateFriendStatus(const char * name, uint16_t status)
 
 	...
 
-#ifndef MOBICORE
+#if !__MOBICORE__
 	Py_InitModule("messenger", s_methods);
 #else
 	auto* poModule = Py_InitModule("messenger", s_methods);

@@ -9,7 +9,7 @@
 #include "config_manager.h"
 #include "queries.h"
 
-#ifdef PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS
 #include "../Test/Console/DatabaseManager.h"
 #endif
 using namespace network;
@@ -80,7 +80,7 @@ namespace mobi_game {
 		}
 
 		//IMPORTANT: adres tuttuklari icin member json icerigini yenilemeden once invalid et.
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 		if (db_info_) {
 			db_info_.reset();
 		}
@@ -96,7 +96,7 @@ namespace mobi_game {
 
 		if (!CheckInfoFields()) return;
 
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 		const type_json& dbInfo = f_info_->json_converted->operator[](JFields::DB);
 
 		db_info_ = std::make_unique<TDBInfo>(
@@ -117,14 +117,14 @@ namespace mobi_game {
 	std::vector<uint8_t> CAdminDataManager::GetDBCache() {
 		LOG_TRACE("Writing.");
 		TMP_BUFFER buf(sizeof(MSDBInfo));
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 		MSDBInfo packet{};
 		network::TMP_BUFFER::str_copy(packet.host, sizeof(packet.host), db_info_->host.c_str());
 		network::TMP_BUFFER::str_copy(packet.user, sizeof(packet.user), db_info_->user.c_str());
 		network::TMP_BUFFER::str_copy(packet.password, sizeof(packet.password), db_info_->password.c_str());
 		buf.write(&packet, sizeof(MSDBInfo));
 		LOG_TRACE("Successfully wrote.");
-#elif defined(MOBICORE)
+#elif __MOBICORE__
 		MSDBInfo packet{};
 		packet.size = sizeof(MSDBInfo);
 
@@ -233,7 +233,7 @@ namespace mobi_game {
 				}
 			}
 		}
-#elif (PLATFORM_WINDOWS) //ifndef ENABLE_MT_DB_INFO and ifndef mobicore: send random test db data
+#elif PLATFORM_WINDOWS //ifndef __MT_DB_INFO__ and ifndef mobi: send random test db data
 		DatabaseManager dbManager;
 		dbManager.initialize();
 		return dbManager.GetDbBuffer();

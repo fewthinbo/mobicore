@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "war_map.h"
 #endif
 
@@ -49,7 +49,7 @@ namespace mobi_game {
 		sync_packet_sent_ = true;
 	}
 
-#ifdef MOBICORE
+#if __MOBICORE__
 	static void WritePids(TMP_BUFFER& buf) {
 		std::vector<uint32_t> pids{};
 		const auto& cl_desc = DESC_MANAGER::instance().GetClientSet();
@@ -85,13 +85,13 @@ namespace mobi_game {
 
 			war_pack.scores[0] = team1.iScore;
 			war_pack.scores[1] = team2.iScore;
-#ifdef FIGHTER_SCORE_SYNC
+#if __FIGHTER_SCORE_SYNC__
 			war_pack.team_size[0] = team1.iMemberCount * sizeof(TWarFighter);
 			war_pack.team_size[1] = team2.iMemberCount * sizeof(TWarFighter);
 #endif
 			buf.write(&war_pack, sizeof(TWarElem));
 
-#ifdef FIGHTER_SCORE_SYNC
+#if __FIGHTER_SCORE_SYNC__
 			auto write_fighters = [&buf, war](uint32_t gid) {
 				for (const auto& pair : war->map_MemberStats) {
 					uint32_t pid = pair.first;
@@ -124,7 +124,7 @@ namespace mobi_game {
 	void GameClientBase::GetSyncData(std::vector<uint8_t>& data) const noexcept {
 		data.clear();
 
-#ifdef MOBICORE
+#if __MOBICORE__
 		const auto& cl_desc = DESC_MANAGER::instance().GetClientSet();
 		LOG_TRACE("? desc found to sync", cl_desc.size());
 		TSIZE player_size = cl_desc.size() * sizeof(uint32_t);

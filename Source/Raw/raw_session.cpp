@@ -22,7 +22,7 @@ namespace network {
 		LOG_INFO("Session started");
 
 		PostTask([this]() {
-#ifdef _MOBI_PACKET_ENCRYPTION
+#if __MOBI_PACKET_ENCRYPTION__
 			if (crypto_ && is_encrypted_) {
 				session_read_encrypted();
 				return;
@@ -40,7 +40,7 @@ namespace network {
 
 		try
 		{
-#ifdef _MOBI_PACKET_ENCRYPTION
+#if __MOBI_PACKET_ENCRYPTION__
 			is_encrypted_ = false;
 			crypto_.reset();
 #endif
@@ -112,7 +112,7 @@ namespace network {
 			});
 	}
 
-#ifdef _MOBI_PACKET_ENCRYPTION
+#if __MOBI_PACKET_ENCRYPTION__
 	void NetworkClientImpl::session_read_encrypted() {
 		if (!IsConnected()) return;
 
@@ -155,7 +155,7 @@ namespace network {
 							return;
 						}
 
-#ifdef _DEBUG
+#if _DEBUG
 						LOG_TRACE("Encrypted data(?) received.", std::string(reinterpret_cast<const char*>(data_buffer->data()), data_buffer->size()));
 #endif
 						if (!IsConnected()) {
@@ -169,7 +169,7 @@ namespace network {
 							return;
 						}
 
-#ifdef _DEBUG
+#if _DEBUG
 						THEADER header = (*data_buffer)[0];
 						LOG_TRACE("Decrypted successfully, header (?)", header);
 #endif
@@ -189,7 +189,7 @@ namespace network {
 
 	void NetworkClientImpl::session_write() {
 		if (write_queue_.empty()) {
-#ifdef _DEBUG
+#if _DEBUG
 			LOG_INFO("Write queue is empty, skipping write");
 #endif
 			return;
@@ -210,7 +210,7 @@ namespace network {
 			return;
 		}
 
-#ifdef _DEBUG
+#if _DEBUG
 		THEADER header = (*current_packet)[0];
 		LOG_TRACE("Writing packet(header:?) with size(?)", header, current_packet->size());
 #endif
@@ -228,7 +228,7 @@ namespace network {
 						LOG_TRACE("Session is not connected, skipping.");
 						return;
 					}
-#ifdef _DEBUG
+#if _DEBUG
 					LOG_TRACE("Successfully wrote packet(header:?), size(?)", header, length);
 #endif
 					if (!write_queue_.empty()) {
@@ -252,7 +252,7 @@ namespace network {
 			if (IsConnected()) {
 				if (activity_state == EActivityState::READ) {
 					PostTask([this]() {
-#ifdef _MOBI_PACKET_ENCRYPTION
+#if __MOBI_PACKET_ENCRYPTION__
 						if (crypto_ && is_encrypted_) {
 							session_read_encrypted();
 							return;
@@ -272,7 +272,7 @@ namespace network {
 				else if (activity_state == EActivityState::BOTH) {
 					PostTask([this]() {
 						session_write();
-#ifdef _MOBI_PACKET_ENCRYPTION
+#if __MOBI_PACKET_ENCRYPTION__
 						if (crypto_ && is_encrypted_) {
 							session_read_encrypted();
 							return;
@@ -287,7 +287,7 @@ namespace network {
 	}
 
 	bool NetworkClientImpl::session_enable_encryption(const std::vector<uint8_t>& key) {
-#ifdef _MOBI_PACKET_ENCRYPTION
+#if __MOBI_PACKET_ENCRYPTION__
 		if (!key_exchange_) {
 			key_exchange_ = std::make_unique<KeyExchange>();
 		}

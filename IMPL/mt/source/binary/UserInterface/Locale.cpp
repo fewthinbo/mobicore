@@ -1,4 +1,4 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include <windows.h>
 std::string ConvertUtf8ToCodePage(const std::string& utf8Input, UINT codePage) {
 	int wideLen = MultiByteToWideChar(CP_UTF8, 0, utf8Input.c_str(), -1, NULL, 0);

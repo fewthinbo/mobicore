@@ -1,4 +1,4 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "mobi_client.h"
 #endif
 
@@ -7,8 +7,8 @@ void CInputDB::PlayerCreateSuccess(LPDESC d, const char * data)
 	...
 
 	d->Packet(&pack, sizeof(TPacketGCPlayerCreateSuccess));
-#ifdef MOBICORE
-#ifdef ENABLE_MT_DB_INFO
+#if __MOBICORE__
+#if __MT_DB_INFO__
 	if (pPacketDB) {
 		mobileInstance.sendCharacterCreate(pPacketDB->player.dwID);
 	}
@@ -24,7 +24,7 @@ void CInputDB::PlayerCreateSuccess(LPDESC d, const char * data)
 void CInputDB::PlayerDeleteSuccess(LPDESC d, const char * data)
 {
 	...
-#ifdef MOBICORE
+#if __MOBICORE__
 	if (d) {
 		auto& player = d->GetAccountTable().players[account_index];
 		mobileInstance.sendCharacterDelete(player.dwID);
@@ -42,7 +42,7 @@ void CInputDB::ChangeName(LPDESC d, const char* data)
 
 	if (r.players[i].dwID == p->pid)
 	{
-#ifdef MOBICORE
+#if __MOBICORE__
 		mobileInstance.sendChangeName(p->pid, p->name);
 #endif
 	}

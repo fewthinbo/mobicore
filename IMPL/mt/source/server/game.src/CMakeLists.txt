@@ -6,6 +6,6 @@ target_include_directories(${TARGET_NAME} PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/mobigame"
 	"${CMAKE_CURRENT_SOURCE_DIR}"
 )
-target_compile_definitions(${TARGET_NAME} PRIVATE MOBICORE)
+target_compile_definitions(${TARGET_NAME} PRIVATE __MOBICORE__)
 target_link_libraries(${TARGET_NAME} PUBLIC MobileClient iconv)
 #======Mobile=========

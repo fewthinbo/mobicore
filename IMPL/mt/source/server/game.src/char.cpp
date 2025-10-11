@@ -1,9 +1,9 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "mobi_client.h"
 #endif
 
 void CHARACTER::Destroy(){
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobileInstance.sendLogout(GetPlayerID());
 #endif
 	...
@@ -18,7 +18,7 @@ void CHARACTER::PointChange(BYTE type ...)
 
 			SetLevel(GetLevel() + amount);
 			val = GetLevel();
-#ifdef MOBICORE
+#if __MOBICORE__
 			mobileInstance.sendLevelPacket(GetPlayerID(), GetLevel());
 #endif
 		...
@@ -27,7 +27,7 @@ void CHARACTER::PointChange(BYTE type ...)
 bool CHARACTER::ChangeSex()
 {
 	...
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobileInstance.sendChangeSex(GetPlayerID(), m_points.job);
 #endif
 	return true;
@@ -40,7 +40,7 @@ void CHARACTER::SetRace(BYTE race)
 	...
 
 	m_points.job = race;
-#ifdef MOBICORE
+#if __MOBICORE__
 	//mobileInstance.sendChangeRace(GetPlayerID(), race);
 #endif
 }

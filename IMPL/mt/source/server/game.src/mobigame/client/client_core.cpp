@@ -16,7 +16,7 @@ namespace mobi_game {
 
 	void GameNetworkClient::OnDisconnect() {
 		mobileInstance.SetBridgeCacheStatus(false);
-#ifdef MOBICORE
+#if __MOBICORE__
 		//messenger'da herkes offline isaretlenir.
 		MessengerManager::instance().HandleConnectionLost();
 #endif

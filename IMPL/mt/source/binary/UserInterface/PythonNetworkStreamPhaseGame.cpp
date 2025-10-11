@@ -1,4 +1,4 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "Locale.h"
 #endif
 
@@ -6,7 +6,7 @@ bool CPythonNetworkStream::SendChatPacket(const char* c_szChat, BYTE byType)
 {
 	...
 	ChatPacket.type = byType;
-#ifdef MOBICORE
+#if __MOBICORE__
 	ChatPacket.code_page = LocaleService_GetCodePage();
 #endif
 }
@@ -15,7 +15,7 @@ bool CPythonNetworkStream::SendWhisperPacket(const char* name, const char* c_szC
 {
 	...
 	WhisperPacket.wSize = sizeof(WhisperPacket) + iTextLen;
-#ifdef MOBICORE
+#if __MOBICORE__
 	WhisperPacket.code_page = LocaleService_GetCodePage();
 #endif
 	...
@@ -29,7 +29,7 @@ bool CPythonNetworkStream::RecvWhisperPacket()
 	buf[whisperPacket.wSize - sizeof(whisperPacket)] = '\0';
 
 	static char line[256];
-#ifdef MOBICORE
+#if __MOBICORE__
 	if (CPythonChat::WHISPER_TYPE_MOBILE == whisperPacket.bType)
 	{
 		std::string converted = ConvertUtf8ToCodePage(buf);
@@ -59,7 +59,7 @@ bool CPythonNetworkStream::RecvMessenger()
 	{
 		case MESSENGER_SUBHEADER_GC_LIST:
 		{
-#ifndef MOBICORE
+#if !__MOBICORE__
 			TPacketGCMessengerListOnline on;
 			while(iSize)
 			{
@@ -92,7 +92,7 @@ bool CPythonNetworkStream::RecvMessenger()
 		}
 
 	 	...
-#ifndef MOBICORE
+#if !__MOBICORE__
 		case MESSENGER_SUBHEADER_GC_LOGIN:
 		{
 			...

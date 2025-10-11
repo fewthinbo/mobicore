@@ -16,7 +16,7 @@ namespace mobi_game {
 	class GameNetworkClient;
 	class GameClientBase;
 
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 	struct TDBInfo {
 		const std::string& host;
 		const std::string& user;
@@ -44,7 +44,7 @@ namespace mobi_game {
 		std::unique_ptr<CConfigManager> config_manager_;
 
 		std::unique_ptr<TJsonFile> f_info_;
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 		std::unique_ptr<TDBInfo> db_info_;
 #endif
 		std::unique_ptr<TBridgeInfo> bridge_info_;

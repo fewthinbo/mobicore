@@ -128,7 +128,7 @@ namespace mobi_game {
 		static_part.rate_limit_block_duration_minutes = rate_limit[JFields::BLOCK_DURATION_MINUTES].get<uint32_t>();
 
 		static_part.online_counter_enabled = mobile_online_counter[JFields::ENABLED].get<bool>();
-#ifdef MOBICORE
+#if __MOBICORE__
 		auto counter_refresh_interval = mobile_online_counter[JFields::REFRESH_INTERVAL_SECONDS].get<uint16_t>();
 		mobileInstance.setOnlineRefreshInterval(std::chrono::seconds(counter_refresh_interval));
 #endif

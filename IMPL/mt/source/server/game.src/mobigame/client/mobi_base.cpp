@@ -1,9 +1,9 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "stdafx.h"
 #endif
 #include "mobi_base.h"
 
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "char.h"
 #include "char_manager.h"
 #include "p2p.h"

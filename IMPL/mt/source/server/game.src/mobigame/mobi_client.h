@@ -8,13 +8,13 @@
 #include "constants/consts.h"
 #include "client/mobi_base.h"
 
-#if !defined(ENABLE_MT_DB_INFO) && defined(MOBICORE)
+#if !__MT_DB_INFO__ && __MOBICORE__
 #include "../common/tables.h"
 class CGuild;
 struct TSimplePlayer;
 #endif
 
-#ifdef PLATFORM_WINDOWS
+#if PLATFORM_WINDOWS
 #include "constants/packets.h"
 #endif
 
@@ -60,20 +60,20 @@ namespace mobi_game {
 		bool sendGuildWarPlayerPositionUpdate(uint32_t guild_id, uint32_t pid, uint32_t pos[2]);
 		bool sendGuildWarMapNotification(uint32_t guild_id1, uint32_t guild_id2, const std::string& message);
 
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 		bool sendCharacterCreate(uint32_t pid);
-#elif defined(MOBICORE)
+#elif __MOBICORE__
 		bool sendCharacterCreate(const TSimplePlayer& player, uint32_t acc_id);
-#elif defined(PLATFORM_WINDOWS)
+#elif PLATFORM_WINDOWS
 		bool sendCharacterCreate(const MSCache::Player& player);
 #endif
 		bool sendCharacterDelete(uint32_t pid);
 
-#ifdef ENABLE_MT_DB_INFO
+#if __MT_DB_INFO__
 		bool sendGuildCreate(uint32_t guild_id);
-#elif defined(MOBICORE)
+#elif __MOBICORE__
 		bool sendGuildCreate(const CGuild& guild);
-#elif defined(PLATFORM_WINDOWS)
+#elif PLATFORM_WINDOWS
 		bool sendGuildCreate(const MSCache::Guild& guild);
 #endif
 		bool sendGuildDelete(uint32_t guild_id);

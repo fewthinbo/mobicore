@@ -1,7 +1,7 @@
 #include "log_manager.h"
 
 
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
 #include <filesystem>
 #include <chrono>
 #include <sstream>
@@ -10,7 +10,7 @@
 
 namespace NSingletons {
 
-#ifdef PLATFORM_FREEBSD
+#if PLATFORM_FREEBSD
 	CLogManager::CLogManager() {
 		InitializeLogDirectory();
 		CleanupOldLogs();

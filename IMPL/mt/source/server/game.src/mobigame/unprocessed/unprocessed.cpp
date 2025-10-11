@@ -32,7 +32,7 @@ namespace mobi_game {
 	void CUnprocessedHelper::unprocessed_process() {
 		if (!client_) return;
 		for (auto& unprocessed : unp_packets_) {
-#ifdef _DEBUG
+#if _DEBUG
 			if (!unprocessed->data.empty()) {
 				LOG_TRACE("sync, header: ?", unprocessed->data[0]);
 			}

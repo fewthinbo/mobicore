@@ -3,7 +3,7 @@ class CPythonMessenger : ...
 		...
 		
 
-#ifndef MOBICORE
+#if !__MOBICORE__
 		void OnFriendLogin(const char * c_szKey);
 		void OnFriendLogout(const char * c_szKey);
 #else

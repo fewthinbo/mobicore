@@ -1,11 +1,11 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "mobi_client.h"
 #endif
 
 void CGuild::AddMember(TPacketDGGuildMember * p)
 {
 	...
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobileInstance.sendGuildJoin(p->dwGuild, p->dwPID);
 #endif
 	if (ch)
@@ -16,13 +16,13 @@ void CGuild::AddMember(TPacketDGGuildMember * p)
 bool CGuild::RemoveMember(DWORD pid)
 {
 	...
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobileInstance.sendGuildLeave(pid);
 #endif
 	return true;
 }
 
-#ifdef MOBICORE
+#if __MOBICORE__
 void CGuild::SetWarData(int iWin, int iDraw, int iLoss) {
 	m_data.win = iWin; 
 	m_data.draw = iDraw; 

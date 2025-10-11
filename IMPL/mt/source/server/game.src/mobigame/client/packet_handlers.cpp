@@ -3,7 +3,7 @@
 #include <vector>
 #include <cstring>
 
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "db.h"
 #include "desc_manager.h"
 #endif
@@ -36,7 +36,7 @@ namespace mobi_game {
 		std::vector<uint8_t> key(data.data() + sizeof(TKeyExchange), data.data() + sizeof(TKeyExchange) + sm->size);
 		LOG_TRACE("Key exchange packet received, size(?), key(?)", sm->size, reinterpret_cast<const char*>(key.data()), key.size());
 
-#ifndef _MOBI_PACKET_ENCRYPTION
+#if !__MOBI_PACKET_ENCRYPTION__
 		return false;
 #endif
 
@@ -78,7 +78,7 @@ namespace mobi_game {
 		const char* message = reinterpret_cast<const char*>(data.data() + sizeof(SMMessage));
 
 		LOG_TRACE("Pm from mobile: message(?), sender_name(?), receiver_pid(?)", message, sm->name, sm->receiver_pid);
-#ifdef MOBICORE
+#if __MOBICORE__
 		LPDESC desc = nullptr;
 
 		//desc bul
@@ -126,7 +126,7 @@ namespace mobi_game {
 		case EUserCheckResponse::BLOCKED:
 		case EUserCheckResponse::NOT_EXIST:
 		{
-#ifdef MOBICORE
+#if __MOBICORE__
 			auto container = message_helper_->message_get_container(ms->container_id);
 			if (!container) return false;
 
@@ -156,7 +156,7 @@ namespace mobi_game {
 	bool GameClientBase::HandleMobileLogin(TDataRef data) const {
 		auto* packet = reinterpret_cast<const SMLogin*>(data.data());
 		LOG_TRACE("Mobile login packet received, name:?", packet->name);
-#ifdef MOBICORE
+#if __MOBICORE__
 		MessengerManager::instance().MobileLogin(packet->name);
 #endif
 		return true;
@@ -164,7 +164,7 @@ namespace mobi_game {
 	bool GameClientBase::HandleMobileLogout(TDataRef data) const {
 		auto* packet = reinterpret_cast<const SMLogout*>(data.data());
 		LOG_TRACE("Mobile logout packet received, name:?", packet->name);
-#ifdef MOBICORE
+#if __MOBICORE__
 		MessengerManager::instance().MobileLogout(packet->name);
 #endif
 		return true;
@@ -314,7 +314,7 @@ namespace mobi_game {
 		
 		uint32_t acc_id{};
 		bool is_valid{false};
-#ifdef MOBICORE
+#if __MOBICORE__
 		auto& db_inst = DBManager::instance();
 		std::string query = loggerInstance.WriteBuf(
 			"SELECT id, login, password FROM account.account WHERE login = ? AND password = PASSWORD(?) LIMIT 1", login, pw);
@@ -352,10 +352,10 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-#ifndef ENABLE_MT_DB_INFO
+#if !__MT_DB_INFO__
 	bool GameClientBase::HandleGetCache(TDataRef data) {
 		auto* pkt = reinterpret_cast<const SMGetCache*>(data.data());
-#ifdef MOBICORE
+#if __MOBICORE__
 		auto& db_inst = DBManager::instance();
 		std::string query = loggerInstance.WriteBuf(
 			query::ACCOUNT_WITH_EMPIRE + std::string(" WHERE a.id = ? LIMIT 1"), pkt->acc_id);

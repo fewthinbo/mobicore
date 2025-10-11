@@ -1,4 +1,4 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 namespace mobi_game {
 	class GameClientBase;
 }
@@ -8,7 +8,7 @@ class CWarMap
 {
 	...
 	friend class CGuild;
-#ifdef MOBICORE
+#if __MOBICORE__
 	friend class GameClientBase;
 #endif
 	...

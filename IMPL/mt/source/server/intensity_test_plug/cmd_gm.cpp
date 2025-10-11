@@ -1,11 +1,11 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "mobi_client.h"
 #endif
 
 ...
 
 
-#ifdef MOBICORE
+#if __MOBICORE__
 ACMD(do_mobitest) {
 	int intensity = 0; //0 kapatir
 	char arg1[256];

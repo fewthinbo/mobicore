@@ -1,4 +1,4 @@
-#ifdef MOBICORE
+#if __MOBICORE__
 #include "mobi_client.h"
 #endif
 
@@ -6,7 +6,7 @@ void heartbeat(LPHEART ht, int pulse)
 {
 	...
 	CPVPManager::instance().Process();
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobileInstance.Process();
 #endif
 	...
@@ -16,7 +16,7 @@ int main(int argc, char **argv)
 {
 	...
 
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobi_game::GameClient mobile_client; // for mobile
 #endif
 	if (!start(argc, argv)) {
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
 
 	...
 
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobile_client.Disconnect(false);
 #endif
 	sys_log(0, "<shutdown> Destroying CArenaManager...");
@@ -43,7 +43,7 @@ int start(int argc, char **argv)
 		db_clientdesc->UpdateChannelStatus(0, true);
 	}
 
-#ifdef MOBICORE
+#if __MOBICORE__
 	mobileInstance.Connect();
 #endif
 
