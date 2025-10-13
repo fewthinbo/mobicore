@@ -23,6 +23,31 @@ namespace mobi_game {
 			GM_IMPLEMENTOR
 		};
 
+		enum class ItemWindows {
+			RESERVED_WINDOW,
+			INVENTORY,
+			EQUIPMENT,
+			SAFEBOX,
+			MALL,
+			DRAGON_SOUL_INVENTORY,
+			BELT_INVENTORY,
+			GROUND,
+#ifdef __OFFSHOP__
+			IKASHOP_OFFLINESHOP,
+			IKASHOP_SAFEBOX,
+			IKASHOP_AUCTION,
+#endif
+			WINDOW_TYPE_MAX,
+		};
+
+		enum ITEM_MAXS {
+			MAX_SOCKETS_COUNT = 3, // max tas veya cevher slotu
+			MAX_ATTR_COUNT = 5 + 2, // max efsun sayisi
+			MAX_ITEM_COUNT = 200, // max item sayisi
+			MAX_INVENTORY_PAGE_SLOT = 45,
+			MAX_INVENTORY_PAGE_COUNT = 5,
+		};
+
 		enum class ENotificationSubHeader : uint8_t {
 			ADD,
 			REMOVE,

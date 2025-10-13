@@ -8,10 +8,14 @@
 #include "constants/consts.h"
 #include "client/mobi_base.h"
 
-#if !__MT_DB_INFO__ && __MOBICORE__
+#if __MOBICORE__
 #include "../common/tables.h"
+
+#if !__MT_DB_INFO__
 class CGuild;
 struct TSimplePlayer;
+#endif
+
 #endif
 
 #if PLATFORM_WINDOWS
@@ -91,6 +95,18 @@ namespace mobi_game {
 		//use wherever you want for send mobile notification to a player.
 		//Example: send when sold player's item in offshop
 		bool sendMobileNotification(uint32_t pid, const std::string& message, ENotificationChannels channel = ENotificationChannels::SYSTEM);
+#if __OFFSHOP__ && __MOBICORE__
+	public: //offshop
+		bool sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t pos, const ikashop::TPriceInfo& price);
+		bool sendShopItemUpdatePos(uint32_t owner_pid, uint32_t pos, uint32_t uptodate);
+		bool sendShopCreate(const ikashop::TShopInfo& info);
+		bool sendShopClose(uint32_t owner_pid);
+		bool sendShopUpdateDuration(uint32_t owner_pid);
+		bool sendShopUpdateSlotCount(uint32_t owner_pid, uint32_t uptodate);
+		bool sendShopItemAdd(uint32_t owner_pid, const ikashop::TShopItem& item);
+		bool sendShopItemRemove(uint32_t owner_pid, uint32_t pos);
+		bool sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t pos);
+#endif
 	public:
 		//100 intensity'de 1 saniye boyunca yazma islemi yapar.
 		bool spamTest(uint8_t intensity);

@@ -634,4 +634,142 @@ namespace mobi_game {
 
 		return SendPacket(buf.get());
 	}
+#if __OFFSHOP__ && __MOBICORE__
+	bool GameClient::sendShopCreate(const ikashop::TShopInfo& info){
+		offshop::TShopCreate pack_sec{};
+		pack_sec.duration = info.duration;
+		pack_sec.slot_count = info.lock_index;
+
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop) + sizeof(pack_sec);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::SHOP_OPEN);
+		pack.owner_pid = info.ownerid;
+
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
+		buf.write(&pack_sec, sizeof(pack_sec));
+		return SendPacket(buf.get());
+	}
+	bool GameClient::sendShopClose(uint32_t owner_pid) {
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::SHOP_CLOSE);
+		pack.owner_pid = owner_pid;
+
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
+		return SendPacket(buf.get());
+	}
+	bool GameClient::sendShopUpdateSlotCount(uint32_t owner_pid, uint32_t uptodate){
+		uint32_t slot_count = uptodate;
+
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop) + sizeof(uint32_t);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::SHOP_UPDATE_SLOT_COUNT);
+		pack.owner_pid = owner_pid;
+
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
+		buf.write(&slot_count, sizeof(uint32_t));
+		return SendPacket(buf.get());
+	}
+	bool GameClient::sendShopUpdateDuration(uint32_t owner_pid) {
+		uint32_t duration = EMisc::OFFLINESHOP_DURATION_MAX_MINUTES;
+
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop) + sizeof(uint32_t);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::SHOP_UPDATE_DURATION);
+		pack.owner_pid = owner_pid;
+
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
+		buf.write(&duration, sizeof(uint32_t));
+		return SendPacket(buf.get());
+	}
+
+	bool GameClient::sendShopItemAdd(uint32_t owner_pid, const ikashop::TShopItem& item){
+		offshop::TItemAdd pack_sec{};
+		for (int i = 0; i < MAX_ATTR_COUNT; ++i) {
+			pack_sec.attrs[i].type = item.aAttr[i].bType;
+			pack_sec.attrs[i].value = item.aAttr[i].sValue;
+		}
+		std::memcpy(pack_sec.sockets, item.alSockets, MAX_SOCKETS_COUNT);
+		pack_sec.count = item.count;
+		pack_sec.pos = item.pos;
+		pack_sec.price.cheque = item.price.cheque;
+		pack_sec.price.yang = item.price.yang;
+		pack_sec.vnum = item.vnum;
+
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop) + sizeof(pack_sec);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::ITEM_ADD);
+		pack.owner_pid = owner_pid;
+
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
+		buf.write(&pack_sec, sizeof(pack_sec));
+		return SendPacket(buf.get());
+	}
+	bool GameClient::sendShopItemRemove(uint32_t owner_pid, uint32_t pos){
+		offshop::TItemRemove pack_sec{};
+		pack_sec.pos = pos;
+
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop) + sizeof(pack_sec);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::ITEM_REMOVE);
+		pack.owner_pid = owner_pid;
+
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
+		buf.write(&pack_sec, sizeof(pack_sec));
+		return SendPacket(buf.get());
+	}
+	bool GameClient::sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t pos, const ikashop::TPriceInfo& price) {
+		offshop::TItemUpdatePrice pack_sec{};
+		pack_sec.pos = pos;
+		pack_sec.yang = price.yang;
+		pack_sec.cheque = price.cheque;
+
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop) + sizeof(pack_sec);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::ITEM_UPDATE_PRICE);
+		pack.owner_pid = owner_pid;
+
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
+		buf.write(&pack_sec, sizeof(pack_sec));
+		return SendPacket(buf.get());
+	}
+	bool GameClient::sendShopItemUpdatePos(uint32_t owner_pid, uint32_t pos, uint32_t uptodate) {
+		offshop::TItemUpdatePos pack_sec{};
+		pack_sec.pos = pos;
+		pack_sec.pos_uptodate = uptodate;
+
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop) + sizeof(pack_sec);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::ITEM_UPDATE_POS);
+		pack.owner_pid = owner_pid;
+
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
+		buf.write(&pack_sec, sizeof(pack_sec));
+		return SendPacket(buf.get());
+	}
+	bool GameClient::sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t pos) {
+		offshop::TItemBuy pack_sec{};
+		pack_sec.buyer_pid = buyer_id;
+		pack_sec.pos = pos;
+
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop) + sizeof(pack_sec);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::ITEM_BUY);
+		pack.owner_pid = owner_pid;
+
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
+		buf.write(&pack_sec, sizeof(pack_sec));
+		return SendPacket(buf.get());
+	}
+
+#endif
 }

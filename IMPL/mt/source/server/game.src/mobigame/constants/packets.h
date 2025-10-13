@@ -69,7 +69,9 @@ namespace mobi_game {
 #if !__MT_DB_INFO__
 		HEADER_SM_GET_CACHE, //sadece yeni acc kayitlari getirmek ve cache senkronizasyonu icin kullanilir.
 #endif
-
+#if	__OFFSHOP__
+		HEADER_MS_OFFSHOP,
+#endif
 		HEADER_MAX
 	};
 
@@ -90,6 +92,27 @@ namespace mobi_game {
 		CHANGE_SEX,
 		CHANGE_NAME,
 	};
+
+#ifdef __OFFSHOP__
+	enum class EOffshopStatus : uint8_t {
+		NONE, //offshop yok
+		ACTIVE, //pazar acik
+		CLOSED, // pazar kapali
+	};
+	//to bridge server & mobile
+	enum class ESubOffshop : uint8_t {
+		SHOP_INFO,  //Detayli shop bilgisi -itemler vs-
+		SHOP_OPEN,
+		SHOP_CLOSE,
+		SHOP_UPDATE_DURATION,
+		SHOP_UPDATE_SLOT_COUNT,
+		ITEM_ADD,
+		ITEM_REMOVE,
+		ITEM_BUY,
+		ITEM_UPDATE_POS,
+		ITEM_UPDATE_PRICE,
+	};
+#endif
 
 #if !__MT_DB_INFO__
 	enum class ECacheType : uint8_t {
@@ -461,6 +484,83 @@ namespace mobi_game {
 		uint8_t type{};
 		uint32_t pid{};
 	};
+#if __OFFSHOP__
+	struct MSOffshop {
+		THEADER header = HEADER_MS_OFFSHOP;
+		TSIZE size{};
+		uint8_t sub_id{};
+		uint32_t owner_pid{};
+	};
+
+	struct TAttr {
+		int16_t type{}; // efsun tipi
+		int16_t value{}; // efsun degeri
+		TAttr() = default;
+		explicit TAttr(int16_t _type, int16_t _value) : type(_type), value(_value) {}
+		~TAttr() noexcept = default;
+	};
+
+	namespace offshop {
+		struct TPriceInfo {
+			uint32_t yang{};
+			uint32_t cheque{};
+            // TPriceInfo için operator+ ve operator- fonksiyonlarını friend olarak ve global scope'ta tanımlayın
+			friend TPriceInfo operator+(const TPriceInfo& l, const TPriceInfo& r) {
+				return { l.yang + r.yang, l.cheque + r.cheque };
+			}
+			friend TPriceInfo operator-(const TPriceInfo& l, const TPriceInfo& r) {
+				return { l.yang - r.yang, l.cheque - r.cheque };
+			}
+
+			TPriceInfo& operator+=(const TPriceInfo& r) {
+				yang += r.yang;
+				cheque += r.cheque;
+				return *this;
+			}
+			TPriceInfo& operator-=(const TPriceInfo& r) {
+				yang -= r.yang;
+				cheque -= r.cheque;
+				return *this;
+			}
+			bool operator==(const TPriceInfo& other) const {
+				return other.yang == yang && other.cheque == cheque;
+			}
+		};
+
+		struct TShopCreate {
+			uint32_t duration{};
+			uint32_t slot_count{};
+		};
+
+		struct TItemAdd {
+			uint32_t vnum{};
+			uint32_t pos{};
+			uint32_t count{};
+			int16_t sockets[consts::MAX_SOCKETS_COUNT]{};
+			TAttr attrs[consts::MAX_ATTR_COUNT]{};
+			TPriceInfo price{};
+		};
+
+		struct TItemRemove {
+			uint32_t pos{};
+		};
+
+		struct TItemUpdatePos {
+			uint32_t pos{};
+			uint32_t pos_uptodate{};
+		};
+
+		struct TItemUpdatePrice {
+			uint32_t pos{};
+			TPriceInfo price{};
+		};
+
+		struct TItemBuy {
+			uint32_t buyer_pid{};
+			uint32_t pos{};
+		};
+	}
+#endif
 
 #pragma pack(pop) 
 

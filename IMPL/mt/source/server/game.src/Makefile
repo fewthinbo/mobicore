@@ -1,21 +1,3 @@
-...
-
-#======Mobile=========
-#INCDIR += -I/root/vcpkg_projects/mt_side_vcpkg_installed/x86-freebsd/include
-INCDIR += -I/usr/local/include/MobileClient/Core -I/usr/local/include/MobileClient/Raw
-INCDIR += -Imobi_game
-INCDIR += -I.
-LIBDIR += -L/usr/local/lib
-LIBS += -lMobileClient
-#open/close this line
-CFLAGS += -D__MOBICORE__ 
-CPPFILE += $(shell find mobigame -name '*.cpp')
-#======Mobile=========
-
-COBJS	= $(CFILE:%.c=$(OBJDIR)/%.o)
-CPPOBJS	= $(CPPFILE:%.cpp=$(OBJDIR)/%.o)
-...
-
 ##############################################################################
 #IF YOU HAVE External/library/libssl.a External/library/libcrypto.a /*NOT CRYPTOPP*/
 #or something in your makefile, use system libs instead of them:
@@ -42,3 +24,23 @@ CPPOBJS	= $(CPPFILE:%.cpp=$(OBJDIR)/%.o)
 #for instlal openssl 3.1 (if you need) to system
 #pkg install -y openssl31
 ##############################################################################
+
+...
+
+#======Mobile=========
+#INCDIR += -I/root/vcpkg_projects/mt_side_vcpkg_installed/x86-freebsd/include
+INCDIR += -I/usr/local/include/MobileClient/Core -I/usr/local/include/MobileClient/Raw
+INCDIR += -Imobi_game
+INCDIR += -I.
+LIBDIR += -L/usr/local/lib
+LIBS += -lMobileClient
+#open/close this line
+CFLAGS += -D__MOBICORE__ 
+CPPFILE += $(shell find mobigame -name '*.cpp')
+#======Mobile=========
+
+COBJS	= $(CFILE:%.c=$(OBJDIR)/%.o)
+CPPOBJS	= $(CPPFILE:%.cpp=$(OBJDIR)/%.o)
+...
+
+
