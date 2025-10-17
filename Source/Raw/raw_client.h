@@ -124,7 +124,7 @@ namespace network {
 		//Header'a gore descriptor kontrol eder ve gereken tum islemleri(dinamik/statik okumalarini) yapar.
 		void packet_process(THEADER header);
 		void packet_process_decrypted(std::shared_ptr<std::vector<uint8_t>> data);	
-		void packet_handle(uint32_t header, std::shared_ptr<std::vector<uint8_t>> v_data);
+		void packet_handle(THEADER header, std::shared_ptr<std::vector<uint8_t>> v_data);
 		const TPacketDescriptor* packet_get_descriptor(THEADER header) const noexcept;
 	public:
 		bool packet_register_fixed(THEADER header, size_t total_size) noexcept;

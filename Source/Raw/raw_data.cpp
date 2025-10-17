@@ -122,7 +122,7 @@ namespace network {
             });
     }
     
-    void NetworkClientImpl::packet_handle(uint32_t header, std::shared_ptr<std::vector<uint8_t>> v_data) {
+    void NetworkClientImpl::packet_handle(THEADER header, std::shared_ptr<std::vector<uint8_t>> v_data) {
         if (!v_data) return;
 
         const auto& data = *v_data;
@@ -136,16 +136,12 @@ namespace network {
         PostTask([this]() {
     #if __MOBI_PACKET_ENCRYPTION__
             if (session_is_crypted()) {
-    #if _DEBUG
                 LOG_TRACE("Passing to encrypted reading manually.");
-    #endif
                 session_read_encrypted();
                 return;
             }
     #endif
-    #if _DEBUG
             LOG_TRACE("Passing to reading manually.");
-    #endif
             session_read();
         });
     }

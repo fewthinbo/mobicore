@@ -56,7 +56,7 @@ namespace network {
         OPENSSL_CLEAR_ERRORS();
 
         // Log peer public key size
-        LOG_INFO("Received peer public key size: ?", peer_public_key.size());
+        //LOG_INFO("Received peer public key size: ?", peer_public_key.size());
 
         // Peer public key'i import et
         auto* peer_key = EVP_PKEY_new_raw_public_key(EVP_PKEY_X25519, nullptr,
@@ -94,7 +94,7 @@ namespace network {
             return false;
         }
 
-        LOG_INFO("Expected shared secret length: ?", shared_secret_len);
+        //LOG_INFO("Expected shared secret length: ?", shared_secret_len);
 
         std::vector<uint8_t> shared_secret(shared_secret_len);
         if (!openssl_compat::pkey_derive(key_ctx.get(), shared_secret.data(), &shared_secret_len)) {
@@ -103,7 +103,7 @@ namespace network {
             return false;
         }
 
-        LOG_INFO("Successfully derived shared secret of length: ?", shared_secret_len);
+        //LOG_INFO("Successfully derived shared secret of length: ?", shared_secret_len);
 
         EVP_PKEY_free(peer_key);
 
@@ -113,7 +113,7 @@ namespace network {
             return false;
         }
         
-        LOG_INFO("Derived AES key size: ?", _computed.size());
+        // LOG_INFO("Derived AES key size: ?", _computed.size());
         return true;
     }
 
@@ -122,7 +122,7 @@ namespace network {
 
         std::vector<uint8_t> derived_key(32); // AES-256 için 32 byte
 
-        LOG_INFO("Starting HKDF key derivation with shared secret size: ?", shared_secret.size());
+        //LOG_INFO("Starting HKDF key derivation with shared secret size: ?", shared_secret.size());
 
         // HKDF parametreleri
         const unsigned char salt[] = "CryptoHelperSalt";
@@ -137,7 +137,7 @@ namespace network {
             return false;
         }
 
-        LOG_INFO("Successfully derived AES key with HKDF, key size: ?", derived_key.size());
+        //LOG_INFO("Successfully derived AES key with HKDF, key size: ?", derived_key.size());
 
         _computed = derived_key;
         return true;

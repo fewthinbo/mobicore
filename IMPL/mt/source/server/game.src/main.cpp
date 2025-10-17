@@ -17,7 +17,7 @@ int main(int argc, char **argv)
 	...
 
 #if __MOBICORE__
-	mobi_game::GameClient mobile_client; // for mobile
+	mobi_game::MobiClient mobile_client; // for mobile
 #endif
 	if (!start(argc, argv)) {
 		CleanUpForEarlyExit();
@@ -44,7 +44,7 @@ int start(int argc, char **argv)
 	}
 
 #if __MOBICORE__
-	mobileInstance.Connect();
+	mobileInstance.ConnectToBridge();
 #endif
 
 	...

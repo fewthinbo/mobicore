@@ -1,4 +1,5 @@
 #pragma once
+#if __MOBICORE__
 #include <cstdint>
 #include <variant>
 #include <unordered_map>
@@ -186,3 +187,4 @@ namespace mobi_game {
 			}();
 	}
 }
+#endif

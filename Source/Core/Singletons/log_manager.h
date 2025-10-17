@@ -57,13 +57,13 @@ namespace NSingletons {
 #define LOG_FATAL(message, ...) NSingletons::CLogManager::getInstance().fatal("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 #define LOG_ERR(message, ...) NSingletons::CLogManager::getInstance().error("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 
-#if _DEBUG
+//#if DEBUG
 #define LOG_INFO(message, ...) NSingletons::CLogManager::getInstance().info("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 #define LOG_TRACE(message, ...) NSingletons::CLogManager::getInstance().trace("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 #define LOG_WARN(message, ...) NSingletons::CLogManager::getInstance().warn("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
-#else
-#define DO_NOTHING do {} while(0) //not void to supress warnings
-#define LOG_INFO(message, ...) DO_NOTHING
-#define LOG_TRACE(message, ...) DO_NOTHING
-#define LOG_WARN(message, ...) DO_NOTHING
-#endif
+//#else
+//#define DO_NOTHING do {} while(0) //not void to supress warnings
+//#define LOG_INFO(message, ...) DO_NOTHING
+//#define LOG_TRACE(message, ...) DO_NOTHING
+//#define LOG_WARN(message, ...) DO_NOTHING
+//#endif

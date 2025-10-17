@@ -34,7 +34,6 @@ bool CHARACTER::ChangeSex()
 
 }
 
-
 void CHARACTER::SetRace(BYTE race)
 {
 	...

@@ -1,7 +1,17 @@
 #pragma once
+#if __MOBICORE__
 #include <cstdint>
 
 namespace mobi_game {
+	//should be synced with bridgeServer/Common/tables.h
+	enum class ENotificationChannels {
+		SYSTEM,
+		CHAT,
+		FRIENDS,
+		GUILD,
+		EVENTS,
+		MAX,
+	};
 
 	namespace consts {
 		enum ELenghts {
@@ -32,7 +42,7 @@ namespace mobi_game {
 			DRAGON_SOUL_INVENTORY,
 			BELT_INVENTORY,
 			GROUND,
-#ifdef __OFFSHOP__
+#if __OFFSHOP__
 			IKASHOP_OFFLINESHOP,
 			IKASHOP_SAFEBOX,
 			IKASHOP_AUCTION,
@@ -58,8 +68,8 @@ namespace mobi_game {
 			NONE = (0 << 0), //0
 			NOTIFICATION_MANAGER = (1 << 1),
 			CONFIG_MANAGER = (1 << 2),
-			ONLINE_COUNTER = (1 << 3),
-			DB_MANAGER = (1 << 4), //2^4
+			P2P_MANAGER = (1 << 3),
+			DB_MANAGER = (1 << 4),
 		};
 
 #if __MT_DB_INFO__
@@ -79,3 +89,4 @@ namespace mobi_game {
 		};
 	}
 }
+#endif

@@ -1,3 +1,7 @@
+#if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
 #include "message_queue.h"
 
 #include <chrono>
@@ -8,7 +12,7 @@
 #include "constants/packets.h"
 
 #include "constants/consts.h"
-#include "client/client_core.h"
+#include "client/client_base.h"
 
 using namespace network;
 
@@ -90,3 +94,4 @@ namespace mobi_game {
         return it != message_queue_.end() ? it->get() : nullptr;
     }
 }
+#endif

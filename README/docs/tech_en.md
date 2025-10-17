@@ -24,12 +24,9 @@ When new characters, accounts or guilds are created:
 - 'RANDOM_STRONG_PASS' length should be lower than PASSWORD_MAX_LENGTH(32)
 ```sql
 CREATE USER 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP' IDENTIFIED BY 'RANDOM_STRONG_PASS';
-GRANT SELECT (id, login, empire, email) ON account.account* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT (mID, mAuthority) ON common.gm_list* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.player* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.guild* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.guild_member* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.messenger_list* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT (id, login, email) ON account.account TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT (mID, mAuthority) ON common.gmlist TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
 FLUSH PRIVILEGES;
 ```
 - After that put the infos to db fields in "/usr/mobile/info.json"

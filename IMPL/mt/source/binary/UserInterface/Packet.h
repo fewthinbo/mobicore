@@ -6,6 +6,12 @@ typedef struct packet_messenger_list_offline
 	BYTE length;
 } TPacketGCMessengerListOffline;
 
+enum
+{
+	MESSENGER_CONNECTED_STATE_OFFLINE,
+	MESSENGER_CONNECTED_STATE_ONLINE,
+};
+
 typedef struct packet_messenger_list_online
 {
 	BYTE connected; // always 1
@@ -50,15 +56,6 @@ typedef struct command_whisper
 	uint16_t code_page{};
 #endif
 } TPacketCGWhisper;
-
-
-#if !__MOBICORE__	
-enum
-{
-	MESSENGER_CONNECTED_STATE_OFFLINE,
-	MESSENGER_CONNECTED_STATE_ONLINE,
-};
-#endif
 
 enum 
 {

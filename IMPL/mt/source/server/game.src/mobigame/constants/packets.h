@@ -1,4 +1,5 @@
 #pragma once
+#if __MOBICORE__
 #include <Network/common.h>
 #include "packet_constants.h"
 
@@ -93,7 +94,7 @@ namespace mobi_game {
 		CHANGE_NAME,
 	};
 
-#ifdef __OFFSHOP__
+#if __OFFSHOP__
 	enum class EOffshopStatus : uint8_t {
 		NONE, //offshop yok
 		ACTIVE, //pazar acik
@@ -223,6 +224,7 @@ namespace mobi_game {
 	struct TKeyExchange {
 		THEADER header{};
 		TSIZE size{};
+		bool is_auth_core{};
 	};
 
 	struct SMLogin {
@@ -504,7 +506,7 @@ namespace mobi_game {
 		struct TPriceInfo {
 			uint32_t yang{};
 			uint32_t cheque{};
-            // TPriceInfo için operator+ ve operator- fonksiyonlarını friend olarak ve global scope'ta tanımlayın
+			// TPriceInfo için operator+ ve operator- fonksiyonlarını friend olarak ve global scope'ta tanımlayın
 			friend TPriceInfo operator+(const TPriceInfo& l, const TPriceInfo& r) {
 				return { l.yang + r.yang, l.cheque + r.cheque };
 			}
@@ -566,3 +568,4 @@ namespace mobi_game {
 
 }
 
+#endif

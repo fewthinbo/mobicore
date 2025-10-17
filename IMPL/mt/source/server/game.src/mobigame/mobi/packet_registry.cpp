@@ -1,39 +1,42 @@
-#include "mobi_base.h"
-
-#include <vector>
+#if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
+#include "mobi_client.h"
 
 #include <Singletons/log_manager.h>
 #include <Network/buffer.h>
 
 #include "constants/packets.h"
-#include "client_core.h"
+
 #include "admin/admin_data_manager.h"
+#include "client/client_base.h"
 
 using namespace network;
 
 namespace mobi_game {
-	void GameClientBase::RegisterPackets() noexcept {
+	void MobiClient::RegisterPackets() noexcept {
 		//dynamic packets
 #if __MOBI_PACKET_ENCRYPTION__
-        client_->packet_register_dynamic(HEADER_SM_KEY_EXCHANGE, sizeof(TKeyExchange), offsetof(TKeyExchange, size));  
+        client_impl_->packet_register_dynamic(HEADER_SM_KEY_EXCHANGE, sizeof(TKeyExchange), offsetof(TKeyExchange, size));  
 #endif
-		client_->packet_register_dynamic(HEADER_SM_MESSAGE, sizeof(SMMessage), offsetof(SMMessage, size));
-		client_->packet_register_dynamic(HEADER_SM_FORWARD, sizeof(SMForward), offsetof(SMForward, size));
-		client_->packet_register_dynamic(HEADER_SM_VALIDATE_LOGIN, sizeof(SMValidateMobileLogin), offsetof(SMValidateMobileLogin, size));
+		client_impl_->packet_register_dynamic(HEADER_SM_MESSAGE, sizeof(SMMessage), offsetof(SMMessage, size));
+		client_impl_->packet_register_dynamic(HEADER_SM_FORWARD, sizeof(SMForward), offsetof(SMForward, size));
+		client_impl_->packet_register_dynamic(HEADER_SM_VALIDATE_LOGIN, sizeof(SMValidateMobileLogin), offsetof(SMValidateMobileLogin, size));
 
 		//static packets
-		client_->packet_register_fixed(HEADER_SM_CORE_AUTHORITY, sizeof(SMCoreAuthority));
-		client_->packet_register_fixed(HEADER_SM_DB_INFO, sizeof(uint8_t));
-		client_->packet_register_fixed(HEADER_SM_USER_CHECK, sizeof(SMUserCheck));
-		client_->packet_register_fixed(HEADER_SM_LOGIN, sizeof(SMLogin));
-		client_->packet_register_fixed(HEADER_SM_LOGOUT, sizeof(SMLogout));
-		client_->packet_register_fixed(HEADER_SM_CACHE_STATUS, sizeof(SMCacheStatus));
+		client_impl_->packet_register_fixed(HEADER_SM_CORE_AUTHORITY, sizeof(SMCoreAuthority));
+		client_impl_->packet_register_fixed(HEADER_SM_DB_INFO, sizeof(uint8_t));
+		client_impl_->packet_register_fixed(HEADER_SM_USER_CHECK, sizeof(SMUserCheck));
+		client_impl_->packet_register_fixed(HEADER_SM_LOGIN, sizeof(SMLogin));
+		client_impl_->packet_register_fixed(HEADER_SM_LOGOUT, sizeof(SMLogout));
+		client_impl_->packet_register_fixed(HEADER_SM_CACHE_STATUS, sizeof(SMCacheStatus));
 #if !__MT_DB_INFO__
-		client_->packet_register_fixed(HEADER_SM_GET_CACHE, sizeof(SMGetCache));
+		client_impl_->packet_register_fixed(HEADER_SM_GET_CACHE, sizeof(SMGetCache));
 #endif
 	}
 
-	bool GameClientBase::HandlePacket(THEADER header, const std::vector<uint8_t>& data) {
+	bool MobiClient::HandlePacket(THEADER header, const std::vector<uint8_t>& data) {
 		bool result = false;
         bool any_match = true;
 		
@@ -78,6 +81,7 @@ namespace mobi_game {
 			}
 			case HEADER_SM_VALIDATE_LOGIN: {
 				result = HandleValidateLogin(data);
+				LOG_TRACE("Login validate packet handled result(?)", result);
 				break;
 			}
 #if !__MT_DB_INFO__
@@ -88,7 +92,6 @@ namespace mobi_game {
 #endif
             default:
                 any_match = false;
-                result = false;
                 break;
         }
 
@@ -102,3 +105,4 @@ namespace mobi_game {
 		return result;
 	}
 }
+#endif

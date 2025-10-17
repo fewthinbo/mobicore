@@ -1,21 +1,28 @@
-#include "mobi_base.h"
-
-#include <vector>
-
 #if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
+#include "mobi_client.h"
+
+#if __BUILD_FOR_GAME__
 #include "war_map.h"
+#include "desc_manager.h"
+#include "desc.h"
+#include "char.h"
 #endif
 
 #include <Singletons/log_manager.h>
-#include <Network/buffer.h>
+
+#include "client/client_base.h"
 
 #include "constants/packets.h"
-#include "client_core.h"
 
 using namespace network;
 
 namespace mobi_game {
-	void GameClientBase::SendSync() {
+	using namespace consts;
+
+	void MobiClient::SendSync() {
 		if (sync_packet_sent_) return;
 		if (!bridge_cache_ready_) return;
 
@@ -38,7 +45,7 @@ namespace mobi_game {
 		}
 
 		//unprocessed olarak eklenmesi istenmedigi icin direkt Send() kullaniliyor.
-		if (client_->Send(data) != ESendResult::SUCCESS) {
+		if (client_impl_->Send(data) != ESendResult::SUCCESS) {
 			LOG_TRACE("sync packet couldn't sent, will retry");
 			++retry_count;
 			return;
@@ -49,13 +56,10 @@ namespace mobi_game {
 		sync_packet_sent_ = true;
 	}
 
-#if __MOBICORE__
-	static void WritePids(TMP_BUFFER& buf) {
+#if __BUILD_FOR_GAME__
+	std::pair<TSIZE, uint32_t> MobiClient::WritePids(TMP_BUFFER& buf) const noexcept {
 		std::vector<uint32_t> pids{};
 		const auto& cl_desc = DESC_MANAGER::instance().GetClientSet();
-		size_t desc_count = cl_desc.size();
-		pids.resize(desc_count);
-
 		for (const auto& d : cl_desc) {
 			if (!d) continue;
 			auto ch = d->GetCharacter();
@@ -65,19 +69,24 @@ namespace mobi_game {
 			pids.emplace_back(pid);
 		}
 
-		buf.write(pids.data(), sizeof(uint32_t) * desc_count);
+		auto pid_count = pids.size();
+		auto total_size = sizeof(uint32_t) * pid_count;
+		buf.write(pids.data(), total_size);
+		return { total_size, pid_count };
 	}
 
-	static void WriteWars(TMP_BUFFER& buf) {
-		auto get_list = [&buf](CWarMap* war) {
+	std::pair<TSIZE, uint32_t> MobiClient::WriteWars(TMP_BUFFER& buf) const noexcept {
+		size_t total_size{};
+		uint32_t war_count{};
+		auto get_list = [&buf, &total_size, &war_count](CWarMap* war) {
 			if (!war) return;
 			CGuild* gld1 = war->GetGuild(0);
 			CGuild* gld2 = war->GetGuild(1);
 
 			if (!gld1 || !gld2) return;
 
-			const auto& team1 = war->m_TeamData[0];
-			const auto& team2 = war->m_TeamData[1];
+			const auto& team1 = war->GetTeamData(0);
+			const auto& team2 = war->GetTeamData(1);
 
 			TWarElem war_pack{};
 			war_pack.gids[0] = team1.dwID;
@@ -91,9 +100,12 @@ namespace mobi_game {
 #endif
 			buf.write(&war_pack, sizeof(TWarElem));
 
+			total_size += sizeof(TWarElem);
+			war_count++;
+
 #if __FIGHTER_SCORE_SYNC__
-			auto write_fighters = [&buf, war](uint32_t gid) {
-				for (const auto& pair : war->map_MemberStats) {
+			auto write_fighters = [&buf, war, &total_size](uint32_t gid) {
+				for (const auto& pair : war) {
 					uint32_t pid = pair.first;
 					const TMemberStats* stats = pair.second;
 					if (!stats) continue;
@@ -105,6 +117,7 @@ namespace mobi_game {
 					fighter_pack.kills = stats->dwKills;
 					fighter_pack.deaths = stats->dwDeaths;
 					buf.write(&fighter_pack, sizeof(TWarFighter));
+					total_size += sizeof(TWarFighter);
 				}
 			};
 			//once team1'in fightlar ini yaz
@@ -113,7 +126,8 @@ namespace mobi_game {
 #endif
 		};
 
-		war_manager.for_each(std::move(get_list));
+		CWarMapManager::instance().for_each(std::move(get_list));
+		return { total_size, war_count };
 	}
 #endif
 
@@ -121,28 +135,27 @@ namespace mobi_game {
 	**Bir** kez bu paket calistirilmalidir cunku:
 	ara sunucu kapali, mt aciksa ve ara sunucu yeni/yeniden baslatiliyorsa, senkronizasyon ihtiyaci dogar:
 	oyuncularin bulundugu portlari -db'de olmayan bir bilgi- initialize etmek onemlidir. Aksi halde oyuncular map degistirene kadar paket alamazlar.*/
-	void GameClientBase::GetSyncData(std::vector<uint8_t>& data) const noexcept {
+	void MobiClient::GetSyncData(std::vector<uint8_t>& data) const noexcept {
 		data.clear();
 
-#if __MOBICORE__
-		const auto& cl_desc = DESC_MANAGER::instance().GetClientSet();
-		LOG_TRACE("? desc found to sync", cl_desc.size());
-		TSIZE player_size = cl_desc.size() * sizeof(uint32_t);
-
-		auto& war_manager = CWarMapManager::instance();
-		TSIZE war_size = war_manager.CountWarMap() * sizeof(TWarElem); //tahmini boyut
+#if __BUILD_FOR_GAME__
+		TMP_BUFFER buf_data{};
+		std::pair<TSIZE, uint32_t> pid_data = WritePids(buf_data);
+		std::pair<TSIZE, uint32_t> war_data = WriteWars(buf_data);
+		if (buf_data.get().empty()) return;
 
 		MSReSync packet{};
 		packet.header = HEADER_MS_SYNC;
-		packet.size = player_size + war_size;
+		packet.size = pid_data.first + war_data.first;
+		packet.count_sync = pid_data.second;
+		packet.count_war = war_data.second;
 
-		TMP_BUFFER buf(sizeof(MSReSync) + packet.size);
-
-		WritePids(buf);
-
-		WriteWars(buf);
+		TMP_BUFFER buf(packet.size);
+		buf.write(&packet, sizeof(MSReSync));
+		buf.write(buf_data.get().data(), packet.size);
 
 		data = std::move(buf.get());
 #endif
 	}
 }
+#endif

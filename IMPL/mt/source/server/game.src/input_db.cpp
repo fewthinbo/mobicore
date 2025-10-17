@@ -42,8 +42,10 @@ void CInputDB::ChangeName(LPDESC d, const char* data)
 
 	if (r.players[i].dwID == p->pid)
 	{
+		...
 #if __MOBICORE__
 		mobileInstance.sendChangeName(p->pid, p->name);
 #endif
+		d->Packet(&pgc, sizeof(TPacketGCChangeName));
 	}
 }

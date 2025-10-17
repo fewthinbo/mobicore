@@ -1,10 +1,14 @@
+#if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
 #include "containers.h"
 
 
 #include <Network/buffer.h>
 #include "constants/packets.h"
 
-#include "client/client_core.h"
+#include "client/client_base.h"
 
 using namespace network;
 
@@ -29,7 +33,7 @@ namespace mobi_game {
 		buf.write(_message.data(), packet.size);
 	}
 
-	bool TMSMessageContainer::process(GameNetworkClient* client) {
+	bool TMSMessageContainer::process(GameClientBase* client) {
 		if (!client) return false;
 		return client->Send(buf.get()) == ESendResult::SUCCESS;
 	}
@@ -54,3 +58,5 @@ namespace mobi_game {
 		return std::chrono::duration_cast<std::chrono::seconds>(now - created_time) > timeout;
 	}
 }
+
+#endif

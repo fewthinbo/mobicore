@@ -1,4 +1,5 @@
 #pragma once
+#if __MOBICORE__
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -10,7 +11,7 @@
 struct TJsonFile;
 
 namespace mobi_game {
-	class GameNetworkClient;
+	class GameClientBase;
 	class CAdminDataManager;
 
 	struct TNotification{
@@ -35,13 +36,13 @@ namespace mobi_game {
 
 	class CNotificationManager final {
 			friend class CAdminDataManager;
-			GameNetworkClient* client_ = nullptr;
+			GameClientBase* client_ = nullptr;
 			NUtility::CFlagWrapper authority_ = 0;
 			std::unique_ptr<TJsonFile> f_notification_;
 			std::chrono::system_clock::time_point last_checktime_;
 			std::vector<std::unique_ptr<TNotification>> notifications_;
 		public:
-			CNotificationManager(GameNetworkClient* client);
+			CNotificationManager(GameClientBase* client);
 			~CNotificationManager() noexcept;
 		public:
 			void LoadNotifications(bool bNeedTimeCheck = true);
@@ -49,3 +50,4 @@ namespace mobi_game {
 	};
 
 }
+#endif

@@ -155,9 +155,7 @@ namespace network {
 							return;
 						}
 
-#if _DEBUG
 						LOG_TRACE("Encrypted data(?) received.", std::string(reinterpret_cast<const char*>(data_buffer->data()), data_buffer->size()));
-#endif
 						if (!IsConnected()) {
 							LOG_TRACE("Session is not connected, skipping.");
 							return;
@@ -169,10 +167,8 @@ namespace network {
 							return;
 						}
 
-#if _DEBUG
 						THEADER header = (*data_buffer)[0];
 						LOG_TRACE("Decrypted successfully, header (?)", header);
-#endif
 						// Paketi isle
 						packet_process_decrypted(data_buffer);
 					});
@@ -189,9 +185,7 @@ namespace network {
 
 	void NetworkClientImpl::session_write() {
 		if (write_queue_.empty()) {
-#if _DEBUG
 			LOG_INFO("Write queue is empty, skipping write");
-#endif
 			return;
 		}
 
@@ -210,14 +204,9 @@ namespace network {
 			return;
 		}
 
-#if _DEBUG
-		THEADER header = (*current_packet)[0];
-		LOG_TRACE("Writing packet(header:?) with size(?)", header, current_packet->size());
-#endif
-
 		boost::asio::async_write(socket_,
 			boost::asio::buffer(current_packet->data(), current_packet->size()),
-			[this, current_packet/*life time garantisi*/, header](
+			[this, current_packet/*life time garantisi*/](
 				error_code ec, std::size_t length) {
 					if (ec) {
 						session_handle_error("write", EActivityState::WRITE, ec);
@@ -228,9 +217,7 @@ namespace network {
 						LOG_TRACE("Session is not connected, skipping.");
 						return;
 					}
-#if _DEBUG
-					LOG_TRACE("Successfully wrote packet(header:?), size(?)", header, length);
-#endif
+
 					if (!write_queue_.empty()) {
 						PostTask([this]() {
 							session_write(); 

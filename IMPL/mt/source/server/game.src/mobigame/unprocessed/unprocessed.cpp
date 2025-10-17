@@ -1,3 +1,7 @@
+#if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
 #include "unprocessed.h"
 
 #include <Singletons/log_manager.h>
@@ -6,7 +10,7 @@
 
 #include "constants/packets.h"
 #include "constants/consts.h"
-#include "client/client_core.h"
+#include "client/client_base.h"
 
 using namespace network;
 
@@ -32,11 +36,9 @@ namespace mobi_game {
 	void CUnprocessedHelper::unprocessed_process() {
 		if (!client_) return;
 		for (auto& unprocessed : unp_packets_) {
-#if _DEBUG
 			if (!unprocessed->data.empty()) {
 				LOG_TRACE("sync, header: ?", unprocessed->data[0]);
 			}
-#endif
 			if (client_->Send(unprocessed->data, unprocessed->need_encrypt) == ESendResult::SUCCESS) {
 				unprocessed->bUsed = true;
 			}
@@ -72,3 +74,4 @@ namespace mobi_game {
 		LOG_TRACE("Removed ? expired unprocessed packets", removed_count);
 	}
 }
+#endif

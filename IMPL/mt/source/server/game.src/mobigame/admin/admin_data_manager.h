@@ -1,4 +1,5 @@
 #pragma once
+#if __MOBICORE__
 #include <memory>
 #include <string>
 #include <cstdint>
@@ -13,7 +14,7 @@ struct TJsonFile;
 namespace mobi_game {
 	class CNotificationManager;
 	class CConfigManager;
-	class GameNetworkClient;
+	class MobiClient;
 	class GameClientBase;
 
 #if __MT_DB_INFO__
@@ -36,8 +37,8 @@ namespace mobi_game {
 	};
 
 	class CAdminDataManager final {
-		friend class GameClientBase;
-		GameNetworkClient* client_ = nullptr;
+		friend class MobiClient;
+		GameClientBase* client_ = nullptr;
 		NUtility::CFlagWrapper authority_ = 0;
 
 		std::unique_ptr<CNotificationManager> notification_manager_;
@@ -49,7 +50,7 @@ namespace mobi_game {
 #endif
 		std::unique_ptr<TBridgeInfo> bridge_info_;
 	public:
-		CAdminDataManager(GameNetworkClient* client);
+		CAdminDataManager(GameClientBase* client);
 		~CAdminDataManager() noexcept;
 	private:
 		bool CheckInfoFields() const;
@@ -70,3 +71,4 @@ namespace mobi_game {
 	};
 }
 
+#endif

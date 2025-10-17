@@ -1,0 +1,1 @@
+put mobigame folder to same place of game and db folder.

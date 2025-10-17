@@ -22,7 +22,6 @@ bool CShopManager::RecvShopRestoreDurationDBPacket(DWORD owner)
 {
 	...
 #if __MOBICORE__ && __OFFSHOP__
-	//TODO: shop duration'u OFFLINESHOP_DURATION_MAX_MINUTES ile guncelle bunu direkt ara sunuccuda aypabilirim.
 	mobileInstance.sendShopUpdateDuration(owner);
 #endif
 	return true;
@@ -74,9 +73,8 @@ bool CShopManager::RecvShopBuyDBPacket(DWORD buyerid, DWORD ownerid, DWORD itemi
 			if (shopItem) {
 				mobileInstance.sendShopItemBuy(ownerid, buyerid, shopItem->GetInfo().pos);
 			}
-#endif		
+#endif
 		}
 
 	return true;
 }
-

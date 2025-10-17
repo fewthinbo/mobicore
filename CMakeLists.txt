@@ -7,9 +7,6 @@ set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard to be used")
 set(CMAKE_CXX_STANDARD_REQUIRED ON CACHE BOOL "Require C++ standard")
 set(CMAKE_CXX_EXTENSIONS OFF CACHE BOOL "Disable C++ extensions")
 
-# Include custom cmake modules
-include(${CMAKE_SOURCE_DIR}/cmake/path_settings.cmake)
-
 # Detect platform
 if(WIN32)
 	set(PLATFORM_WINDOWS TRUE)
@@ -24,10 +21,10 @@ set(IS_64_BIT FALSE)
 include(CheckTypeSize)
 check_type_size("void*" SIZEOF_VOID_P)
 if(SIZEOF_VOID_P EQUAL 8)
-    message(STATUS "64-bit ortam")
+    message(STATUS "64-bit")
 	set(IS_64_BIT TRUE)
 elseif(SIZEOF_VOID_P EQUAL 4)
-    message(STATUS "32-bit ortam")
+    message(STATUS "32-bit")
 	set(IS_64_BIT FALSE)
 endif()
 
@@ -39,6 +36,8 @@ if(PLATFORM_WINDOWS)
 elseif(PLATFORM_FREEBSD)
 	set(CMAKE_C_COMPILER "clang")
 	set(CMAKE_CXX_COMPILER "clang++")
+	# Set installation prefix to /usr/local if not specified
+	set(CMAKE_INSTALL_PREFIX "/usr/local" CACHE PATH "Installation prefix" FORCE)
 	message(STATUS "Using Clang compiler on FreeBSD")
 endif()
 
@@ -55,7 +54,7 @@ file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/Source)
 file(GLOB_RECURSE SOURCES "Source/*.cpp" "Source/*.h" "Source/*.hpp")
 file(GLOB_RECURSE HEADERS "Source/*.h" "Source/*.hpp")
 
-if (TEST_EXECUTABLE OR PLATFORM_WINDOWS)
+if (PLATFORM_WINDOWS)
 	set(MOBIGAME_BASE_DIR "${CMAKE_SOURCE_DIR}/IMPL/mt/source/server/game.src/mobigame/")
 
 	file(GLOB_RECURSE MOBIGAME_SOURCES "${MOBIGAME_BASE_DIR}/*.cpp")
@@ -67,7 +66,7 @@ endif()
 
 
 # Create target based on platform
-if(PLATFORM_WINDOWS OR TEST_EXECUTABLE)
+if(PLATFORM_WINDOWS)
 	add_executable(${TARGET_NAME} ${SOURCES})
 else()
 	add_library(${TARGET_NAME} STATIC ${SOURCES})
@@ -90,7 +89,6 @@ if(PLATFORM_WINDOWS)
 	# Set MSVC runtime library
 	if(CMAKE_BUILD_TYPE STREQUAL "Debug")
 		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
-		add_compile_definitions(TEST_CONSOLE=1)
 	else()
 		set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreadedDLL")
 	endif()
@@ -114,6 +112,11 @@ if(PLATFORM_WINDOWS)
 		WIN32_LEAN_AND_MEAN
 		PLATFORM_WINDOWS=1
 	)
+	add_compile_definitions(
+		TEST_CONSOLE=1	
+		LOCAL_DB_MANAGER=0
+		__BUILD_FOR_GAME__=0
+	)
 
 	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 		add_compile_options(-g -fno-inline -fno-omit-frame-pointer)
@@ -125,6 +128,8 @@ if(PLATFORM_WINDOWS)
 	else() # if clang on Windows
 		add_compile_options(-Wall -Wextra)
 	endif()
+
+
 elseif(PLATFORM_FREEBSD)
 	add_compile_definitions(PLATFORM_FREEBSD=1)
 
@@ -151,6 +156,10 @@ elseif(PLATFORM_FREEBSD)
 	endif()
 
 	add_compile_options(
+		-m32
+		-fno-strict-aliasing
+		#-fno-exceptions
+		#-fno-rtti
 		-Wall 
 		-Wextra 
 		-Wpedantic
@@ -161,9 +170,13 @@ elseif(PLATFORM_FREEBSD)
 		-Wno-invalid-utf8
 	)
 
-	add_compile_definitions(TEST_EXECUTABLE=1) #dogrudan test executable 
+	add_compile_definitions(
+		TEST_CONSOLE=0
+		__BUILD_FOR_GAME__=1
+	)
 endif()
 
+add_compile_definitions(__MOBICORE__=1)
 add_compile_definitions(__MT_DB_INFO__=1)
 add_compile_definitions(__MOBI_PACKET_ENCRYPTION__=1)
 add_compile_definitions(__FIGHTER_SCORE_SYNC__=0)
@@ -199,6 +212,17 @@ target_include_directories(${TARGET_NAME} PUBLIC
 	"${CMAKE_SOURCE_DIR}/Source/Raw/"
 )
 
+if (PLATFORM_WINDOWS)
+	target_include_directories(${TARGET_NAME} PUBLIC
+		"${MOBIGAME_BASE_DIR}"
+	)
+elseif(PLATFORM_FREEBSD)
+	target_include_directories(${TARGET_NAME} SYSTEM PUBLIC
+		/usr/include/
+		/usr/local/include/
+	)
+endif()
+
 if (PLATFORM_FREEBSD)
 	if (IS_64_BIT)
 		target_link_directories(${TARGET_NAME} PUBLIC
@@ -213,15 +237,9 @@ if (PLATFORM_FREEBSD)
 	endif()
 endif()
 
-if (TEST_EXECUTABLE OR PLATFORM_WINDOWS)
-	target_include_directories(${TARGET_NAME} PUBLIC
-		"${MOBIGAME_BASE_DIR}"
-	)
-endif()
-
 if (PLATFORM_FREEBSD)
-	if (TEST_EXECUTABLE) #test executable icin hepsini statik linkle
-		message(STATUS "FreeBSD: Using static system libraries only")
+	if (FALSE) #bsd icin mt bagimsiz test executable; hepsini statik linkle
+		message(STATUS "FreeBSD: Using static system libraries only ")
 		set(LINK_LIBRARIES "")
 		
 		list(APPEND LINK_LIBRARIES 
@@ -237,11 +255,13 @@ if (PLATFORM_FREEBSD)
 		message(STATUS "Static libraries to link: ${LINK_LIBRARIES}")
 		target_link_libraries(${TARGET_NAME} PUBLIC ${LINK_LIBRARIES})
 	else()
-		find_package(Boost REQUIRED COMPONENTS system thread)
+		set(Iconv_IS_BUILT_IN FALSE CACHE BOOL "" FORCE)  #libiconv'ye gectim, Iconv::Iconv
+		find_package(Boost CONFIG REQUIRED COMPONENTS system thread)
 		find_package(nlohmann_json CONFIG REQUIRED)
 		find_package(OpenSSL REQUIRED)
 		find_package(ZLIB REQUIRED)
 		find_package(Iconv REQUIRED)
+
 		
 		target_link_libraries(${TARGET_NAME} 
 			PUBLIC
@@ -274,10 +294,6 @@ if(PLATFORM_WINDOWS)
 	)
 endif()
 
-if (PLATFORM_FREEBSD)
-	configure_mt()
-endif()
-
 # Configure as console application if windows
 if(MSVC)
 	set_target_properties(${TARGET_NAME} PROPERTIES 
@@ -303,14 +319,7 @@ foreach(HEADER ${HEADERS})
 	file(COPY ${HEADER} DESTINATION ${CMAKE_BINARY_DIR}/include/${TARGET_NAME}/${HEADER_DIR})
 endforeach()
 
-
-
 if(PLATFORM_FREEBSD)
-	# Set installation prefix to /usr/local if not specified
-	# if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-	set(CMAKE_INSTALL_PREFIX "/usr/local" CACHE PATH "Installation prefix" FORCE)
-	# endif()
-
 	file(REMOVE_RECURSE ${CMAKE_INSTALL_PREFIX}/include/${TARGET_NAME})
 
 	# Install the library

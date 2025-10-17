@@ -1,63 +1,63 @@
 #pragma once
 #if __MOBICORE__
-#include <memory>
-#include "db.h"
-#endif
+#include <string>
+#include <sstream>
+
 namespace mobi_game {
-#if !__MT_DB_INFO__
+#if __OFFSHOP__
+	static constexpr const char* SCHEMA_ACCOUNT = "srv1_account";
+	static constexpr const char* SCHEMA_PLAYER = "srv1_player";
+	static constexpr const char* SCHEMA_COMMON = "srv1_common";
+#else
+	static constexpr const char* SCHEMA_ACCOUNT = "account";
+	static constexpr const char* SCHEMA_PLAYER = "player";
+	static constexpr const char* SCHEMA_COMMON = "common";
+#endif
+
 	namespace query {
-		static constexpr const char* ACCOUNT_WITH_EMPIRE =
-			"SELECT a.id, a.login, pi.empire, a.email, "
-			"COALESCE(CAST(gl.mAuthority AS UNSIGNED), 0) AS authority "
-			"FROM account.account a LEFT JOIN "
-			"player.player_index "
-			"pi ON a.id = pi.id "
-			"LEFT JOIN common.gmlist gl ON gl.mID = a.id";
+#if !__MT_DB_INFO__ //@deprecated
+		static const std::string QUERY_ACCOUNT_WITH_EMPIRE = []() -> std::string {
+			std::stringstream ss;
+			ss << "SELECT a.id, a.login, pi.empire, a.email, ";
+			ss << "COALESCE(CAST(gl.mAuthority AS UNSIGNED), 0) AS authority ";
+			ss << "FROM " << SCHEMA_ACCOUNT << ".account a ";
+			ss << "LEFT JOIN " << SCHEMA_PLAYER << ".player_index pi ON a.id = pi.id ";
+			ss << "LEFT JOIN " << SCHEMA_COMMON << ".gmlist gl ON a.id = gl.mID";
+			return ss.str();
+			}();
 
-		static constexpr const char* PLAYER =
-			"SELECT "
-			"player.id, "
-			"player.account_id, "
-			"player.name, "
-			"player.job, "
-			"player.map_index, player.level, player.playtime, "
-			"player.last_play, "
-			"COALESCE(guild_member.guild_id, 0) as guild_id, "
-			"COALESCE(guild_member.is_general, 0) as is_guild_leader "
-			"FROM player.player "
-			"LEFT JOIN guild_member ON player.id = guild_member.pid";
+		static const std::string QUERY_PLAYER = []() -> std::string {
+			std::stringstream ss;
+			ss << "SELECT p.id, p.account_id, p.name, p.job, ";
+			ss << "p.map_index, p.playtime, p.level, p.last_play, ";
+			ss << "COALESCE(g.guild_id, 0) as guild_id, ";
+			ss << "COALESCE(g.is_general, 0) as is_guild_leader ";
+			ss << "FROM " << SCHEMA_PLAYER << ".player p ";
+			ss << "LEFT JOIN " << SCHEMA_PLAYER << ".guild_member g ON p.id = g.pid";
+			return ss.str();
+			}();
 
-		static constexpr const char* GUILD = "SELECT id, name, master, level, win, draw, loss, ladder_point FROM player.guild";
+		static const std::string QUERY_GUILD = []() -> std::string {
+			std::stringstream ss;
+			ss << "SELECT id, name, master, level, win, draw, loss, ladder_point FROM ";
+			ss << SCHEMA_PLAYER << ".guild";
+			return ss.str();
+			}();
 
-		static constexpr const char* GUILD_MEMBER = "SELECT pid, guild_id, grade, is_general, offer FROM player.guild_member";
+		static const std::string QUERY_GUILD_MEMBER = []() -> std::string {
+			std::stringstream ss;
+			ss << "SELECT pid, guild_id, grade, is_general, offer FROM ";
+			ss << SCHEMA_PLAYER << ".guild_member";
+			return ss.str();
+			}();
 
-		static constexpr const char* MESSENGER_LIST = "SELECT account, companion FROM player.messenger_list";
-	}
-#if __MOBICORE__
-	namespace utils {
-		inline std::unique_ptr<SQLMsg> GetResultOfQuery(const char* query) {
-			auto& db_inst = DBManager::instance();
-
-			std::unique_ptr<SQLMsg> ret(db_inst.DirectQuery(query));
-			if (!ret) {
-				LOG_TRACE("Sql response of query(?) is nullptr", query);
-				return {};
-			}
-
-			SQLResult* sql_res = ret->Get();
-			if (!sql_res) {
-				LOG_TRACE("Weird stuff happened. Line(?), query(?)", __LINE__, query);
-				return {};
-			}
-
-			if (sql_res->uiNumRows == 0) {
-				LOG_TRACE("Query(?) result is empty.", query);
-				return {};
-			}
-
-			return ret;
-		}
-	}
+		static const std::string QUERY_MESSENGER_LIST = []() -> std::string {
+			std::stringstream ss;
+			ss << "SELECT account, companion FROM ";
+			ss << SCHEMA_PLAYER << ".messenger_list";
+			return ss.str();
+			}();
 #endif
-#endif
+	}
 }
+#endif

@@ -11,10 +11,9 @@
 #include "char.h"
 #include "char_manager.h"
 #include "questmanager.h"
-
 #if __MOBICORE__
+#include "db.h"
 #include "mobi_client.h"
-
 MessengerManagerEnhanced::~MessengerManagerEnhanced() noexcept = default;
 
 void MessengerManagerEnhanced::HandleConnectionLost() {

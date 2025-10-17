@@ -1,3 +1,7 @@
+#if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
 #include "config_manager.h"
 
 #include <vector>
@@ -9,13 +13,13 @@
 
 #include "constants/packets.h"
 #include "constants/consts.h"
-#include "client/client_core.h"
+#include "client/client_base.h"
 
 using namespace network;
 namespace mobi_game {
 	using namespace consts;
 
-	CConfigManager::CConfigManager(GameNetworkClient* client)
+	CConfigManager::CConfigManager(GameClientBase* client)
 		: client_(client) {}
 
 	CConfigManager::~CConfigManager() noexcept = default;
@@ -128,7 +132,7 @@ namespace mobi_game {
 		static_part.rate_limit_block_duration_minutes = rate_limit[JFields::BLOCK_DURATION_MINUTES].get<uint32_t>();
 
 		static_part.online_counter_enabled = mobile_online_counter[JFields::ENABLED].get<bool>();
-#if __MOBICORE__
+#if __BUILD_FOR_GAME__
 		auto counter_refresh_interval = mobile_online_counter[JFields::REFRESH_INTERVAL_SECONDS].get<uint16_t>();
 		mobileInstance.setOnlineRefreshInterval(std::chrono::seconds(counter_refresh_interval));
 #endif
@@ -167,3 +171,4 @@ namespace mobi_game {
 		LoadConfigFile();
 	}
 }
+#endif

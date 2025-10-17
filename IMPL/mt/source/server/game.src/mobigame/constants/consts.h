@@ -1,4 +1,5 @@
 #pragma once
+#if __MOBICORE__
 #include <cstdint>
 
 namespace mobi_game {
@@ -83,3 +84,4 @@ namespace mobi_game {
 		};
 	}
 }
+#endif

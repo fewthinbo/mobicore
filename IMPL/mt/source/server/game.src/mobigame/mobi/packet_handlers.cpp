@@ -1,11 +1,25 @@
-#include "mobi_base.h"
+#if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
 
-#include <vector>
+#include "mobi_client.h"
+
 #include <cstring>
 
-#if __MOBICORE__
-#include "db.h"
+#if __BUILD_FOR_GAME__
+#include "char.h"
+#include "char_manager.h"
+#include "p2p.h"
+#include "desc.h"
+#include "messenger_manager.h"
 #include "desc_manager.h"
+#include "config.h"
+#include "buffer_manager.h"
+#include "packet.h"
+#include "../../../common/tables.h"
+#include "../../../common/length.h"
+#include "db.h"
 #endif
 
 #include <Singletons/log_manager.h>
@@ -14,10 +28,12 @@
 #include "constants/packets.h"
 #include "constants/custom_packets.h"
 
+#include "client/client_base.h"
+#include "admin/queries.h"
 #include "admin/admin_data_manager.h"
 #include "unprocessed/message_queue.h"
 #include "unprocessed/unprocessed.h"
-#include "client_core.h"
+
 
 using namespace network;
 
@@ -25,13 +41,17 @@ namespace mobi_game {
 	using namespace consts;
 	using namespace custom_packets;
 
-	bool GameClientBase::HandleDbInfo(TDataRef data) {
+	bool MobiClient::HandleDbInfo(TDataRef data) {
+		if (!admin_data_manager_->authority_.HasFlag(EAuthorityType::DB_MANAGER)) {
+			LOG_TRACE("The core hot has authority to handle DB info request.");
+			return true;
+		}
 		LOG_TRACE("Request received.");
 		std::vector<uint8_t> db_cache = admin_data_manager_->GetDBCache();
 		return SendPacket(db_cache);
 	}
 
-	bool GameClientBase::HandleKeyExchange(TDataRef data) {
+	bool MobiClient::HandleKeyExchange(TDataRef data) {
 		auto* sm = reinterpret_cast<const TKeyExchange*>(data.data());
 		std::vector<uint8_t> key(data.data() + sizeof(TKeyExchange), data.data() + sizeof(TKeyExchange) + sm->size);
 		LOG_TRACE("Key exchange packet received, size(?), key(?)", sm->size, reinterpret_cast<const char*>(key.data()), key.size());
@@ -42,8 +62,12 @@ namespace mobi_game {
 
 		TKeyExchange key_packet{};
 		key_packet.header = HEADER_MS_KEY_EXCHANGE;
-
-		const std::vector<uint8_t>& public_key = client_->session_get_public_key();
+#if __BUILD_FOR_GAME__
+		key_packet.is_auth_core = g_bAuthServer;
+#else
+		key_packet.is_auth_core = true;
+#endif
+		const std::vector<uint8_t>& public_key = client_impl_->session_get_public_key();
 		if (public_key.empty()) {
 			LOG_ERR("Generated public key is empty");
 			return false;
@@ -66,19 +90,19 @@ namespace mobi_game {
 		//IMPORTANT: session enable encryption fonksiyonunda afterenc calisiyor, bu admin notifications settings vb bilgileri sifreli gonderecektir.
 		//burada oldugu gibi: public key'i gonderme islemi once schedule edilmelidir bu sayede ara sunucu sifreleme islemini tamamlayip sifreli verileri dogru okuyabilir.
 
-		if (!client_->session_enable_encryption(key)) {
+		if (!client_impl_->session_enable_encryption(key)) {
 			LOG_ERR("an error occured while enable encryption");
 			return false;
 		}
 		return true;
 	}
 
-	bool GameClientBase::HandleMobilePm(TDataRef data) const {
+	bool MobiClient::HandleMobilePm(TDataRef data) const {
 		auto* sm = reinterpret_cast<const SMMessage*>(data.data());
 		const char* message = reinterpret_cast<const char*>(data.data() + sizeof(SMMessage));
 
 		LOG_TRACE("Pm from mobile: message(?), sender_name(?), receiver_pid(?)", message, sm->name, sm->receiver_pid);
-#if __MOBICORE__
+#if __BUILD_FOR_GAME__
 		LPDESC desc = nullptr;
 
 		//desc bul
@@ -112,7 +136,7 @@ namespace mobi_game {
 		return true;
 	}
 
-	bool GameClientBase::HandleUserCheck(TDataRef data) const {
+	bool MobiClient::HandleUserCheck(TDataRef data) const {
 		auto* ms = reinterpret_cast<const SMUserCheck*>(data.data());
 		auto response = static_cast<EUserCheckResponse>(ms->response);
 
@@ -126,7 +150,7 @@ namespace mobi_game {
 		case EUserCheckResponse::BLOCKED:
 		case EUserCheckResponse::NOT_EXIST:
 		{
-#if __MOBICORE__
+#if __BUILD_FOR_GAME__
 			auto container = message_helper_->message_get_container(ms->container_id);
 			if (!container) return false;
 
@@ -153,24 +177,24 @@ namespace mobi_game {
 		return true;
 	}
 
-	bool GameClientBase::HandleMobileLogin(TDataRef data) const {
+	bool MobiClient::HandleMobileLogin(TDataRef data) const {
 		auto* packet = reinterpret_cast<const SMLogin*>(data.data());
 		LOG_TRACE("Mobile login packet received, name:?", packet->name);
-#if __MOBICORE__
+#if __BUILD_FOR_GAME__
 		MessengerManager::instance().MobileLogin(packet->name);
 #endif
 		return true;
 	}
-	bool GameClientBase::HandleMobileLogout(TDataRef data) const {
+	bool MobiClient::HandleMobileLogout(TDataRef data) const {
 		auto* packet = reinterpret_cast<const SMLogout*>(data.data());
 		LOG_TRACE("Mobile logout packet received, name:?", packet->name);
-#if __MOBICORE__
+#if __BUILD_FOR_GAME__
 		MessengerManager::instance().MobileLogout(packet->name);
 #endif
 		return true;
 	}
 
-	bool GameClientBase::HandleCacheStatus(TDataRef data) {
+	bool MobiClient::HandleCacheStatus(TDataRef data) {
 		auto* packet = reinterpret_cast<const SMCacheStatus*>(data.data());
 		SetBridgeCacheStatus(packet->is_ready);
 		return true;
@@ -180,12 +204,12 @@ namespace mobi_game {
 	//Those data comes from mobile devices of admins and dynamic sizes of the packets are validated from bridgeServer. 
 	//use memcpy in this function for more safety to UB
 
-	bool GameClientBase::HandleForwardPacket(TDataRef data) const {
+	bool MobiClient::HandleForwardPacket(TDataRef data) const {
 		auto* packet = reinterpret_cast<const SMForward*>(data.data());
 		auto sub_id = static_cast<ECustomPackets>(packet->sub_header);
 		const uint8_t* dynamic_data = reinterpret_cast<const uint8_t*>(data.data() + sizeof(SMForward)); //dynamic part, if you have
 		const uint8_t* data_end = reinterpret_cast<const uint8_t*>(data.data() + packet->size);
-
+		LOG_TRACE("Custom forward packet received");
 		switch (sub_id)
 		{
 		case ECustomPackets::EXAMPLE_EVENT: {
@@ -307,19 +331,18 @@ namespace mobi_game {
 		return false;
 	}
 
-	bool GameClientBase::HandleValidateLogin(TDataRef data) {
+	bool MobiClient::HandleValidateLogin(TDataRef data) {
 		auto* login = reinterpret_cast<const char*>(data.data() + sizeof(SMValidateMobileLogin));
 		auto* pw = reinterpret_cast<const char*>(login + strlen(login) + 1);
 		LOG_TRACE("Login credentials of account(id: ?, pw: ?) received", login, pw); //TODO: remove this log
-		
+#if __BUILD_FOR_GAME__
 		uint32_t acc_id{};
-		bool is_valid{false};
-#if __MOBICORE__
-		auto& db_inst = DBManager::instance();
-		std::string query = loggerInstance.WriteBuf(
-			"SELECT id, login, password FROM account.account WHERE login = ? AND password = PASSWORD(?) LIMIT 1", login, pw);
+		bool is_valid{ false };
 
-		std::unique_ptr<SQLMsg> ret(db_inst.DirectQuery(query));
+		std::string query = loggerInstance.WriteBuf(
+			"SELECT id FROM ?.account WHERE login='?' AND password = PASSWORD(?) LIMIT 1", SCHEMA_ACCOUNT, login, pw);
+
+		std::unique_ptr<SQLMsg> ret(DBManager::instance().DirectQuery(query.c_str()));
 		if (!ret) {
 			LOG_TRACE("Sql response is nullptr");
 			return false;
@@ -339,9 +362,7 @@ namespace mobi_game {
 		str_to_number(acc_id, row[0]);
 		is_valid = true;
 		LOG_TRACE("Login(?) successful", login);
-#else
 
-#endif
 		TMP_BUFFER buf(sizeof(MSValidateMobileLogin));
 
 		MSValidateMobileLogin res{};
@@ -350,18 +371,21 @@ namespace mobi_game {
 		buf.write(&res, sizeof(MSValidateMobileLogin));
 
 		return SendPacket(buf.get());
+#else
+		return false;
+#endif
 	}
 
 #if !__MT_DB_INFO__
-	bool GameClientBase::HandleGetCache(TDataRef data) {
+	bool MobiClient::HandleGetCache(TDataRef data) {
 		auto* pkt = reinterpret_cast<const SMGetCache*>(data.data());
-#if __MOBICORE__
+#if __BUILD_FOR_GAME__
 		auto& db_inst = DBManager::instance();
 		std::string query = loggerInstance.WriteBuf(
-			query::ACCOUNT_WITH_EMPIRE + std::string(" WHERE a.id = ? LIMIT 1"), pkt->acc_id);
+			query::QUERY_ACCOUNT_WITH_EMPIRE + " WHERE a.id = ? LIMIT 1", pkt->acc_id);
 		//SELECT Query calistir ve set'i guncelle. : Email ve authority field'leri gerekli ve bunlari TAccount'tan dogrudan alamiyoruz.
 
-		std::unique_ptr<SQLMsg> ret(db_inst.DirectQuery(query));
+		std::unique_ptr<SQLMsg> ret(db_inst.DirectQuery(query.c_str()));
 		if (!ret) {
 			LOG_TRACE("Sql response is nullptr");
 			return false;
@@ -398,3 +422,4 @@ namespace mobi_game {
 #endif
 
 }
+#endif

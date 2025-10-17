@@ -1,4 +1,5 @@
 #if __MOBICORE__
+#if __BUILD_FOR_GAME__
 #include "stdafx.h"
 #endif
 #include "mobi_client.h"
@@ -7,67 +8,20 @@
 #include "constants/packets.h"
 #include <Network/buffer.h>
 
-#include "admin/queries.h"
+#if __BUILD_FOR_GAME__
+#include "../../../common/tables.h"
+#endif
+
+#include "client/client_base.h"
 #include "admin/admin_data_manager.h"
+#include "unprocessed/unprocessed.h"
 #include "unprocessed/message_queue.h"
-#include "client/client_core.h"
 
 using namespace network;
 
 namespace mobi_game {
 	using namespace consts;
-	namespace test_constants {
-		constexpr auto one_hundred_bytes = u8"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-		constexpr uint16_t test_code_page = 65001; //utf8
-		constexpr auto intensity_part_budget = std::chrono::milliseconds(10);
-
-		struct STimer {
-			const char* name;
-			std::chrono::steady_clock::time_point time_start;
-			STimer(const char* task_name) : time_start(std::chrono::steady_clock::now()), name(task_name) {
-				LOG_WARN("(?) has been started", name);
-			}
-			~STimer() {
-				LOG_WARN("(?) complated in ms(?)", name,
-					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - time_start)
-				);
-			}
-		};
-	}
-
-	//Sunucudan cevap beklenilen hicbir paket gonderilmez, amac: gonderim yogunlugunu test etmektir.
-	bool GameClient::spamTest(uint8_t intensity) {
-		using namespace test_constants;
-
-		constexpr uint32_t receiver_pid = 116;
-		constexpr std::array<uint32_t, 4> pid_arr{ 1, 114, 115, 116 };
-
-		auto time_start = std::chrono::steady_clock::now();
-		auto total_budget = intensity_part_budget * intensity;
-		size_t write_counter = 0;
-
-		LOG_WARN("Waiting other tasks to finish");
-		{
-			STimer timer("Write Part");
-
-			while (std::chrono::steady_clock::now() - time_start < total_budget) {
-				for (size_t i = 0; i < pid_arr.size(); ++i) {
-					const auto& pid = pid_arr[i];
-					sendShout(pid, one_hundred_bytes, test_code_page);
-					sendMessage(pid, receiver_pid, one_hundred_bytes, test_code_page);
-				}
-				write_counter += 8;
-			}
-		}
-		LOG_WARN("Total bytes written(~?)", write_counter * 100);
-		return true;
-	}
-
-
-
-	GameClient::~GameClient() noexcept = default;
-
-	bool GameClient::sendLogin(uint32_t pid, uint32_t map_idx) {
+	bool MobiClient::sendLogin(uint32_t pid, uint32_t map_idx) {
 		if (pid == 0) return false;
 
 		MSLogin packet{};
@@ -79,7 +33,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendLogout(uint32_t pid) {
+	bool MobiClient::sendLogout(uint32_t pid) {
 		if (pid == 0) return false;
 
 		MSLogout packet{};
@@ -91,7 +45,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendMessage(uint32_t sender_pid, uint32_t receiver_pid, const std::string& message, uint16_t code_page) {
+	bool MobiClient::sendMessage(uint32_t sender_pid, uint32_t receiver_pid, const std::string& message, uint16_t code_page) {
 		if (sender_pid == 0 || receiver_pid == 0 || message.empty()) return false;
 
 		MSMessage packet{};
@@ -107,7 +61,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendShout(uint32_t pid, const std::string& message, uint16_t code_page) {
+	bool MobiClient::sendShout(uint32_t pid, const std::string& message, uint16_t code_page) {
 		if (pid == 0 || message.empty()) return false;
 
 		MSShout packet{};
@@ -123,7 +77,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendLevelPacket(uint32_t pid, uint32_t level) {
+	bool MobiClient::sendLevelPacket(uint32_t pid, uint32_t level) {
 		if (pid == 0) return false;
 
 		MSLevelUp packet{};
@@ -135,7 +89,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendUserCheck(const std::string& nameTo, const std::string& message, uint32_t sender_pid, uint16_t code_page) {
+	bool MobiClient::sendUserCheck(const std::string& nameTo, const std::string& message, uint32_t sender_pid, uint16_t code_page) {
 		if (nameTo.empty() || message.empty() || sender_pid == 0) return false;
 
 		MSUserCheck packet{};
@@ -158,7 +112,9 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendGuildJoin(uint32_t guild_id, uint32_t pid) {
+	bool MobiClient::sendGuildJoin(uint32_t guild_id, uint32_t pid) {
+		if (!IsCoreP2PManager()) return true;
+
 		if (guild_id == 0 || pid == 0) return false;
 
 		MSGuildJoin packet{};
@@ -171,7 +127,8 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendGuildLeave(uint32_t pid) {
+	bool MobiClient::sendGuildLeave(uint32_t pid) {
+		if (!IsCoreP2PManager()) return true;
 		if (pid == 0) return false;
 
 		MSGuildLeave packet{};
@@ -183,7 +140,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendMessengerAdd(const std::string& name, const std::string& target) {
+	bool MobiClient::sendMessengerAdd(const std::string& name, const std::string& target) {
 		if (name.empty() || target.empty()) return false;
 
 		MSMessengerAdd packet{};
@@ -196,7 +153,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendMessengerRemove(const std::string& name, const std::string& target) {
+	bool MobiClient::sendMessengerRemove(const std::string& name, const std::string& target) {
 		if (name.empty() || target.empty()) return false;
 
 		MSMessengerRemove packet{};
@@ -209,8 +166,8 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendOnlineCount(const int(&empires)[4]) {
-		if (!admin_data_manager_->HasAuthority(EAuthorityType::ONLINE_COUNTER)) return false;
+	bool MobiClient::sendOnlineCount(const int(&empires)[4]) {
+		if (!IsCoreP2PManager()) return true;
 		auto now = std::chrono::steady_clock::now();
 		if (std::chrono::duration_cast<std::chrono::seconds>(now - last_sent_) < refresh_interval_) return false;
 
@@ -226,7 +183,7 @@ namespace mobi_game {
 	}
 
 	//guild war packets
-	bool GameClient::sendGuildWarStart(uint32_t guild_id1, uint32_t guild_id2, uint32_t scoreLimit) {
+	bool MobiClient::sendGuildWarStart(uint32_t guild_id1, uint32_t guild_id2, uint32_t scoreLimit) {
 		if (guild_id1 == 0 || guild_id2 == 0) return false;
 
 		MSGuildWar packet{};
@@ -245,7 +202,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendGuildWarEnd(uint32_t guild_id1, uint32_t guild_id2) {
+	bool MobiClient::sendGuildWarEnd(uint32_t guild_id1, uint32_t guild_id2) {
 		if (guild_id1 == 0 || guild_id2 == 0) return false;
 
 		MSGuildWar packet{};
@@ -263,7 +220,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendGuildWarPlayerKill(uint32_t guild_id1, uint32_t guild_id2, uint32_t killer_pid, uint32_t victim_pid) {
+	bool MobiClient::sendGuildWarPlayerKill(uint32_t guild_id1, uint32_t guild_id2, uint32_t killer_pid, uint32_t victim_pid) {
 		if (guild_id1 == 0 || guild_id2 == 0 || killer_pid == 0 || victim_pid == 0) return false;
 		MSGuildWar packet{};
 		packet.header = HEADER_MS_GUILD_WAR;
@@ -282,7 +239,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendGuildWarPlayerJoin(uint32_t guild_id, uint32_t pid) {
+	bool MobiClient::sendGuildWarPlayerJoin(uint32_t guild_id, uint32_t pid) {
 		if (guild_id == 0 || pid == 0) return false;
 
 		MSGuildWar packet{};
@@ -300,7 +257,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendGuildWarPlayerLeave(uint32_t guild_id, uint32_t pid) {
+	bool MobiClient::sendGuildWarPlayerLeave(uint32_t guild_id, uint32_t pid) {
 		if (guild_id == 0 || pid == 0) return false;
 
 		MSGuildWar packet{};
@@ -318,7 +275,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendGuildWarPlayerPositionUpdate(uint32_t guild_id, uint32_t pid, uint32_t pos[2]) {
+	bool MobiClient::sendGuildWarPlayerPositionUpdate(uint32_t guild_id, uint32_t pid, uint32_t pos[2]) {
 		if (guild_id == 0 || pid == 0) return false;
 
 		MSGuildWar packet{};
@@ -338,7 +295,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendGuildWarMapNotification(uint32_t guild_id1, uint32_t guild_id2, const std::string& message) {
+	bool MobiClient::sendGuildWarMapNotification(uint32_t guild_id1, uint32_t guild_id2, const std::string& message) {
 		if (guild_id1 == 0 || guild_id2 == 0 || message.empty()) return false;
 		auto msgSize = message.size() + 1;
 
@@ -361,7 +318,8 @@ namespace mobi_game {
 
 
 #if __MT_DB_INFO__
-	bool GameClient::sendCharacterCreate(uint32_t pid) {
+	bool MobiClient::sendCharacterCreate(uint32_t pid) {
+		if (!IsCoreP2PManager()) return true;
 		if (pid == 0) return false;
 		MSDataUpdate packet{};
 		packet.type = static_cast<uint8_t>(EDataUpdateTypes::CREATE_PLAYER);
@@ -371,8 +329,9 @@ namespace mobi_game {
 		buf.write(&packet, sizeof(packet));
 		return SendPacket(buf.get());
 	}
-#elif __MOBICORE__
-	bool GameClient::sendCharacterCreate(const TSimplePlayer& player, uint32_t acc_id) {
+#elif __BUILD_FOR_GAME__
+	bool MobiClient::sendCharacterCreate(const TSimplePlayer& player, uint32_t acc_id) {
+		if (!IsCoreP2PManager()) return true;
 		if (!d) return false;
 		//TODO: sendAccountCreate de ekle. db bilgilerini aliyorken buna gerek yoktu fakat simdi gerekli.
 		//tODO: Bunlari windows icin test konsola ekle ve paketleri test et.
@@ -400,7 +359,8 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 #elif PLATFORM_WINDOWS
-	bool GameClient::sendCharacterCreate(const MSCache::Player& player) {
+	bool MobiClient::sendCharacterCreate(const MSCache::Player& player) {
+		if (!IsCoreP2PManager()) return true;
 		MSDataUpdate packet{};
 		packet.cache_type = static_cast<uint8_t>(ECacheType::PLAYER);
 		packet.is_invalidate = false;
@@ -413,8 +373,10 @@ namespace mobi_game {
 	}
 #endif
 
-	bool GameClient::sendCharacterDelete(uint32_t pid) {
+	bool MobiClient::sendCharacterDelete(uint32_t pid) {
+		if (!IsCoreP2PManager()) return true;
 		if (pid == 0) return false;
+
 
 		MSDataUpdate packet{};
 		packet.header = HEADER_MS_DATA_UPDATE;
@@ -435,7 +397,7 @@ namespace mobi_game {
 	}
 
 #if __MT_DB_INFO__
-	bool GameClient::sendGuildCreate(uint32_t guild_id) {
+	bool MobiClient::sendGuildCreate(uint32_t guild_id) {
 		if (guild_id == 0) return false;
 
 		MSDataUpdate packet{};
@@ -447,8 +409,8 @@ namespace mobi_game {
 		buf.write(&packet, sizeof(packet));
 		return SendPacket(buf.get());
 	}
-#elif __MOBICORE__
-	bool GameClient::sendGuildCreate(const CGuild& gld) {
+#elif __BUILD_FOR_GAME__
+	bool MobiClient::sendGuildCreate(const CGuild& gld) {
 		MSCache::Guild data{
 			gld.GetName(),
 			gld.GetID(),
@@ -471,7 +433,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 #elif PLATFORM_WINDOWS
-	bool GameClient::sendGuildCreate(const MSCache::Guild& gld) {
+	bool MobiClient::sendGuildCreate(const MSCache::Guild& gld) {
 		MSDataUpdate packet{};
 		packet.cache_type = static_cast<uint8_t>(ECacheType::GUILD);
 		packet.is_invalidate = false;
@@ -484,7 +446,8 @@ namespace mobi_game {
 	}
 #endif
 
-	bool GameClient::sendGuildDelete(uint32_t guild_id) {
+	bool MobiClient::sendGuildDelete(uint32_t guild_id) {
+		if (!IsCoreP2PManager()) return true;
 		if (guild_id == 0) return false;
 
 		MSDataUpdate packet{};
@@ -505,7 +468,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendLadderPoint(uint32_t guild_id, uint32_t point) {
+	bool MobiClient::sendLadderPoint(uint32_t guild_id, uint32_t point) {
 		if (guild_id == 0) return false;
 
 		MSLadderPoint packet{};
@@ -518,7 +481,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendGuildStats(uint32_t guild_id, uint32_t win, uint32_t draw, uint32_t loss) {
+	bool MobiClient::sendGuildStats(uint32_t guild_id, uint32_t win, uint32_t draw, uint32_t loss) {
 		if (guild_id == 0) return false;
 
 		MSGuildStats packet{};
@@ -533,7 +496,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendKill(uint32_t killerID, uint32_t victimID) {
+	bool MobiClient::sendKill(uint32_t killerID, uint32_t victimID) {
 		if (killerID == 0 || victimID == 0) return false;
 		if (!IsBoss(victimID)) return true;
 
@@ -547,7 +510,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendChangeRace(uint32_t pid, uint8_t race) {
+	bool MobiClient::sendChangeRace(uint32_t pid, uint8_t race) {
 		if (pid == 0) return false;
 
 		MSCharacter packet{};
@@ -565,7 +528,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendChangeSex(uint32_t pid, uint8_t sex) {
+	bool MobiClient::sendChangeSex(uint32_t pid, uint8_t sex) {
 		if (pid == 0) return false;
 
 		MSCharacter packet{};
@@ -583,7 +546,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendChangeEmpire(uint32_t pid, uint8_t empire) {
+	bool MobiClient::sendChangeEmpire(uint32_t pid, uint8_t empire) {
 		if (pid == 0) return false;
 
 		MSCharacter packet{};
@@ -601,7 +564,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendChangeName(uint32_t pid, const std::string& name) {
+	bool MobiClient::sendChangeName(uint32_t pid, const std::string& name) {
 		if (pid == 0 || name.empty()) return false;
 
 		MSCharacter packet{};
@@ -619,7 +582,7 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendMobileNotification(uint32_t pid, const std::string& message, ENotificationChannels channel) {
+	bool MobiClient::sendMobileNotification(uint32_t pid, const std::string& message, ENotificationChannels channel) {
 		if (pid == 0 || message.empty()) return false;
 
 		MSMobileNotification packet{};
@@ -634,8 +597,11 @@ namespace mobi_game {
 
 		return SendPacket(buf.get());
 	}
-#if __OFFSHOP__ && __MOBICORE__
-	bool GameClient::sendShopCreate(const ikashop::TShopInfo& info){
+#if __OFFSHOP__
+#if __BUILD_FOR_GAME__
+	bool MobiClient::sendShopCreate(const ikashop::TShopInfo& info){
+		if (!IsCoreP2PManager()) return true;
+
 		offshop::TShopCreate pack_sec{};
 		pack_sec.duration = info.duration;
 		pack_sec.slot_count = info.lock_index;
@@ -650,7 +616,9 @@ namespace mobi_game {
 		buf.write(&pack_sec, sizeof(pack_sec));
 		return SendPacket(buf.get());
 	}
-	bool GameClient::sendShopClose(uint32_t owner_pid) {
+#endif
+	bool MobiClient::sendShopClose(uint32_t owner_pid) {
+		if (!IsCoreP2PManager()) return true;
 		MSOffshop pack{};
 		pack.size = sizeof(MSOffshop);
 		pack.sub_id = static_cast<uint8_t>(ESubOffshop::SHOP_CLOSE);
@@ -660,7 +628,8 @@ namespace mobi_game {
 		buf.write(&pack, sizeof(pack));
 		return SendPacket(buf.get());
 	}
-	bool GameClient::sendShopUpdateSlotCount(uint32_t owner_pid, uint32_t uptodate){
+	bool MobiClient::sendShopUpdateSlotCount(uint32_t owner_pid, uint32_t uptodate){
+		if (!IsCoreP2PManager()) return true;
 		uint32_t slot_count = uptodate;
 
 		MSOffshop pack{};
@@ -673,9 +642,13 @@ namespace mobi_game {
 		buf.write(&slot_count, sizeof(uint32_t));
 		return SendPacket(buf.get());
 	}
-	bool GameClient::sendShopUpdateDuration(uint32_t owner_pid) {
+	bool MobiClient::sendShopUpdateDuration(uint32_t owner_pid) {
+		if (!IsCoreP2PManager()) return true;
+#if __BUILD_FOR_GAME__
 		uint32_t duration = EMisc::OFFLINESHOP_DURATION_MAX_MINUTES;
-
+#else
+		uint32_t duration = 1200;
+#endif
 		MSOffshop pack{};
 		pack.size = sizeof(MSOffshop) + sizeof(uint32_t);
 		pack.sub_id = static_cast<uint8_t>(ESubOffshop::SHOP_UPDATE_DURATION);
@@ -687,7 +660,9 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
-	bool GameClient::sendShopItemAdd(uint32_t owner_pid, const ikashop::TShopItem& item){
+#if __BUILD_FOR_GAME__
+	bool MobiClient::sendShopItemAdd(uint32_t owner_pid, const ikashop::TShopItem& item){
+		if (!IsCoreP2PManager()) return true;
 		offshop::TItemAdd pack_sec{};
 		for (int i = 0; i < MAX_ATTR_COUNT; ++i) {
 			pack_sec.attrs[i].type = item.aAttr[i].bType;
@@ -710,7 +685,9 @@ namespace mobi_game {
 		buf.write(&pack_sec, sizeof(pack_sec));
 		return SendPacket(buf.get());
 	}
-	bool GameClient::sendShopItemRemove(uint32_t owner_pid, uint32_t pos){
+#endif
+	bool MobiClient::sendShopItemRemove(uint32_t owner_pid, uint32_t pos){
+		if (!IsCoreP2PManager()) return true;
 		offshop::TItemRemove pack_sec{};
 		pack_sec.pos = pos;
 
@@ -724,11 +701,13 @@ namespace mobi_game {
 		buf.write(&pack_sec, sizeof(pack_sec));
 		return SendPacket(buf.get());
 	}
-	bool GameClient::sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t pos, const ikashop::TPriceInfo& price) {
+#if __BUILD_FOR_GAME__
+	bool MobiClient::sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t pos, const ikashop::TPriceInfo& price) {
+		if (!IsCoreP2PManager()) return true;
 		offshop::TItemUpdatePrice pack_sec{};
 		pack_sec.pos = pos;
-		pack_sec.yang = price.yang;
-		pack_sec.cheque = price.cheque;
+		pack_sec.price.yang = price.yang;
+		pack_sec.price.cheque = price.cheque;
 
 		MSOffshop pack{};
 		pack.size = sizeof(MSOffshop) + sizeof(pack_sec);
@@ -740,7 +719,9 @@ namespace mobi_game {
 		buf.write(&pack_sec, sizeof(pack_sec));
 		return SendPacket(buf.get());
 	}
-	bool GameClient::sendShopItemUpdatePos(uint32_t owner_pid, uint32_t pos, uint32_t uptodate) {
+#endif
+	bool MobiClient::sendShopItemUpdatePos(uint32_t owner_pid, uint32_t pos, uint32_t uptodate) {
+		if (!IsCoreP2PManager()) return true;
 		offshop::TItemUpdatePos pack_sec{};
 		pack_sec.pos = pos;
 		pack_sec.pos_uptodate = uptodate;
@@ -755,7 +736,8 @@ namespace mobi_game {
 		buf.write(&pack_sec, sizeof(pack_sec));
 		return SendPacket(buf.get());
 	}
-	bool GameClient::sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t pos) {
+	bool MobiClient::sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t pos) {
+		if (!IsCoreP2PManager()) return true;
 		offshop::TItemBuy pack_sec{};
 		pack_sec.buyer_pid = buyer_id;
 		pack_sec.pos = pos;
@@ -773,3 +755,5 @@ namespace mobi_game {
 
 #endif
 }
+
+#endif

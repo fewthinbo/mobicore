@@ -1,3 +1,7 @@
+#if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
 #include "notification.h"
 
 #include <vector>
@@ -7,7 +11,7 @@
 
 #include "constants/packets.h"
 #include "constants/consts.h"
-#include "client/client_core.h"
+#include "client/client_base.h"
 
 using namespace network;
 
@@ -16,7 +20,7 @@ namespace mobi_game {
 
 	CNotificationManager::~CNotificationManager() noexcept = default;
 
-	CNotificationManager::CNotificationManager(GameNetworkClient* client)
+	CNotificationManager::CNotificationManager(GameClientBase* client)
 		: client_(client) {}
 
 	//game ve db'nin bulundugu dizinde olan admin_data.json dosyasini oku ve m_notifications'a ekle.
@@ -89,3 +93,4 @@ namespace mobi_game {
 	}
 
 }
+#endif

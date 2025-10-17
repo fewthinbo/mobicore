@@ -1,18 +1,12 @@
-function(configure_mt)
+function(configure_mt) #deprecated
+	#[===[
 	if (NOT PLATFORM_FREEBSD)
 		message(STATUS "Platform is not freebsd -> Skipping configure mt")
 		return()
 	endif()
 
 	message(STATUS "Configuring for mt")
-	if (NOT TEST_EXECUTABLE)
-		add_compile_definitions(
-			__MOBICORE__
-		)
-	endif()
 
-	#mt src paths: ADJUST THESE LINES @deprecated
-	#[===[
 	set(MAIN_SRC_DIR "/usr/home/src/server" CACHE STRING "Mt main source directory")
 	set(MT_DIRS
 		"/usr/home/src/extern/include"	# extern include dir
@@ -31,8 +25,4 @@ function(configure_mt)
 		endif()
 	endforeach()
 	]===]
-	target_include_directories(${TARGET_NAME} SYSTEM PUBLIC
-		/usr/include/
-		/usr/local/include/
-	)
 endfunction()

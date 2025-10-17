@@ -1,1 +1,1 @@
-#define __MOBICORE__
+#define __MOBICORE__ 1

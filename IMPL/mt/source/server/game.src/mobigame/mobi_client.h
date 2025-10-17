@@ -1,46 +1,77 @@
 #pragma once
-
+#if __MOBICORE__
 #include <string>
 #include <cstdint>
-
+#include <chrono>
+#include <memory>
+#include <string>
+#include <vector>
+#if __BUILD_FOR_GAME__
+#include <utility>
+#endif
 #include <singleton.h>
+#include <Network/buffer.h>
+#include <Utility/flag_wrapper.h>
 
 #include "constants/consts.h"
-#include "client/mobi_base.h"
-
-#if __MOBICORE__
-#include "../common/tables.h"
-
-#if !__MT_DB_INFO__
-class CGuild;
-struct TSimplePlayer;
-#endif
-
-#endif
-
+#include "constants/packet_constants.h"
 #if PLATFORM_WINDOWS
 #include "constants/packets.h"
 #endif
 
+#if __BUILD_FOR_GAME__
+	#if !__MT_DB_INFO__
+		class CGuild;
+		struct TSimplePlayer;
+	#endif
+	#if __OFFSHOP__
+		namespace ikashop {
+			struct TPriceInfo;
+			struct TShopInfo;
+			struct TShopItem;
+		}
+	#endif
+#endif
+
 namespace mobi_game {
-	class GameNetworkClient;
+	class GameClientBase;
+	class CAdminDataManager;
+	class CMessageHelper;
+	class CUnprocessedHelper;
 
-	//should be synced with bridgeServer/Common/tables.h
-	enum class ENotificationChannels {
-		SYSTEM,
-		CHAT,
-		FRIENDS,
-		GUILD,
-		EVENTS,
-		MAX,
-	};
-
-	class GameClient final :
-		public GameClientBase,
-		public CSingleton<GameClient> {
-		friend class GameNetworkClient;
+	class MobiClient final :
+		public CSingleton<MobiClient> {
 	public:
-		~GameClient() noexcept;
+		friend class GameClientBase;
+		MobiClient();
+		~MobiClient() noexcept;
+
+//==================================== BASE API
+	public:
+		void ConnectToBridge();
+		void Disconnect(bool need_reconnect = true) noexcept;
+		void Process();
+
+//==================================== SHITS
+	private:
+		bool IsCoreP2PManager() const noexcept;
+		void GetSyncData(std::vector<uint8_t>& data) const noexcept;
+		void SendSync();
+		void SetBridgeCacheStatus(bool uptodate);
+		void RegisterPackets() noexcept;
+		bool HandlePacket(network::THEADER header, const std::vector<uint8_t>& data);
+	public:
+		void setOnlineRefreshInterval(std::chrono::seconds sec) { refresh_interval_ = sec; };
+#if __BUILD_FOR_GAME__
+	private:
+		std::pair<network::TSIZE, uint32_t> WritePids(network::TMP_BUFFER& buf) const noexcept;
+		std::pair<network::TSIZE, uint32_t> WriteWars(network::TMP_BUFFER& buf) const noexcept;
+#endif
+
+//==================================== SEND PACKETS
+	protected:
+		using TDataRef = const std::vector<uint8_t>&;
+		bool SendPacket(std::vector<uint8_t>& data, bool encrypt = true); //non-const because of encryption processes etc.
 	public:
 		bool sendLogin(uint32_t pid, uint32_t map_idx);
 		bool sendLogout(uint32_t pid);
@@ -66,7 +97,7 @@ namespace mobi_game {
 
 #if __MT_DB_INFO__
 		bool sendCharacterCreate(uint32_t pid);
-#elif __MOBICORE__
+#elif __BUILD_FOR_GAME__
 		bool sendCharacterCreate(const TSimplePlayer& player, uint32_t acc_id);
 #elif PLATFORM_WINDOWS
 		bool sendCharacterCreate(const MSCache::Player& player);
@@ -75,7 +106,7 @@ namespace mobi_game {
 
 #if __MT_DB_INFO__
 		bool sendGuildCreate(uint32_t guild_id);
-#elif __MOBICORE__
+#elif __BUILD_FOR_GAME__
 		bool sendGuildCreate(const CGuild& guild);
 #elif PLATFORM_WINDOWS
 		bool sendGuildCreate(const MSCache::Guild& guild);
@@ -95,22 +126,60 @@ namespace mobi_game {
 		//use wherever you want for send mobile notification to a player.
 		//Example: send when sold player's item in offshop
 		bool sendMobileNotification(uint32_t pid, const std::string& message, ENotificationChannels channel = ENotificationChannels::SYSTEM);
-#if __OFFSHOP__ && __MOBICORE__
+
+#if __OFFSHOP__
 	public: //offshop
-		bool sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t pos, const ikashop::TPriceInfo& price);
 		bool sendShopItemUpdatePos(uint32_t owner_pid, uint32_t pos, uint32_t uptodate);
+#if __BUILD_FOR_GAME__
+		bool sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t pos, const ikashop::TPriceInfo& price);
 		bool sendShopCreate(const ikashop::TShopInfo& info);
+#endif
 		bool sendShopClose(uint32_t owner_pid);
 		bool sendShopUpdateDuration(uint32_t owner_pid);
 		bool sendShopUpdateSlotCount(uint32_t owner_pid, uint32_t uptodate);
+#if __BUILD_FOR_GAME__
 		bool sendShopItemAdd(uint32_t owner_pid, const ikashop::TShopItem& item);
+#endif
 		bool sendShopItemRemove(uint32_t owner_pid, uint32_t pos);
 		bool sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t pos);
 #endif
+//==================================== EOF SEND PACKETS
+
+
+//==================================== TEST
 	public:
 		//100 intensity'de 1 saniye boyunca yazma islemi yapar.
 		bool spamTest(uint8_t intensity);
+//==================================== EOF TEST
+
+//==================================== HANDLERS
+	private: //packet handlers
+		bool HandleDbInfo(TDataRef data);
+		bool HandleMobilePm(TDataRef data) const;
+		bool HandleUserCheck(TDataRef data) const;
+		bool HandleMobileLogin(TDataRef data) const;
+		bool HandleMobileLogout(TDataRef data) const;
+		bool HandleCacheStatus(TDataRef data);
+		bool HandleKeyExchange(TDataRef data);
+		bool HandleForwardPacket(TDataRef data) const;
+		bool HandleValidateLogin(TDataRef data);
+#if !__MT_DB_INFO__
+		bool HandleGetCache(TDataRef data); //yeni acc kaydini senkronize et
+#endif
+//==================================== EOF HANDLERS
+	private:
+		std::unique_ptr<CAdminDataManager> admin_data_manager_;
+		std::unique_ptr<CMessageHelper> message_helper_;
+		std::unique_ptr<CUnprocessedHelper> unprocessed_helper_;
+		std::unique_ptr<GameClientBase> client_impl_; //important: must be the last member to be destructed last.
+
+		std::chrono::steady_clock::time_point last_sent_{};
+		std::chrono::seconds refresh_interval_ = std::chrono::seconds(15);
+
+		bool bridge_cache_ready_{false}; //use SetBridgeCacheStatus instead of directly set.
+		bool sync_packet_sent_{ false };
 	};
 }
 
-#define mobileInstance mobi_game::GameClient::getInstance()
+#define mobileInstance mobi_game::MobiClient::getInstance()
+#endif

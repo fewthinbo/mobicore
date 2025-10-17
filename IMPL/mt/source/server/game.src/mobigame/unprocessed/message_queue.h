@@ -1,4 +1,5 @@
 #pragma once
+#if __MOBICORE__
 
 #include <memory>
 #include <cstdint>
@@ -10,13 +11,13 @@
 #include "constants/consts.h"
 
 namespace mobi_game {
-	class GameNetworkClient;
+	class GameClientBase;
 
 	class CMessageHelper final {
 		std::deque<std::unique_ptr<TMSMessageContainer>> message_queue_;
 		std::chrono::steady_clock::time_point last_cleanup_time_{};
 	public:
-		explicit CMessageHelper(GameNetworkClient* client) : client_(client) {}
+		explicit CMessageHelper(GameClientBase* client) : client_(client) {}
 	public:
 		// Interface implementations
 		uint32_t message_get_container_id() const noexcept;
@@ -28,6 +29,7 @@ namespace mobi_game {
 		const TMSMessageContainer* message_get_container(uint32_t container_id) const noexcept;
 		void message_cleanup_expired() noexcept;
 	private:
-		GameNetworkClient* client_ = nullptr;
+		GameClientBase* client_ = nullptr;
 	};
 }
+#endif

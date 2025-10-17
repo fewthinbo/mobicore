@@ -1,9 +1,18 @@
+#if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
 #include "admin_data_manager.h"
+
+#if __BUILD_FOR_GAME__
+#include "../../../common/tables.h"
+#include "../../../common/length.h"
+#include "db.h"
+#endif
 
 #include <Singletons/json_loader.h>
 
-#include "constants/consts.h"
-#include "client/client_core.h"
+#include "client/client_base.h"
 
 #include "notification.h"
 #include "config_manager.h"
@@ -12,12 +21,42 @@
 #if PLATFORM_WINDOWS
 #include "../Test/Console/DatabaseManager.h"
 #endif
+
+#include "constants/consts.h"
+
 using namespace network;
 
 namespace mobi_game {
 	using namespace consts;
 
-	CAdminDataManager::CAdminDataManager(GameNetworkClient* client)
+#if __BUILD_FOR_GAME__
+	namespace utils {
+		inline std::unique_ptr<SQLMsg> GetResultOfQuery(const char* query) {
+			auto& db_inst = DBManager::instance();
+
+			std::unique_ptr<SQLMsg> ret(db_inst.DirectQuery(query));
+			if (!ret) {
+				LOG_TRACE("Sql response of query(?) is nullptr", query);
+				return {};
+			}
+
+			SQLResult* sql_res = ret->Get();
+			if (!sql_res) {
+				LOG_TRACE("Weird stuff happened. Line(?), query(?)", __LINE__, query);
+				return {};
+			}
+
+			if (sql_res->uiNumRows == 0) {
+				LOG_TRACE("Query(?) result is empty.", query);
+				return {};
+			}
+
+			return ret;
+		}
+	}
+#endif
+
+	CAdminDataManager::CAdminDataManager(GameClientBase* client)
 		: client_(client) {
 		notification_manager_ = std::make_unique<CNotificationManager>(client);
 		config_manager_ = std::make_unique<CConfigManager>(client);
@@ -72,13 +111,6 @@ namespace mobi_game {
 	}
 
 	void CAdminDataManager::LoadInfoFile() {
-		if (!f_info_) /*late init*/ {
-			f_info_ = std::make_unique<TJsonFile>(
-				JFileNames::BASE_FOLDER + std::string(JFileNames::F_INFO),
-				std::vector<std::string>{ consts::JFields::DB}
-			);
-		}
-
 		//IMPORTANT: adres tuttuklari icin member json icerigini yenilemeden once invalid et.
 #if __MT_DB_INFO__
 		if (db_info_) {
@@ -87,6 +119,13 @@ namespace mobi_game {
 #endif
 		if (bridge_info_) {
 			bridge_info_.reset();
+		}
+
+		if (!f_info_) /*late init*/ {
+			f_info_ = std::make_unique<TJsonFile>(
+				JFileNames::BASE_FOLDER + std::string(JFileNames::F_INFO),
+				std::vector<std::string>{ consts::JFields::DB}
+			);
 		}
 		
 		if (!jsonLoaderInstance.LoadFile(*f_info_)) {
@@ -112,6 +151,8 @@ namespace mobi_game {
 			bridgeInfo[JFields::HOST].get_ref<const std::string&>(),
 			bridgeInfo[JFields::PORT_TCP].get<uint16_t>()
 		);
+
+		LOG_TRACE("Bridge info(host(?):port(?)", bridge_info_->host, bridge_info_->port);
 	}
 
 	std::vector<uint8_t> CAdminDataManager::GetDBCache() {
@@ -124,16 +165,16 @@ namespace mobi_game {
 		network::TMP_BUFFER::str_copy(packet.password, sizeof(packet.password), db_info_->password.c_str());
 		buf.write(&packet, sizeof(MSDBInfo));
 		LOG_TRACE("Successfully wrote.");
-#elif __MOBICORE__
+#elif __BUILD_FOR_GAME__
 		MSDBInfo packet{};
 		packet.size = sizeof(MSDBInfo);
 
 		using namespace utils;
-		auto* ret_acc = GetResultOfQuery(query::ACCOUNT_WITH_EMPIRE);
-		auto* ret_player = GetResultOfQuery(query::PLAYER);
-		auto* ret_gld = GetResultOfQuery(query::GUILD);
-		auto* ret_gld_member = GetResultOfQuery(query::GUILD_MEMBER);
-		auto* ret_messenger = GetResultOfQuery(query::MESSENGER_LIST);
+		auto* ret_acc = GetResultOfQuery(query::QUERY_ACCOUNT_WITH_EMPIRE);
+		auto* ret_player = GetResultOfQuery(query::QUERY_PLAYER);
+		auto* ret_gld = GetResultOfQuery(query::QUERY_GUILD);
+		auto* ret_gld_member = GetResultOfQuery(query::QUERY_GUILD_MEMBER);
+		auto* ret_messenger = GetResultOfQuery(query::QUERY_MESSENGER_LIST);
 
 		auto b_acc = ret_acc && ret_acc->Get();
 		auto b_player = ret_player && ret_player->Get()
@@ -252,3 +293,4 @@ namespace mobi_game {
 		return bridge_info_->port;
 	}
 }
+#endif

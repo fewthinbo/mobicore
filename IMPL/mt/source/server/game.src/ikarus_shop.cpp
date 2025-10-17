@@ -17,11 +17,10 @@ bool CShop::ModifyItemPrice(DWORD itemid, const TPriceInfo& price)
 void CShop::MoveItem(DWORD itemid, int destCell)
 {
 	...
-
-		item->SetCell(destCell);
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopItemUpdatePos(this->GetOwnerPID(), shopItem->GetInfo().pos, destCell);
+		mobileInstance.sendShopItemUpdatePos(this->GetOwnerPID(), item->GetInfo().pos, destCell);
 #endif
+		item->SetCell(destCell);
 	...
 }
 
@@ -30,10 +29,10 @@ bool CShop::AcceptOffer(OFFER_HANDLE offer)
 	...
 	if (auto item = GetItem(offer->itemid)) {
 		...
-		BuyItem(item->GetID());
 #if __MOBICORE__ && __OFFSHOP__
 		mobileInstance.sendShopItemBuy(this->GetOwnerPID(), offer->buyerid, item->GetInfo().pos);
 #endif
+		item->SetPrice(offer->price);
 		...
 	}
 }

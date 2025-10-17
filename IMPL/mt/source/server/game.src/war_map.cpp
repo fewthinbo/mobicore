@@ -2,6 +2,15 @@
 #include "mobi_client.h"
 #endif
 
+#if __MOBICORE__
+const TeamData& CWarMap::GetTeamData(BYTE bIdx) const {
+	if (bIdx >= 2) {
+		bIdx = 0;
+	}
+	return m_TeamData[bIdx];
+}
+#endif
+
 bool CWarMap::SetEnded()
 {
 	if (m_pkEndEvent)
@@ -21,7 +30,7 @@ void CWarMap::IncMember(LPCHARACTER ch)
 		mobileInstance.sendGuildWarPlayerJoin(gid, ch->GetPlayerID());
 	}
 #endif
-	m_set_pkChr.insert(ch);
+	SendWarPacket(d);
 	...
 }
 

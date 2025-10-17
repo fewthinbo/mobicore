@@ -1,3 +1,7 @@
+#if __MOBICORE__
+#if __BUILD_FOR_GAME__
+#include "stdafx.h"
+#endif
 #include "consts.h"
 
 namespace mobi_game {
@@ -18,3 +22,4 @@ namespace mobi_game {
 		}
 	}
 }
+#endif

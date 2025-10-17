@@ -33,7 +33,8 @@ if [ "$NEED_VCPKG" = true ]; then
 	#echo "${EXPORT_CMD} CMAKE_MAKE_PROGRAM=\"/usr/local/bin/ninja\"" >> "$PROFILE_FILE"
 	#echo "${EXPORT_CMD} MAKE=\"/usr/local/bin/gmake\"" >> "$PROFILE_FILE"
 else #sistemi kullanalim.
-	pkg install -y boost-all nlohmann-json stb
+	pkg install -y boost-all boost-libs nlohmann-json stb libiconv
+	#pkg delete -f -y libiconv # #gnu libiconv kullanacaksam
 fi
 
 # rsync kur (Visual Studio için gerekli)

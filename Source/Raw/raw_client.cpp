@@ -26,8 +26,8 @@ namespace network {
     }
 
     NetworkClientImpl::~NetworkClientImpl() noexcept {
-        //Disconnect(false); //movedd to derived class
-        StopIO();
+        //Disconnect(false);
+        //StopIO();
     }
 
     void NetworkClientImpl::StartIO(bool restart) noexcept {
@@ -190,11 +190,18 @@ namespace network {
                 session_handle_error("no IPv4 endpoint found", boost::asio::error::address_family_not_supported);
                 return;
             }
+            std::string resolved_str = it->endpoint().address().to_string();
 
-            LOG_INFO("Host successfully resolved to ?", it->endpoint().address().to_string());
+            LOG_INFO("Host successfully resolved to ?", resolved_str);
+
+            auto endpoint_vec = std::vector<tcp::endpoint>{ it->endpoint() };
+
+            if (resolved_str == "localhost" || resolved_str == "127.0.0.1") {
+                endpoint_vec = { boost::asio::ip::tcp::endpoint(boost::asio::ip::make_address(last_host_), last_port_) };
+            }
 
             // Sadece IPv4 endpoint ile bağlantı başlat
-            boost::asio::async_connect(socket_, std::vector<tcp::endpoint>{ it->endpoint() },
+            boost::asio::async_connect(socket_, endpoint_vec,
                 [this](const error_code& ec, const tcp::endpoint& endpoint) {
                     if (ec) {
                         session_handle_error("critical: connection failed", ec);
@@ -257,7 +264,7 @@ namespace network {
     }
 
     ESendResult NetworkClientImpl::Send(std::vector<uint8_t>& data, bool encrypt) {
-        if (data.empty()) {
+        if (data.empty() || data[0] == 0)/*header sifir gecersizdir.*/ {
             session_handle_error("Empty packet");
             return ESendResult::EMPTY_PACKET;
         }
@@ -268,9 +275,7 @@ namespace network {
         }
 
         THEADER header = data[0];
-#if _DEBUG
         LOG_TRACE("Writing packet: header(?)", header);
-#endif
 
 #if __MOBI_PACKET_ENCRYPTION__
         if (encrypt && is_encrypted_ && crypto_) {
@@ -278,20 +283,14 @@ namespace network {
                 session_handle_error("Encryption failed");
                 return ESendResult::ENCRYPTION_FAILED;
             }
-#if _DEBUG
             else {
                 LOG_TRACE("Data encrypted successfully for header(?)", header);
             }
-#endif
         }
 #endif
 
         // Prevent unbounded queue growth
-        #if _DEBUG   
-        static constexpr size_t MAX_WRITE_QUEUE_SIZE = 100;
-        #else
         static constexpr size_t MAX_WRITE_QUEUE_SIZE = 100000;
-        #endif
 
         if (write_queue_.size() >= MAX_WRITE_QUEUE_SIZE) {
             LOG_WARN("Write queue full (size: ?), dropping oldest packet", write_queue_.size());
@@ -300,11 +299,9 @@ namespace network {
 
         write_queue_.emplace_back(std::move(data));
 
-#if _DEBUG
         if (write_queue_.size() % 100 == 0) {
             LOG_WARN("Write queue size: ?", write_queue_.size());
         }
-#endif
 
         PostTask([this]() {
             session_write();

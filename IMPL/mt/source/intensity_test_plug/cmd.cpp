@@ -5,5 +5,5 @@ ACMD(do_mobitest);
 ...
 
 #if __MOBICORE__
-{ "mobitest", do_mobitest, 0, 0, GM_IMPLEMENTOR },
+	{ "mobitest", do_mobitest, 0, 0, GM_IMPLEMENTOR },
 #endif

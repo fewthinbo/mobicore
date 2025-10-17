@@ -24,12 +24,9 @@ Yeni karakterler, hesaplar veya loncalar oluşturulduğunda:
 - 'RANDOM_STRONG_PASS' uzunluğu PASSWORD_MAX_LENGTH(32)'den az olmalıdır.
 ```sql
 CREATE USER 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP' IDENTIFIED BY 'RANDOM_STRONG_PASS';
-GRANT SELECT (id, login, empire, email) ON account.account* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT (mID, mAuthority) ON common.gm_list* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.player* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.guild* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.guild_member* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
-GRANT SELECT ON player.messenger_list* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT (id, login, email) ON account.account TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT (mID, mAuthority) ON common.gmlist TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
+GRANT SELECT ON player.* TO 'mobicore'@'YOUR_MOBI_BRIDGE_SERVER_IP';
 FLUSH PRIVILEGES;
 ```
 - "/usr/mobile/info.json" dosyasına bilgileri koyun.

@@ -1,4 +1,5 @@
 #pragma once
+#if __MOBICORE__
 
 #include <cstdint>
 #include <string>
@@ -10,7 +11,7 @@
 #include "constants/consts.h"
 
 namespace mobi_game {
-	class GameNetworkClient;
+	class GameClientBase;
 
 	struct TMSMessageContainer final {
 		network::TMP_BUFFER buf;
@@ -22,7 +23,7 @@ namespace mobi_game {
 		TMSMessageContainer(uint32_t _sender_pid,
 			const std::string& _receiver_name, const std::string& _message, uint32_t _containerID, uint16_t code_page = consts::DEFAULT_CODEPAGE);
 		~TMSMessageContainer() noexcept;
-		bool process(GameNetworkClient* client);
+		bool process(GameClientBase* client);
 		bool is_expired(const std::chrono::seconds& timeout) const noexcept;
 		uint32_t get_sender_pid() const noexcept;
 		const char* get_receiver_name() const noexcept;
@@ -41,3 +42,4 @@ namespace mobi_game {
 		bool is_expired(const std::chrono::seconds& timeout) const noexcept;
 	};
 }
+#endif

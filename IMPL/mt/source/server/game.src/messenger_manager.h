@@ -1,8 +1,6 @@
 #if !__INC_MESSENGER_MANAGER_H
 #define __INC_MESSENGER_MANAGER_H
 
-#include "db.h"
-
 #if __MOBICORE__
 #include <string>
 //#include <functional>
@@ -10,7 +8,11 @@
 #include <map>
 #include <cstdint>
 #include <type_traits>
+#else
+#include "db.h"
+#endif
 
+#if __MOBICORE__
 enum EUserStatus : uint16_t {
 	OFFLINE = (1 << 0),
 	IN_GAME = (1 << 1),
