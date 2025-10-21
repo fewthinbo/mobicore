@@ -1,3 +1,4 @@
+**🌐 Language**: **English (selected)** | [Turkish](./logic_tr.md)
 # 🌟 mobi-core - Transcend the Boundaries of Gaming
 
 ## 📖 The Story
@@ -60,28 +61,9 @@ mobi-core's current features are just the beginning! The system is constantly ev
 - **Easy Setup**: Players login with their in-game accounts
 - **User-Friendly**: Intuitive and modern interface
 
-## 🛠️ Technical Integration
+[✨ Let's install now](./installation_en.md)
 
-The component to be integrated into your MT server is shared completely as **open source**.
-
-## 🚀 Get Started Now!
-
-### 📋 Subscription Process
-1. **Contact**: Reach out to us at mobicore.io@gmail.com
-2. **Consultation**: Determines your needs through a few short questions
-3. **Quick Setup**: The system is completely installed and configured in a very short time
-4. **Support**: Continuous technical support and update services
-
+---
 Take your players' experience to the next level with mobi-core. Capture the advantage before your competitors adopt this technology!
-
----
-
-## 📖 Navigation
-
-**📚 Documentation**: [← Back to Main](../en.md) | **Next →** [Technical Management](./tech_en.md)
-
-**🌐 Language**: [Türkçe](./logic_tr.md) | **English**
-
----
 
 *mobi-core - Transcend Gaming Boundaries, Grow Your Community!* 

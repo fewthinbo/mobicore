@@ -1,3 +1,4 @@
+**🌐 Dil**: **Türkçe (seçildi)** | [English](./logic_en.md)
 # 🌟 mobi-core - Oyunun Sınırlarını Aşın
 
 ## 📖 Hikaye
@@ -60,28 +61,9 @@ mobi-core'un mevcut özellikleri sadece başlangıç! Sistem sürekli gelişiyor
 - **Kolay Kurulum**: Oyuncular oyun içi hesaplarıyla giriş yapar
 - **Kullanıcı Dostu**: Sezgisel ve modern arayüz
 
-## 🛠️ Teknik Entegrasyon
+[✨ Hadi yükleyelim](./installation_tr.md)
 
-MT sunucunuza entegre edilecek bileşen tamamen **açık kaynak** olarak paylaşılır.
-
-## 🚀 Hemen Başlayın!
-
-### 📋 Abonelik Süreci
-1. **İletişim**: mobicore.io@gmail.com adresinden bize ulaşın
-2. **Danışmanlık**: Birkaç kısa soruyla ihtiyaçlarınızı belirler
-3. **Hızlı Kurulum**: Sistem çok kısa sürede tamamen kurulur ve yapılandırılır
-4. **Destek**: Sürekli teknik destek ve güncelleme hizmetleri
-
+---
 mobi-core ile oyuncularınızın deneyimini bir üst seviyeye taşıyın. Rakipleriniz bu teknolojiyi benimser önce avantajı yakalayın!
-
----
-
-## 📖 Navigasyon
-
-**📚 Dokümantasyon**: [← Ana Sayfaya Dön](../tr.md) | **Sonraki →** [Teknik Yönetim](./tech_tr.md)
-
-**🌐 Dil**: **Türkçe** | [English](./logic_en.md)
-
----
 
 *mobi-core - Oyun Sınırlarını Aşın, Topluluğunuzu Büyütün!* 

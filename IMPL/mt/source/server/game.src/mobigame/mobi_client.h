@@ -135,7 +135,6 @@ namespace mobi_game {
 		bool sendShopCreate(const ikashop::TShopInfo& info);
 #endif
 		bool sendShopClose(uint32_t owner_pid);
-		bool sendShopUpdateDuration(uint32_t owner_pid);
 		bool sendShopUpdateSlotCount(uint32_t owner_pid, uint32_t uptodate);
 #if __BUILD_FOR_GAME__
 		bool sendShopItemAdd(uint32_t owner_pid, const ikashop::TShopItem& item);

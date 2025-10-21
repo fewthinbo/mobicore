@@ -9,7 +9,7 @@ Mobile application integration **for all servers**.
 [![Platform](https://img.shields.io/badge/Platform-FreeBSD-red)](https://www.freebsd.org/)
 [![C++](https://img.shields.io/badge/C%2B%2B-17-00599C.svg)](https://isocpp.org/)
 
-[📖 Documentation](README/en.md) • [💬 Community](#-community) • [🌐 Türkçe](README/tr.md)
+**🌐 Language**: **English (selected)** | [Turkish](./README/tr.md)
 
 <img src="demo.gif" height="500" />
 
@@ -17,10 +17,8 @@ Mobile application integration **for all servers**.
 
 
 ## What is mobicore?
-
 **mobicore** is an advanced bridge server system that connects your MT server with mobile devices, revolutionizing the player experience. 
 Your players can now stay connected to the MT world even after leaving the game!
-
 
 ### The Problem We Solve
 
@@ -28,7 +26,6 @@ Your players can now stay connected to the MT world even after leaving the game!
 - 📱 No mobile communication with game friends
 - 🏪 Missing trade opportunities
 - 👥 Inactive community when players are offline
-
 
 ### Who Should Use This?
 
@@ -41,16 +38,12 @@ Your players can now stay connected to the MT world even after leaving the game!
 
 
 ## Documentation
+Documentations are available in multiple languages.
 
-Documentations are available in multiple languages:
-
-| Document | English | Turkish |
-|----------|---------|---------|
-| 🏠 **Main Guide** | [Main](README/en.md) | [Başlangıç](README/tr.md) |
-| 🌍 **Project Overview** | [Logic](README/docs/logic_en.md) | [Mantık](README/docs/logic_tr.md) |
-| ⚙️ **Technical Setup** | [Technical](README/docs/tech_en.md) | [Teknik](README/docs/tech_tr.md) |
-| 📦 **Packet Reference** | [Packets](README/docs/packets_en.md) | [Paketler](README/docs/packets_tr.md) |
-| 🔧 **Installation** | [Installation](README/docs/this_en.md) | [Kurulum](README/docs/this_tr.md) |
+| Document                                        | Description                                             | Target Audience                   |
+|-------------------------------------------------|---------------------------------------------------------|------------------------------------|
+| 🔧 [Installation Guide](./README/installation_en.md)   | Guides for mobicore setup, license, adjustments                   | Developers                        |
+| 📄 [Project Logic](./README/logic_en.md)         | Project expilanation, features and profits for customers | Customers & Server Founders       |
 
 
 ## Technical Highlights
@@ -61,6 +54,18 @@ Documentations are available in multiple languages:
 - **📱 Cross-Platform**: iOS & Android support
 - **🔄 Auto-Reconnect**: Handles connection failures
 - **📝 Detailed Logging**: Comprehensive debug info
+
+
+## License
+
+This project is licensed under the [GNU General Public License v3.0](LICENSE). 
+
+### 🔗 Third-Party Licenses
+- **OpenSSL** - [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+- **nlohmann-json** - [MIT License](https://opensource.org/licenses/MIT)
+- **zlib** - [zlib License](https://zlib.net/zlib_license.html)
+- **Boost** - [Boost Software License 1.0](https://www.boost.org/LICENSE_1_0.txt)
+- **libiconv** - [GNU GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)
 
 
 ## Community
@@ -76,34 +81,12 @@ Documentations are available in multiple languages:
 - 🐛 **Bug Reports**: [Issues](https://github.com/fewthinbo/mobicore/issues)
 - 💬 **General Chat**: [Discussions](https://github.com/fewthinbo/mobicore/discussions)
 
-
-## License
-
-This project is licensed under the [GNU General Public License v3.0](LICENSE). 
-
-### 🔗 Third-Party Licenses
-- **OpenSSL** - [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-- **nlohmann-json** - [MIT License](https://opensource.org/licenses/MIT)
-- **zlib** - [zlib License](https://zlib.net/zlib_license.html)
-- **Boost** - [Boost Software License 1.0](https://www.boost.org/LICENSE_1_0.txt)
-- **libiconv** - [GNU GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)
-
-
-## Getting Started
-
-Ready to transform your MT server? 
-
-1. ⭐ **Star** this repository
-2. 📖 Read [Documentation](README/en.md)
-3. 🚀 Follow the [Installation Guide](README/docs/this_en.md)
-4. 💬 Join [Community](https://github.com/fewthinbo/mobicore/discussions)
-
 ---
 
 <div align="center">
 
 **Transform your MT server experience today!**
 
-*Made with ❤️ for the MT community*
+*Made with ❤️ for the MT Game community*
 
 </div> 

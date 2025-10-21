@@ -1,0 +1,4 @@
+Put the files following to this folder:
+Source/
+CMakeLists.txt
+CMakePresets.json

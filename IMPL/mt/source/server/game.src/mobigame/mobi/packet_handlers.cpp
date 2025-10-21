@@ -65,7 +65,7 @@ namespace mobi_game {
 #if __BUILD_FOR_GAME__
 		key_packet.is_auth_core = g_bAuthServer;
 #else
-		key_packet.is_auth_core = true;
+		key_packet.is_auth_core = false;
 #endif
 		const std::vector<uint8_t>& public_key = client_impl_->session_get_public_key();
 		if (public_key.empty()) {
@@ -372,7 +372,7 @@ namespace mobi_game {
 
 		return SendPacket(buf.get());
 #else
-		return false;
+		return true;
 #endif
 	}
 

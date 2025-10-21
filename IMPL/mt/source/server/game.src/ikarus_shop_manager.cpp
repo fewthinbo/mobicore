@@ -18,15 +18,6 @@ bool CShopManager::RecvShopForceCloseDBPacket(DWORD pid) {
 #endif
 }
 
-bool CShopManager::RecvShopRestoreDurationDBPacket(DWORD owner)
-{
-	...
-#if __MOBICORE__ && __OFFSHOP__
-	mobileInstance.sendShopUpdateDuration(owner);
-#endif
-	return true;
-}
-
 void CShopManager::RecvShopUnlockCellDBPacket(DWORD owner, int lockIndex)
 {
 	...

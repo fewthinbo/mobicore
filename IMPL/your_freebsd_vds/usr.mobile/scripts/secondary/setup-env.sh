@@ -1,5 +1,4 @@
 #!/bin/sh
-# FreeBSD için C++ geliştirme ortamını hazırlama scripti
 NEED_VCPKG=false
 
 # Temel geliştirme araçlarını yükle #llvm15
@@ -8,6 +7,7 @@ pkg install -y cmake git bash autoconf automake libtool gmake
 # Ninja'nın yeni sürümünü portlardan kuruyoruz (pkg versiyonu yerine)
 pkg install -y pkgconf
 cd /tmp
+echo "Ninja installing.."
 fetch https://github.com/ninja-build/ninja/archive/refs/tags/v1.12.1.tar.gz
 tar -xf v1.12.1.tar.gz
 cd ninja-1.12.1
@@ -21,6 +21,7 @@ which ninja || ln -sf /usr/local/bin/ninja /usr/bin/ninja
 # gmake'in sistem PATH'inde olduğundan emin ol
 which gmake || ln -sf /usr/local/bin/gmake /usr/bin/gmake
 
+echo "Required packets installing.."
 # vcpkg kurmak ve hazırlamak için
 if [ "$NEED_VCPKG" = true ]; then
 	# vcpkg için gerekli araçlar
@@ -33,11 +34,11 @@ if [ "$NEED_VCPKG" = true ]; then
 	#echo "${EXPORT_CMD} CMAKE_MAKE_PROGRAM=\"/usr/local/bin/ninja\"" >> "$PROFILE_FILE"
 	#echo "${EXPORT_CMD} MAKE=\"/usr/local/bin/gmake\"" >> "$PROFILE_FILE"
 else #sistemi kullanalim.
-	pkg install -y boost-all boost-libs nlohmann-json stb libiconv
+	pkg install -y boost-all boost-libs nlohmann-json stb libiconv python3
 	#pkg delete -f -y libiconv # #gnu libiconv kullanacaksam
 fi
 
 # rsync kur (Visual Studio için gerekli)
 pkg install -y rsync
 
-echo "FreeBSD geliştirme ortamı kurulumu tamamlandı!"
+echo "FreeBSD environment setup for is done! Now you can build Mobicore!"

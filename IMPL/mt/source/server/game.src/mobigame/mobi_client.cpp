@@ -642,24 +642,6 @@ namespace mobi_game {
 		buf.write(&slot_count, sizeof(uint32_t));
 		return SendPacket(buf.get());
 	}
-	bool MobiClient::sendShopUpdateDuration(uint32_t owner_pid) {
-		if (!IsCoreP2PManager()) return true;
-#if __BUILD_FOR_GAME__
-		uint32_t duration = EMisc::OFFLINESHOP_DURATION_MAX_MINUTES;
-#else
-		uint32_t duration = 1200;
-#endif
-		MSOffshop pack{};
-		pack.size = sizeof(MSOffshop) + sizeof(uint32_t);
-		pack.sub_id = static_cast<uint8_t>(ESubOffshop::SHOP_UPDATE_DURATION);
-		pack.owner_pid = owner_pid;
-
-		TMP_BUFFER buf(pack.size);
-		buf.write(&pack, sizeof(pack));
-		buf.write(&duration, sizeof(uint32_t));
-		return SendPacket(buf.get());
-	}
-
 #if __BUILD_FOR_GAME__
 	bool MobiClient::sendShopItemAdd(uint32_t owner_pid, const ikashop::TShopItem& item){
 		if (!IsCoreP2PManager()) return true;

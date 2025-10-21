@@ -1,58 +1,96 @@
-# 🌟 mobi-core - Dokümantasyon
+<div align="center">
 
-## 📋 Genel Bakış
+**MT Sunucuları için Devrimsel Mobil Köprü Sunucusu**
 
-**mobi-core**, MT sunucularına mobil bağlantı köprüsü sağlayan gelişmiş bir ara sunucu sistemidir. Oyuncularınız artık mobil cihazlarından MT dünyasına bağlanabilir, mesajlaşabilir ve oyun deneyimlerini sürdürebilirler.
+MT sunucu deneyiminizi sorunsuz mobil entegrasyonla dönüştürün
+**Tüm sunucular** için mobil uygulama entegrasyonu.
 
-## 📚 Dokümantasyon Kategorileri
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Platform](https://img.shields.io/badge/Platform-FreeBSD-red)](https://www.freebsd.org/)
+[![C++](https://img.shields.io/badge/C%2B%2B-17-00599C.svg)](https://isocpp.org/)
 
-### 🌍 Proje Mantığı ve Genel Bilgi
-Projenin temel çalışma mantığı, özellikler ve faydaları hakkında bilgi edinin:
+**🌐 Dil**: **Türkçe (seçildi)** | [English](./../README.md)
 
-| Belge | Açıklama | Hedef Kitle |
-|-------|----------|-------------|
-| 📄 [Proje Mantığı](./docs/logic_tr.md) | Müşteriler için proje açıklaması, özellikler ve faydalar | Müşteriler & Sunucu Sahipleri |
+<img src="../demo.gif" height="500" />
 
-### ⚙️ Teknik Rehberler
-Sistem kurulumu, yapılandırma ve yönetimi için detaylı rehberler:
+</div>
 
-| Belge | Açıklama | Hedef Kitle |
-|-------|----------|-------------|
-| 🔧 [Teknik Yönetim](./docs/tech_tr.md) | JSON yapılandırma, SQL kurulumu, sistem ayarları | Sistem Yöneticileri |
+## mobicore nedir?
+**mobicore**, MT sunucunuzu mobil cihazlarla bağlayan, oyuncu deneyimini gelişmiş bir köprü sunucu sistemidir.
+Oyuncularınız artık oyunu kapattıktan sonra bile MT dünyasına bağlı kalabilir!
 
-### 📦 Geliştirici Kaynakları
-Paket yapısı, özelleştirme rehberleri:
+### Çözdüğümüz Problem
 
-| Belge | Açıklama | Hedef Kitle |
-|-------|----------|-------------|
-| 📋 [Paket Referansı](./docs/packets_tr.md) | Paket ID'leri, açıklamaları ve devre dışı bırakma rehberi | Geliştiriciler & Sistem Yöneticileri |
+- 😞 Oyuncular oyunu kapattığında iletişimi kaybediyor
+- 📱 Oyun arkadaşlarıyla mobil iletişim yok
+- 🏪 Kaçırılan ticaret fırsatları
+- 👥 Oyuncular çevrimdışıyken pasif topluluk
 
-### 🛠️ Kurulum & Ayarlama
-Tamamlayıcı kurulum ve ayarlama rehberi:
+### Kimler Kullanmalı?
 
-| Belge | Açıklama | Hedef Kitle |
-|-------|----------|-------------|
-| 🔧 [Kurulum Rehberi](./docs/this_tr.md) | Sistem gereksinimleri, derleme ve kurulum | Geliştiriciler & Sistem Yöneticileri |
+|🎮 **MT Sunucu Sahipleri**| 👥 **MT Oyuncuları**|
+|----------|---------|
+|- Aktif oyuncu oranını artırın| - 7/24 bağlı kalın|
+|- Topluluk etkileşimini artırın| - Her yerden arkadaşlarla sohbet edin|
+|- Rekabet avantajı kazanın| - Ticaret sohbetlerini, lonca savaşlarını, etkinlikleri ve daha fazlasını kaçırmayın|
+|- Oyuncu memnuniyetini artırın| - iOS ve Android'de kolay mobil erişim|
 
-## 📞 Destek
+## Dokümantasyon
+Dokümantasyonlar birden fazla dilde mevcuttur
 
-### 💬 İletişim
-- **E-posta**: mobicore.io@gmail.com
-- **Konu**: Lisans, teknik destek ve genel sorular
+| Doküman                                        | Açıklama                                             | Hedef Kitle                   |
+|-------------------------------------------------|---------------------------------------------------------|------------------------------------|
+| 🔧 [Kurulum Rehberi](./installation_tr.md)   | Mobicore kurulumu ve lisans için rehberler                   | Geliştiriciler                        |
+| 📄 [Proje Mantığı](./logic_tr.md)         | Proje açıklaması, özellikler ve müşteriler için karlar | Müşteriler ve Sunucu Kurucuları       |
 
-### 🔍 Sorun Giderme
-1. İlgili dokümantasyon bölümünü kontrol edin
-2. [Paket Referansı](./docs/packets_tr.md) ile sistem ayarlarını inceleyin
-3. Sorun devam ederse e-posta ile iletişime geçin
+## Teknik Özellikler
+
+- **🔒 Güvenli**: Şifrelenmiş veri aktarımı
+- **⚡ Hızlı**: Optimize edilmiş ağ protokolleri
+- **🔧 Yapılandırılabilir**: JSON tabanlı ayarlar
+- **📱 Çapraz Platform**: iOS ve Android desteği
+- **🔄 Otomatik Yeniden Bağlanma**: Bağlantı hatalarını yönetir
+- **📝 Detaylı Kayıt**: Kapsamlı hata ayıklama bilgisi
+
+## Topluluk
+
+### 🤝 Katılın
+- 🌟 Bu depoyu **yıldızlayın**
+- 🍴 **Fork** edin ve katkıda bulunun
+- 🐛 [Issues](https://github.com/fewthinbo/mobicore/issues) üzerinden hataları **bildirin**
+- 💡 [Discussions](https://github.com/fewthinbo/mobicore/discussions)'da özellik **önerin**
+
+### 📞 Destek
+- 📧**E-posta**: mobicore.io@gmail.com
+- 🐛 **Hata Raporları**: [Issues](https://github.com/fewthinbo/mobicore/issues)
+- 💬 **Genel Sohbet**: [Discussions](https://github.com/fewthinbo/mobicore/discussions)
+
+## Lisans
+
+Bu proje [GNU General Public License v3.0](LICENSE) altında lisanslanmıştır.
+
+### 🔗 Üçüncü Taraf Lisansları
+- **OpenSSL** - [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+- **nlohmann-json** - [MIT License](https://opensource.org/licenses/MIT)
+- **zlib** - [zlib License](https://zlib.net/zlib_license.html)
+- **Boost** - [Boost Software License 1.0](https://www.boost.org/LICENSE_1_0.txt)
+- **libiconv** - [GNU GPL-3.0](https://www.gnu.org/licenses/gpl-3.0.html)
+
+## Başlangıç
+
+MT sunucunuzu dönüştürmeye hazır mısınız?
+
+1. ⭐ Bu depoyu **yıldızlayın**
+2. 📖 [Dokümantasyonu](README/tr.md) okuyun
+3. 🚀 [Kurulum Rehberini](README/docs/this_tr.md) takip edin
+4. 💬 [Topluluğa](https://github.com/fewthinbo/mobicore/discussions) katılın
 
 ---
 
-## 📖 Dokümantasyon Navigasyonu
+<div align="center">
 
-**📚 Okumaya Başlayın**: [Proje Mantığı](./docs/logic_tr.md) → [Teknik Yönetim](./docs/tech_tr.md) → [Paket Referansı](./docs/packets_tr.md) → [Kurulum Rehberi](./docs/this_tr.md)
+**MT sunucu deneyiminizi bugün dönüştürün!**
 
-**🌐 Dil**: **Türkçe** | [English](./en.md)
+*MT Oyun topluluğu için ❤️ ile yapıldı*
 
----
-
-*mobi-core ile MT sunucunuzun mobil deneyimini geliştirin! 🚀*
+</div>
