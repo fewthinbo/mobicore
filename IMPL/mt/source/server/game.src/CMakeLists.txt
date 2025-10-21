@@ -1,3 +1,21 @@
+################################ NOTES ##################################
+#IF YOU HAVE External/library/libssl.a External/library/libcrypto.a /NOT CRYPTOPP/
+#or something in your cmakelists.txt, use system libs instead of them:
+#target_link_libraries(${TARGET_NAME} 
+#	PUBLIC
+#	Boost::system
+#	Boost::thread
+#	OpenSSL::Crypto
+#	OpenSSL::SSL
+#)
+##########
+#NOTE: IF YOU ARE USING EXTERNAL BOOST LIBRARY WITH VENDOR APPROACH, DELETE THEM AND USE SYSTEM ONES
+#DELETE THAT LINE IF YOU'VE SOMETHING LIKE THIS
+#target_include_directories(${TARGET_NAME} PUBLIC
+#	"Extern/include/boost"
+#)
+################################ EOF NOTES ##################################
+
 #===================================================Mobile======================================================
 set(IS_64_BIT FALSE)
 include(CheckTypeSize)

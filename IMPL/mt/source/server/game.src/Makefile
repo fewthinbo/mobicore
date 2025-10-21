@@ -1,3 +1,14 @@
+################################ NOTES ##################################
+#IF YOU HAVE External/library/libssl.a External/library/libcrypto.a /NOT CRYPTOPP/
+#or something in your makefile, use system libs instead of them:
+#LIBS += /usr/lib/libssl.a
+#LIBS += /usr/lib/libcrypto.a
+##########
+#NOTE: IF YOU ARE USING EXTERNAL BOOST LIBRARY WITH VENDOR APPROACH, DELETE THEM AND USE SYSTEM ONES
+#DELETE THAT LINE IF YOU'VE SOMETHING LIKE THIS
+#INCDIR += -I../../../Extern/include/boost
+################################ EOF NOTES ##################################
+
 ...
 
 #===================================================Mobile======================================================
