@@ -72,7 +72,11 @@ namespace mobi_game {
 #endif
 #if	__OFFSHOP__
 		HEADER_MS_OFFSHOP,
+		HEADER_SM_OFFSHOP,
 #endif
+
+		HEADER_SM_CHARACTER, //ara sunucudan mt'ye karakter komutlari
+
 		HEADER_MAX
 	};
 
@@ -85,6 +89,11 @@ namespace mobi_game {
 		PLAYER_LEAVE,
 		PLAYER_POSITION_UPDATE,
 		NOTIFICATION,
+	};
+
+	//bridge to mt
+	enum class ESubModifyCharacter : uint8_t {
+		DISCONNECT,
 	};
 
 	enum class ESubCharacter : uint8_t {
@@ -105,7 +114,6 @@ namespace mobi_game {
 		SHOP_INFO,  //Detayli shop bilgisi -itemler vs-
 		SHOP_OPEN,
 		SHOP_CLOSE,
-		SHOP_UPDATE_DURATION,
 		SHOP_UPDATE_SLOT_COUNT,
 		ITEM_ADD,
 		ITEM_REMOVE,
@@ -494,6 +502,14 @@ namespace mobi_game {
 		uint32_t owner_pid{};
 	};
 
+	struct SMOffshop {
+		THEADER header = HEADER_SM_OFFSHOP;
+		TSIZE size{};
+		uint8_t sub_id{};
+		uint32_t sender_pid{};
+		uint32_t shop_pid{};
+	};
+
 	struct TAttr {
 		int16_t type{}; // efsun tipi
 		int16_t value{}; // efsun degeri
@@ -527,14 +543,20 @@ namespace mobi_game {
 			bool operator==(const TPriceInfo& other) const {
 				return other.yang == yang && other.cheque == cheque;
 			}
+
+			long long GetTotalAsYang(uint32_t yang_per_cheque) const {
+				long long total = yang;
+				total += static_cast<long long>(yang_per_cheque * cheque);
+				return total;
+			}
 		};
 
 		struct TShopCreate {
-			uint32_t duration{};
 			uint32_t slot_count{};
 		};
 
 		struct TItemAdd {
+			uint32_t virtual_id{};
 			uint32_t vnum{};
 			uint32_t pos{};
 			uint32_t count{};
@@ -561,8 +583,19 @@ namespace mobi_game {
 			uint32_t buyer_pid{};
 			uint32_t pos{};
 		};
+
+		struct SMItemBuy {
+			uint32_t pos{};
+			TPriceInfo seen_price{};
+		};
 	}
 #endif
+
+	struct SMModifyCharacter {
+		THEADER header = HEADER_SM_CHARACTER;
+		uint8_t sub_id{};
+		uint32_t pid{};
+	};
 
 #pragma pack(pop) 
 

@@ -64,12 +64,14 @@ namespace mobi_game {
 			LIST,
 		};
 
+		//Mt core authorities
 		enum EAuthorityType : uint16_t {
 			NONE = (0 << 0), //0
-			NOTIFICATION_MANAGER = (1 << 1),
-			CONFIG_MANAGER = (1 << 2),
-			P2P_MANAGER = (1 << 3),
-			DB_MANAGER = (1 << 4),
+			NOTIFICATION_MANAGER = (1 << 1), //admin duyurularini gonderme yetkisi
+			CONFIG_MANAGER = (1 << 2), //ayarlar dosyasini okur ve gonderir.
+			P2P_MANAGER = (1 << 3), // send p2p related packets from single core.
+			DB_MANAGER = (1 << 4), // read mobicore db info or update cache
+			SM_MANAGER = (1 << 5), // receive and handle spesific bridge server packets 
 		};
 
 #if __MT_DB_INFO__

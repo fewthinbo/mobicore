@@ -603,7 +603,6 @@ namespace mobi_game {
 		if (!IsCoreP2PManager()) return true;
 
 		offshop::TShopCreate pack_sec{};
-		pack_sec.duration = info.duration;
 		pack_sec.slot_count = info.lock_index;
 
 		MSOffshop pack{};
@@ -651,6 +650,7 @@ namespace mobi_game {
 			pack_sec.attrs[i].value = item.aAttr[i].sValue;
 		}
 		std::memcpy(pack_sec.sockets, item.alSockets, MAX_SOCKETS_COUNT);
+		pack_sec.virtual_id = item.id;
 		pack_sec.count = item.count;
 		pack_sec.pos = item.pos;
 		pack_sec.price.cheque = item.price.cheque;

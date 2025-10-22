@@ -165,6 +165,10 @@ namespace mobi_game {
 #if !__MT_DB_INFO__
 		bool HandleGetCache(TDataRef data); //yeni acc kaydini senkronize et
 #endif
+#if __OFFSHOP__
+		bool HandleOffshop(TDataRef data);
+#endif
+		bool HandleModifyCharacter(TDataRef data);
 //==================================== EOF HANDLERS
 	private:
 		std::unique_ptr<CAdminDataManager> admin_data_manager_;

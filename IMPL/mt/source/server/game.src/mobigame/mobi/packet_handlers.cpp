@@ -421,5 +421,126 @@ namespace mobi_game {
 	}
 #endif
 
+#if __OFFSHOP__
+	bool MobiClient::HandleOffshop(TDataRef data) {
+		auto* pkt = reinterpret_cast<const SMOffshop*>(data.data());
+		auto sub_header = static_cast<ESubOffshop>(pkt->sub_id);
+		LOG_TRACE("Offshop modify packet received: shop_pid(?), sender_pid(?)", pkt->shop_pid, pkt->sender_pid);
+
+		if (sub_header != ESubOffshop::ITEM_BUY && pkt->shop_pid != pkt->sender_pid) /*impossible case*/ {
+			LOG_TRACE("Pid(?) trying to modify another character's(?) offshop.", pkt->sender_pid, pkt->shop_pid);
+			return false;
+		}
+
+		auto sender_ch = CHARACTER_MANAGER::instance().FindByPID(pkt->sender_pid);
+		if (sender_ch) {
+			LOG_TRACE("Sender(?) is online in-game but doing things to shop(?) from mobile.", pkt->sender_pid, pkt->shop_pid);
+			return false;
+		}
+
+		const auto& ikaInstance = ikashop::GetManager();
+
+		std::shared_ptr<ikashop::CShop> shop = ikaInstance.GetShopByOwnerID(pkt->shop_pid);
+		if (!shop) {
+			LOG_TRACE("Shop(pid: ?) not exist, sender_pid(?)", pkt->shop_pid, pkt->sender_pid);
+			return false;
+		}
+
+		#ifdef EXTEND_IKASHOP_PRO
+		if (shop->GetDuration() == 0)
+			return false;
+		#endif
+
+		switch (sub_header)
+		{
+		case ESubOffshop::ITEM_REMOVE: {
+			auto* pkt_sec = reinterpret_cast<const offshop::TItemRemove*>(data.data() + sizeof(SMOffshop));
+
+			break;
+		}
+		case ESubOffshop::ITEM_BUY: {
+			auto* pkt_sec = reinterpret_cast<const offshop::SMItemBuy*>(data.data() + sizeof(SMOffshop));
+
+			auto pitem = shop->GetItem(pkt_sec->pos);
+			if (!pitem) {
+				LOG_TRACE("Item(pos:?) of shop(pid: ?) not exist, sender_pid(?)", pkt_sec->pos, pkt->shop_pid, pkt->sender_pid);
+				return false;
+			}
+
+			const auto& item_price = pitem->GetPrice();
+
+			if (item_price.yang > ch->GetGold()
+				|| item_price.cheque > ch->GetCheque()) {
+
+			}
+
+			if (!pitem->CanBuy(ch))
+			{
+				SendPopupMessage(ch, "IKASHOP_SERVER_POPUP_MESSAGE_CANNOT_BUY_NOT_ENOUGH_MONEY");
+				return false;
+			}
+
+			long long seenprice = pkt_sec->price.GetTotalAsYang(EMisc::YANG_PER_CHEQUE);
+			long long item_total_yang = item_price.GetTotalYangAmount();
+			if (item_total_yang != seenprice)
+			{
+				LOG_TRACE("Price mismatch, seen(?), current(?)", seenprice, item_total_yang);
+				return false;
+			}
+
+			//TODO: gercek ch lazim.
+			//ikaInstance.SendShopLockBuyItemDBPacket(pkt_sec->sender_acc, pkt->sender_pid, pkt->shop_pid, pitem, seenprice);
+			return true;
+		}
+		case ESubOffshop::ITEM_UPDATE_POS: {
+			auto* pkt_sec = reinterpret_cast<const offshop::TItemUpdatePos*>(data.data() + sizeof(SMOffshop));
+
+			break;
+		}
+		case ESubOffshop::ITEM_UPDATE_PRICE: {
+			auto* pkt_sec = reinterpret_cast<const offshop::TItemUpdatePrice*>(data.data() + sizeof(SMOffshop));
+
+		}
+		default:
+			break;
+		}
+
+		//TODO
+		/*
+		RecvShopBuyItemClientPacket
+		RecvShopRemoveItemClientPacket
+		RecvShopMoveItemClientPacket
+		RecvShopEditItemClientPacket
+		*/
+
+		return true;
+	}
+#endif
+
+	bool MobiClient::HandleModifyCharacter(TDataRef data) {
+		auto* pkt = reinterpret_cast<const SMModifyCharacter*>(data.data());
+		auto sub_header = static_cast<ESubModifyCharacter>(pkt->sub_id);
+		switch (sub_header)
+		{
+		case ESubModifyCharacter::DISCONNECT: {
+			auto ch = CHARACTER_MANAGER::instance().FindByPID(pkt->pid);
+			if (!ch) {
+				LOG_TRACE("Character(?) not found.", pkt->pid);
+				return false;
+			}
+			auto desc = ch->GetDesc();
+			if (!desc) {
+				LOG_TRACE("Desc of ch(?) not found.", pkt->pid);
+				return false;
+			}
+			DESC_MANAGER::instance().DestroyLoginKey(desc);
+			DESC_MANAGER::instance().DestroyDesc(desc);
+			break;
+		}
+		default:
+			break;
+		}
+		return true;
+	}
 }
 #endif
