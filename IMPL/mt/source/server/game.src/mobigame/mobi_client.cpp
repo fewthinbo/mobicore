@@ -513,15 +513,16 @@ namespace mobi_game {
 	bool MobiClient::sendChangeRace(uint32_t pid, uint8_t race) {
 		if (pid == 0) return false;
 
-		MSCharacter packet{};
-		packet.header = HEADER_MS_CHARACTER;
-		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_RACE);
-		
 		MSChangeRace s_packet{};
 		s_packet.pid = pid;
 		s_packet.race = race;
 
-		TMP_BUFFER buf(sizeof(MSCharacter) + sizeof(MSChangeRace));
+		MSCharacter packet{};
+		packet.header = HEADER_MS_CHARACTER;
+		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_RACE);
+		packet.size = sizeof(packet) + sizeof(s_packet);
+
+		TMP_BUFFER buf(packet.size);
 		buf.write(&packet, sizeof(packet));
 		buf.write(&s_packet, sizeof(s_packet));
 
@@ -531,15 +532,35 @@ namespace mobi_game {
 	bool MobiClient::sendChangeSex(uint32_t pid, uint8_t sex) {
 		if (pid == 0) return false;
 
-		MSCharacter packet{};
-		packet.header = HEADER_MS_CHARACTER;
-		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_SEX);
-
 		MSChangeSex s_packet{};
 		s_packet.pid = pid;
 		s_packet.sex = sex;
 
-		TMP_BUFFER buf(sizeof(MSCharacter) + sizeof(MSChangeSex));
+		MSCharacter packet{};
+		packet.header = HEADER_MS_CHARACTER;
+		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_SEX);
+		packet.size = sizeof(packet) + sizeof(s_packet);
+
+		TMP_BUFFER buf(packet.size);
+		buf.write(&packet, sizeof(packet));
+		buf.write(&s_packet, sizeof(s_packet));
+
+		return SendPacket(buf.get());
+	}
+
+	bool MobiClient::sendChLoadStatus(uint32_t pid, bool is_loaded) {
+		if (pid == 0) return false;
+
+		MSLoadCharacter s_packet{};
+		s_packet.pid = pid;
+		s_packet.is_loaded = is_loaded;
+
+		MSCharacter packet{};
+		packet.header = HEADER_MS_CHARACTER;
+		packet.sub_header = static_cast<uint8_t>(ESubCharacter::LOAD_CH_STATE);
+		packet.size = sizeof(packet) + sizeof(s_packet);
+
+		TMP_BUFFER buf(packet.size);
 		buf.write(&packet, sizeof(packet));
 		buf.write(&s_packet, sizeof(s_packet));
 
@@ -549,15 +570,16 @@ namespace mobi_game {
 	bool MobiClient::sendChangeEmpire(uint32_t pid, uint8_t empire) {
 		if (pid == 0) return false;
 
+		MSChangeEmpire s_packet{};
+		s_packet.pid = pid;
+		s_packet.empire = sex;
+
 		MSCharacter packet{};
 		packet.header = HEADER_MS_CHARACTER;
 		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_EMPIRE);
+		packet.size = sizeof(packet) + sizeof(s_packet);
 
-		MSChangeEmpire s_packet{};
-		s_packet.pid = pid;
-		s_packet.empire = empire;
-
-		TMP_BUFFER buf(sizeof(MSCharacter) + sizeof(MSChangeEmpire));
+		TMP_BUFFER buf(packet.size);
 		buf.write(&packet, sizeof(packet));
 		buf.write(&s_packet, sizeof(s_packet));
 
@@ -567,15 +589,16 @@ namespace mobi_game {
 	bool MobiClient::sendChangeName(uint32_t pid, const std::string& name) {
 		if (pid == 0 || name.empty()) return false;
 
+		MSChangeName s_packet{};
+		s_packet.pid = pid;
+		TMP_BUFFER::str_copy(s_packet.name, sizeof(s_packet.name), name.c_str());
+
 		MSCharacter packet{};
 		packet.header = HEADER_MS_CHARACTER;
 		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_NAME);
+		packet.size = sizeof(packet) + sizeof(s_packet);
 
-		MSChangeName s_packet{};
-		s_packet.pid = pid;
-		network::TMP_BUFFER::str_copy(s_packet.name, sizeof(s_packet.name), name.c_str());
-
-		TMP_BUFFER buf(sizeof(MSCharacter) + sizeof(MSChangeName));
+		TMP_BUFFER buf(packet.size);
 		buf.write(&packet, sizeof(packet));
 		buf.write(&s_packet, sizeof(s_packet));
 

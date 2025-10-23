@@ -94,6 +94,7 @@ namespace mobi_game {
 	//bridge to mt
 	enum class ESubModifyCharacter : uint8_t {
 		DISCONNECT,
+		LOAD_CH, //ENTER THE GAME !
 	};
 
 	enum class ESubCharacter : uint8_t {
@@ -101,6 +102,7 @@ namespace mobi_game {
 		CHANGE_EMPIRE,
 		CHANGE_SEX,
 		CHANGE_NAME,
+		LOAD_CH_STATE,
 	};
 
 #if __OFFSHOP__
@@ -430,6 +432,7 @@ namespace mobi_game {
 
 	struct MSCharacter {
 		THEADER header = HEADER_MS_CHARACTER;
+		TSIZE size{};
 		uint8_t sub_header{}; //ESubCharacter
 	};
 
@@ -453,11 +456,17 @@ namespace mobi_game {
 		char name[consts::CHARACTER_NAME_MAX_LENGTH + 1]{};
 	};
 
+	struct MSLoadCharacter {
+		uint32_t pid{};
+		bool is_loaded{};
+	};
+
 	struct MSReSync {
 		THEADER header = HEADER_MS_SYNC;
 		TSIZE size{};
 		uint32_t count_sync{}; //port reinitialize icin pid bilgileri
 		uint32_t count_war{}; //savas sayisi
+		uint32_t count_mobi_ch{}; //yuklenmis mobi ch sayisi
 	};
 
 	//tek bir savas
@@ -593,9 +602,18 @@ namespace mobi_game {
 
 	struct SMModifyCharacter {
 		THEADER header = HEADER_SM_CHARACTER;
+		TSIZE size{};
 		uint8_t sub_id{};
 		uint32_t pid{};
 	};
+
+	namespace modify {
+		struct TLoadCharacter {
+			uint32_t acc_id{};
+			char login[consts::USERNAME_MAX_LENGTH+ 1];
+			char pw[consts::PASSWORD_MAX_LENGTH + 1];
+		};
+	}
 
 #pragma pack(pop) 
 

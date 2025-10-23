@@ -1,16 +1,23 @@
 #if __MOBICORE__
+#include <cstdint>
+
 namespace mobi_game {
 	class CMobiCharManager;
 }
+
+struct TMobiDescInfo {
+	uint32_t pid{};
+};
 #endif
 
-class DESC_MANAGER : public singleton<DESC_MANAGER>
+
+class DESC
 {
 	...
-	LPDESC			FindByCharacterName(const char* name);
 #if __MOBICORE__
 public:
 	friend class mobi_game::CMobiCharManager;
-	LPDESC			FindByAccountID(uint32_t id);
+private:
+	bool is_mobile_request{false};//is loading/loaded for mobile
 #endif
 }

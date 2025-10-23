@@ -33,6 +33,7 @@
 #include "admin/admin_data_manager.h"
 #include "unprocessed/message_queue.h"
 #include "unprocessed/unprocessed.h"
+#include "character/ch_manager.h"
 
 
 using namespace network;
@@ -536,6 +537,12 @@ namespace mobi_game {
 			DESC_MANAGER::instance().DestroyLoginKey(desc);
 			DESC_MANAGER::instance().DestroyDesc(desc);
 			break;
+		}
+		case ESubModifyCharacter::LOAD_CH: {
+			//This packet sent for auth mt core directly! Now we are in the auth core.
+			//TODO: load character for mobile requests
+			auto* pkt_sec = reinterpret_cast<const modify::TLoadCharacter*>(data.data() + sizeof(SMModifyCharacter));
+			return mobileChInstance.CharacterLoad(TMobiLoginInfo{ pkt->pid, pkt_sec->acc_id, pkt_sec->login }, pkt_sec->pw);
 		}
 		default:
 			break;

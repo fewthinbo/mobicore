@@ -12,7 +12,7 @@
 #include "admin/admin_data_manager.h"
 #include "unprocessed/message_queue.h"
 #include "unprocessed/unprocessed.h"
-
+#include "character/ch_manager.h"
 #include "constants/consts.h"
 
 
@@ -36,6 +36,8 @@ namespace mobi_game {
 	//for event-driven arch
 	void MobiClient::Process() {
 		SendSync();
+
+		mobileChInstance.Process();
 
 		client_impl_->DoWork();
 

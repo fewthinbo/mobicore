@@ -37,7 +37,7 @@ typedef struct command_whisper
 #endif
 } TPacketCGWhisper;
 
-enum 
+enum
 {
 	MESSENGER_SUBHEADER_GC_LIST,
 #if !__MOBICORE__

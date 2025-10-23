@@ -2,7 +2,6 @@
 #include "mobi_client.h"
 #endif
 
-
 void CInputLogin::Entergame(LPDESC d, const char * data)
 {
 	...

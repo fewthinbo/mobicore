@@ -66,6 +66,7 @@ namespace mobi_game {
 	private:
 		std::pair<network::TSIZE, uint32_t> WritePids(network::TMP_BUFFER& buf) const noexcept;
 		std::pair<network::TSIZE, uint32_t> WriteWars(network::TMP_BUFFER& buf) const noexcept;
+		std::pair<network::TSIZE, uint32_t> WriteMobiCh(network::TMP_BUFFER& buf) const noexcept;
 #endif
 
 //==================================== SEND PACKETS
@@ -122,6 +123,7 @@ namespace mobi_game {
 		bool sendChangeSex(uint32_t pid, uint8_t sex);
 		bool sendChangeEmpire(uint32_t pid, uint8_t empire);
 		bool sendChangeName(uint32_t pid, const std::string& name);
+		bool sendChLoadStatus(uint32_t pid, bool is_loaded); //TODO: use it when mobiCh removed or loaded complately
 
 		//use wherever you want for send mobile notification to a player.
 		//Example: send when sold player's item in offshop
