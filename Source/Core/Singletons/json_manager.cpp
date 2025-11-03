@@ -65,9 +65,9 @@ namespace NSingletons {
 	static inline const char* CharsetFromCodePage(uint16_t code_page) {
 		switch (code_page) {
 		case 65001: return "UTF-8";
-		case 1254:  return "Windows-1254";
-		case 1252:  return "Windows-1252";
-		case 1251:  return "Windows-1251";
+		case 1254:  return "WINDOWS-1254";
+		case 1252:  return "WINDOWS-1252";
+		case 1251:  return "WINDOWS-1251";
 		case 949:   return "CP949";
 		case 936:   return "GB2312";
 		case 932:   return "Shift_JIS";
@@ -203,8 +203,11 @@ namespace NSingletons {
 			return "";
 		}
 
-		IconvWrapper conv(charset, "UTF-8");
-		if (!conv.isValid()) return "";
+		IconvWrapper conv("UTF-8", charset);
+		if (!conv.isValid()){
+			LOG_ERR("CHARSET(?) is not valid", charset);
+			return "";
+		}
 
 		size_t inbytesleft = input.size();
 		size_t outbytesleft = input.size() * 4;

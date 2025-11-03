@@ -21,7 +21,7 @@ else
 fi
 
 echo "Reloading /root/.shrc..."
-. ~/.shrc
+. /root/.shrc
 
 echo "Mobicore installing..."
 mobi_install_rel

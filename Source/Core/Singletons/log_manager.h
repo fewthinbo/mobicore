@@ -46,6 +46,7 @@ namespace NSingletons {
             {LogLevel::WARN, "warnings"},
             {LogLevel::ERR, "errors"},
             {LogLevel::FATAL, "fatal"},
+            {LogLevel::REPORT, "report"},
         };
         std::map<LogLevel, LogFile> log_files;
 #endif
@@ -54,13 +55,26 @@ namespace NSingletons {
 
 #define loggerInstance NSingletons::CLogManager::getInstance()
 
-#define LOG_FATAL(message, ...) NSingletons::CLogManager::getInstance().fatal("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
-#define LOG_ERR(message, ...) NSingletons::CLogManager::getInstance().error("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
+//\ karakterinden sonra hicbir bosluk olmamalidir.
+
+#define LOG_FATAL(message, ...)\
+NSingletons::CLogManager::getInstance().fatal("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
+
+#define LOG_ERR(message, ...)\
+NSingletons::CLogManager::getInstance().error("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
+
+#define LOG_REP(message, ...)\
+NSingletons::CLogManager::getInstance().report("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 
 //#if DEBUG
-#define LOG_INFO(message, ...) NSingletons::CLogManager::getInstance().info("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
-#define LOG_TRACE(message, ...) NSingletons::CLogManager::getInstance().trace("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
-#define LOG_WARN(message, ...) NSingletons::CLogManager::getInstance().warn("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
+#define LOG_INFO(message, ...)\
+NSingletons::CLogManager::getInstance().info("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
+
+#define LOG_TRACE(message, ...)\
+NSingletons::CLogManager::getInstance().trace("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
+
+#define LOG_WARN(message, ...)\
+NSingletons::CLogManager::getInstance().warn("? : ?", __FUNCTION__, message, ##__VA_ARGS__)
 //#else
 //#define DO_NOTHING do {} while(0) //not void to supress warnings
 //#define LOG_INFO(message, ...) DO_NOTHING

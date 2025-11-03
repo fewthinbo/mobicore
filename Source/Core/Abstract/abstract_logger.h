@@ -10,6 +10,7 @@ enum class LogLevel {
 	WARN,
 	ERR,
 	FATAL,
+	REPORT,
 };
 
 namespace NSingletons {
@@ -22,6 +23,7 @@ namespace NSingletons {
 			case LogLevel::WARN: return "WARN";
 			case LogLevel::ERR: return "ERROR";
 			case LogLevel::FATAL: return "FATAL";
+			case LogLevel::REPORT: return "REPORT";
 			default: return "";
 			}
 		}
@@ -122,6 +124,11 @@ namespace NSingletons {
 		template<typename ... Args>
 		void fatal(std::string_view message, Args&&... args) {
 			log(LogLevel::FATAL, message, std::forward<Args>(args)...);
+		}
+
+		template<typename ... Args>
+		void report(std::string_view message, Args&&... args) {
+			log(LogLevel::REPORT, message, std::forward<Args>(args)...);
 		}
 	};
 }
