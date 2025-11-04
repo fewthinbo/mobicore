@@ -3,10 +3,10 @@
 if [ ! -f "$ACME_SH" ]; then
   echo "acme.sh not found, installing..."
   curl https://get.acme.sh | sh
-  . ~/.profile
+  . /root/.profile
 fi
 
-. ~/.profile
+. /root/.profile
 
 echo "acme.sh is ready"
 $ACME_SH --version
@@ -25,11 +25,6 @@ CRON_MIN=0
 CRON_HOUR=3
 
 echo "Setting up daily cron job for acme.sh (at ${CRON_HOUR}:${CRON_MIN})..."
-
-if [ "$(id -u)" -ne 0 ]; then
-  echo "You must be root."
-  exit 1
-fi
 
 CRON_CMD="$CRON_MIN $CRON_HOUR * * * \"$ACME_SH\" --cron --home \"$ACME_HOME\" > /dev/null"
 

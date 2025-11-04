@@ -15,11 +15,6 @@ RULE_FILE="/etc/ipfw.rules"
 PY=/usr/local/bin/python3
 PY_SCRIPT_GET_FIELD="/usr/mobile/scripts/secondary/jsonfield-value.py"
 
-if [ "$(id -u)" -ne 0 ]; then
-  echo "You must be root."
-  exit 1
-fi
-
 # Check python script
 if [ ! -f "$PY_SCRIPT_GET_FIELD" ]; then
   echo "Please create $PY_SCRIPT_GET_FIELD and make it executable."

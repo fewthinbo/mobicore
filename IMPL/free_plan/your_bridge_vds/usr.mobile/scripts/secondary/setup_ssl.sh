@@ -36,11 +36,11 @@ echo "=== SSL SETUP/RENEW SCRIPT STARTED ==="
 if [ ! -f "$ACME_SH" ]; then
   echo "acme.sh not found, installing..."
   curl https://get.acme.sh | sh
-  . ~/.profile
+  . /root/.profile
 fi
 
 # ortam değişkenlerini yükle
-. ~/.profile
+. /root/.profile
 
 echo "acme.sh is ready"
 $ACME_SH --version
