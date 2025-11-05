@@ -1,5 +1,5 @@
 #pragma once
-#include "log_manager.h"
+//#include "log_manager.h"
 #include <singleton.h>
 
 #include <nlohmann/json.hpp>
@@ -8,7 +8,7 @@
 #include <typeindex>
 #include <string>
 
-//#define __JSON_LOG__
+//#define _JSON_LOG
 
 
 using type_json = nlohmann::json;
@@ -56,7 +56,7 @@ namespace NSingletons {
 				}
 			}
 			catch (const std::exception& e) {
-				LOG_ERR("Error setting JSON field ?: ?", _field, e.what());
+				//LOG_ERR("Error setting JSON field ?: ?", _field, e.what());
 			}
 		}
 
@@ -88,14 +88,14 @@ namespace NSingletons {
 				}
 			}
 			catch (const std::exception& e) {
-				LOG_ERR("Error getting JSON field ?: ?", field, e.what());
+				//LOG_ERR("Error getting JSON field ?: ?", field, e.what());
 			}
 		}
 
 		template<typename ... Args>
 		bool checkField(const type_json& j, Args&& ... args) const {
 			if (j.is_null()) {
-				LOG_WARN("Json is null, argSize(?)", sizeof...(args));
+				//LOG_WARN("Json is null, argSize(?)", sizeof...(args));
 				return false;
 			}
 			return (j.contains(args) && ...);
@@ -105,11 +105,11 @@ namespace NSingletons {
 		bool valcmp(const type_json& j, const std::string& _field, T&& _value) const {
 			using clearType = std::decay_t<T>;
 			if (j.is_null()) {
-				LOG_WARN("Json is null");
+				//LOG_WARN("Json is null");
 				return false;
 			}
 			if (!j.contains(_field)) {
-				LOG_WARN("Field ? not found", _field);
+				//LOG_WARN("Field ? not found", _field);
 				return false;
 			}
 
@@ -121,27 +121,27 @@ namespace NSingletons {
 					return jsonTime == _value;
 				}
 				catch (const std::exception& e) {
-					LOG_ERR("Error comparing time point: ?", e.what());
+					//LOG_ERR("Error comparing time point: ?", e.what());
 					return false;
 				}
 			}
 
 			// Debug için tip bilgisi
-#if defined(DEBUG) && defined(__JSON_LOG__)
-			LOG_TRACE("valcmp type info - Raw type: ?, Is string literal/const char*: ?, Is std::string: ?, Is decayed std::string: ?",
+#if defined(DEBUG) && defined(_JSON_LOG)
+			//LOG_TRACE("valcmp type info - Raw type: ?, Is string literal/const char*: ?, Is std::string: ?, Is decayed std::string: ?",
 				typeid(T).name(),
 				std::is_convertible_v<T, const char*>,
 				std::is_same_v<T, std::string>,
 				std::is_same_v<clearType, std::string>);
-			LOG_TRACE("valcmp comparing - Field: ?, Expected Value: ?", _field, _value);
+			//LOG_TRACE("valcmp comparing - Field: ?, Expected Value: ?", _field, _value);
 #endif
 
 			// String literal veya const char* için özel kontrol
 			if constexpr (std::is_convertible_v<T, const char*> || std::is_same_v<clearType, std::string>) {
 				try {
 					if (!j[_field].is_string()) {
-#if defined(DEBUG) && defined(__JSON_LOG__)
-						LOG_WARN("Field ? is not a string", _field);
+#if defined(DEBUG) && defined(_JSON_LOG)
+						//LOG_WARN("Field ? is not a string", _field);
 #endif
 						return false;
 					}
@@ -149,7 +149,7 @@ namespace NSingletons {
 					return _value == jsonStr;
 				}
 				catch (const std::exception& e) {
-					LOG_ERR("Error comparing string literal values: ?", e.what());
+					//LOG_ERR("Error comparing string literal values: ?", e.what());
 					return false;
 				}
 			}
@@ -160,19 +160,19 @@ namespace NSingletons {
 						return false;
 					}
 					auto comp = j[_field].get<clearType>();
-#if defined(DEBUG) && defined(__JSON_LOG__)
-					LOG_TRACE("int/uint: valcmp comparing - Field: ?, Value in JSON: ?, Expected Value: ?", _field, comp, _value);
+#if defined(DEBUG) && defined(_JSON_LOG)
+					//LOG_TRACE("int/uint: valcmp comparing - Field: ?, Value in JSON: ?, Expected Value: ?", _field, comp, _value);
 #endif
 					return comp == _value;
 				}
 				catch (const std::exception& e) {
-					LOG_ERR("Error comparing integer values: ?", e.what());
+					//LOG_ERR("Error comparing integer values: ?", e.what());
 					return false;
 				}
 			}
 
 			// Desteklenmeyen tip
-			LOG_WARN("Unsupported type for comparison");
+			//LOG_WARN("Unsupported type for comparison");
 			return false;
 		}
 

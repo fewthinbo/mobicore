@@ -14,6 +14,8 @@
 #include <sstream>
 #include <atomic>
 
+#include "log_manager.h"
+
 namespace JSONTables {
 	TResponse::TResponse(const std::string& _msg, long _code)
 		: code(_code) {
