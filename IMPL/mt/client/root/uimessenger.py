@@ -34,6 +34,16 @@ class MessengerMemberItem(MessengerItem):
 			self.UpdateStatus(self.STATE_OFFLINE)
 		...
 
+	...
+
+	def IsOnline(self):
+		if app.MOBICORE:
+			return self.STATE_ONLINE == self.state or self.STATE_MOBILE == self.state
+		else:
+			if self.STATE_ONLINE == self.state:
+				return True
+
+		return False
 
 	...
 

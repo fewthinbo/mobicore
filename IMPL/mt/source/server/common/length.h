@@ -1,3 +1,12 @@
+
+enum EMisc
+{
+	...
+#if !__MOBICORE__
+	QUERY_MAX_LEN			= 8192,
+#endif
+	FILE_MAX_LEN			= 128,
+}
 enum EWhisperType
 {
 	...

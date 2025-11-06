@@ -4,7 +4,7 @@
 
 namespace mobi_game {
 	//should be synced with bridgeServer/Common/tables.h
-	enum class ENotificationChannels {
+	enum class ENotificationChannels : uint8_t {
 		SYSTEM,
 		CHAT,
 		FRIENDS,
@@ -90,5 +90,49 @@ namespace mobi_game {
 			NOT_EXIST,
 		};
 	}
+
+	enum class EMobiLoad : uint8_t {
+		SUCCESS,
+		LOADING,
+		WRONG_PWD,
+		INGAME_REAL,
+		INVALID_LOCATION,
+		PLAYER_LOAD_FAILED,
+		NO_ACCOUNT_TABLE,
+		INDEX_OVERFLOW,
+		INVALID_PID,
+		NAME_CHANGED,
+		SHUTDOWN,
+		USER_LIMIT,
+		ID_NOT_EXISTS,
+		NOT_AVAIL,
+		BAD_SOCIAL_ID,
+		AGE_LIMIT,
+		BLOCKED,
+		NOBILL,
+		INVALID_STATUS,
+		LOGOUT,
+		NO_ACTIVITY,
+		OTHERS, //you can use this one for extra failure types
+	};
+
+#if __OFFSHOP__
+	enum class EResponseShopOperation : uint8_t {
+		SUCCESS,
+		INGAME_REAL,
+		NOT_EXISTS_CH,
+		NOT_EXISTS_SHOP,
+		NOT_EXISTS_ITEM,
+		FLOOD,
+		CHARACTER_ACTIONS,
+		NOT_ENOUGH_SAFEBOX_SPACE, //remove
+		NOT_ENOUGH_MONEY,//buy
+		PRICE_MISMATCH, //buy
+		INVALID_CELL, //move
+		INVALID_SALE_PRICE, //edit price
+		OTHERS,
+	};
+#endif
+
 }
 #endif

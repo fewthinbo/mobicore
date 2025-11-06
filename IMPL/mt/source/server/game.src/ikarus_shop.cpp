@@ -23,16 +23,3 @@ void CShop::MoveItem(DWORD itemid, int destCell)
 		item->SetCell(destCell);
 	...
 }
-
-bool CShop::AcceptOffer(OFFER_HANDLE offer)
-{
-	...
-	if (auto item = GetItem(offer->itemid)) {
-		...
-#if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopItemBuy(this->GetOwnerPID(), offer->buyerid, item->GetInfo().pos);
-#endif
-		item->SetPrice(offer->price);
-		...
-	}
-}

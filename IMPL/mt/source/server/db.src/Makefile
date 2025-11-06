@@ -1,1 +1,6 @@
-CFLAGS += -D__MOBICORE__=1
+ifeq ($(ENABLE_STATIC), 1)
+CFLAGS += -static
+endif
+
+#Mobile
+CFLAGS += -D__MOBICORE__

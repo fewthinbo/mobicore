@@ -23,321 +23,369 @@
 
 #include <Singletons/log_manager.h>
 
+#include "constants/packet_constants.h"
+#include "mobi_client.h"
+
+#if __BUILD_FOR_GAME__
+extern bool g_bShutdown;
+#endif
+
 namespace mobi_game {
 
-	TMobiCharacter::~TMobiCharacter() noexcept {
-		if (this->desc) {
-			const auto& desc_manager = DESC_MANAGER::instance();
-			desc_manager.DestroyLoginKey(desc);
-			desc_manager.DestroyDesc(desc);
+	static bool IsLoadFailed(EMobiLoad code) {
+		switch (code)
+		{
+		case EMobiLoad::SUCCESS:
+		case EMobiLoad::LOADING:
+			return false;
+		default:
+			return true;
 		}
+	}
+
+	TMobiCharacter::~TMobiCharacter() noexcept {
+#if __BUILD_FOR_GAME__
+		if (g_bShutdown) return;
+
+		auto& desc_manager = DESC_MANAGER::instance();
+		auto* d = desc_manager.FindByHandle(this->handle_id);
+		if (!d) return;
+
+		LOG_TRACE("MobiDesc(hid: ?) found and destroying", this->handle_id);
+		/*isinlanmalarda login_key'in kalmasini istiyorum*/
+		/*if (!g_bAuthServer) { //Auth server'da henuz login islemi bitmemis olacaktir
+			LOG_TRACE("Destroying login key(?)", d->GetLoginKey());
+			desc_manager.DestroyLoginKey(this->info.login);
+		}*/
+		desc_manager.DestroyDesc(d);
+#endif
 	};
 
 	CMobiCharManager::~CMobiCharManager() noexcept = default;
 
-	bool CMobiCharManager::IsLoadingForMobi(DESC* d) const {
-		if (!d) return false;
-		uint32_t handle_id = d->GetHandle();
-		
-		auto found = std::find_if(character_vec_.begin(), character_vec_.end(), [handle_id](const auto& mobi) {
-			if (!mobi) return false;
-			auto* desc = mobi->desc;
-			if (!desc) return false;
-			return handle_id == desc->GetHandle();
-		});
-
-		if (found == character_vec_.end()) {
-			LOG_TRACE("Desc(hid:?) is not loading for mobi", handle_id);
-			return false;
+	void CMobiCharManager::NotifyStatus(DESC* d, EMobiLoad code) {
+		if (!d) return;
+		if (!d->is_mobile_request) {
+			LOG_TRACE("Desc(hid: ?) not loaded for mobile, code(?)", d->GetHandle(), code);
+			return;
 		}
 
-		auto* ptr = found->get();
+		auto* ptr = MobiGetByHandleID(d->GetHandle());
 		if (!ptr) {
-			LOG_TRACE("Data is nullptr (hid:?)", handle_id);
-			return false;
+			LOG_TRACE("MobiData is nullptr for handle_id(?), code(?)", d->GetHandle(), code);
+			return;
 		}
+		uint32_t pid = ptr->info.pid;
 
-		if (ptr->status != EMobiChStatus::LOADING) {
-			LOG_TRACE("Data found but status doesn't match.");
-		}
+		mobileInstance.sendChLoadStatus(pid, code);
+		LOG_TRACE("Code(?) notified to server for pid(?)", code, pid);
+		
+		if (!IsLoadFailed(code)) return;
+		
+		LOG_TRACE("Load progress failed, desc(hid: ?) will remove: code(?), pid(?)", ptr->handle_id, code, pid);
 
-		return true;
+		descs_.EraseByKey(pid);
 	}
 
-	TMobiCharacter* CMobiCharManager::MobiGetByPID(uint32_t pid) {
-		auto found = character_map_.find(pid);
-		if (found == character_map_.end()) return nullptr;
-		return found->second;
-	}
-
-	bool CMobiCharManager::CharacterRemove(uint32_t pid) {
-		size_t removed = character_map_.erase(pid);
-
-		auto found = std::find_if(character_vec_.begin(), character_vec_.end(), [pid](const auto& mobi_ch) {
-			if (!mobi_ch) return false;
-			return mobi_ch->pid == pid;
+	TMobiCharacter* CMobiCharManager::MobiGetByHandleID(uint32_t hid) const {
+		auto found = std::find_if(descs_.begin(), descs_.end(), [hid](const auto& mobi) {
+			if (!mobi) return false;
+			return hid == mobi->handle_id;
 		});
 
-		bool found_in_vec = found != character_vec_.end();
-
-		if (removed != found_in_vec) {
-			LOG_ERR("Map(size: ?) and vector(size: ?) is not synced. Pid(?)", character_map_.size(), character_vec_.size(), pid);
-			return false;
+		if (found == descs_.end()) {
+			LOG_TRACE("Desc(hid:?) is not exists for mobi", hid);
+			return nullptr;
 		}
-
-		if (!found_in_vec) {
-			LOG_TRACE("Character not found to remove(pid: ?)", pid);
-			return false;
-		}
-
-		if (found != character_vec_.end() - 1) {
-			*found = std::move(character_vec_.back());
-		}
-		character_vec_.pop_back();
-		return true;
+		return found->get();
 	}
 
-	ELoadChResult CMobiCharManager::CharacterLoad(TMobiLoginInfo&& info, const std::string& pw) {
-		/*
-		Su an auth core'undayiz fakat asil veriler game core'larina dagitilmalidir.
-		*/
-		if (auto* mobi_ptr = MobiGetByPID(info.pid)) {
-			if (mobi_ptr->status == EMobiChStatus::LOADING) {
-				LOG_TRACE("Same request received for pid(?), already loading.", info.pid);
-				return ELoadChResult::LOADING;
-			}
-			else {
-				LOG_TRACE("Ptr found(pid: ?) but status(?) is not loading, will try to load", info.pid, mobi_ptr->status);
-			}
-		}
-		//FIXME: LoginSuccess olmadan once zaten oyunda mi diye kontrol edilen yeri bul ve dogrudan cikis yap.
-		//Hatta o kontrolu buraya ekle.
-		//SORU: PlayerLoad'dan once auth core'undan veri cikabiliyor mu?
-
-		//TODO: cci yapisina is_mobile eklenmesi gerekebilir.
-
-		//Auth core'u icin sorgula:
-		//Client zaten authenticate olmaya mi calisiyor?
-		if (LPDESC d = DESC_MANAGER::instance().FindByLoginName(info.login)) {
-			if (d->GetMobiInfo().is_loading_for_mobi) {
-				//DESC'ler ortak degil, peki nasil senkronize oluyorlar.??
-			}
-		}
-
-		//Zaten basarisiz girisler umrumuzda degil.
-		//LoginSuccess'dan sonraki islemler icin tum core'lar arasinda arama yap.
-		if (CCI* p2p_found = P2P_MANAGER::instance().FindByPID(info.pid)) {
-			//Tum login islemleri sirasinda desc'te bilgi bulunmalidir.
-			//Su an auth core'undayiz desc manager ile dogrudan bulabiliyorsak karakter yukleniyor demektir.
-		}
-
-		if (auto ch = CHARACTER_MANAGER::instance().FindByPID(info.pid)) {
-			LOG_TRACE("Character(pid:?) already exists", info.pid);
-
-			if (ch->is_mobile_request) {
-				LOG_TRACE("Character(pid:?) already loaded for mobile.", info.pid);
-				return ELoadChResult::ALREADY_FOR_MOBILE;
-			}
-
-			LOG_TRACE("Character(pid:?) is in game cannot load for mobile.", info.pid);
-			return ELoadChResult::IN_GAME;
-		}
-
-		const auto& desc_manager = DESC_MANAGER::instance();
+#if __BUILD_FOR_GAME__
+	DESC* CMobiCharManager::CreateDesc() const {
+		auto& desc_manager = DESC_MANAGER::instance();
 
 		//=============================== SETUP
 		auto* newd = M2_NEW DESC;
 		if (!newd) {
-			LOG_TRACE("Memory allocation error for desc(pid:?).", info.pid);
-			return ELoadChResult::SYSTEM_ERR;
+			LOG_TRACE("Memory allocation error while creating desc.");
+			return nullptr;
 		}
 
 		uint32_t handle_id = ++desc_manager.m_iHandleCount;
-
-		//IMPORTANT: db'ye haber sal, bu id mobil icin yuklenecek.
-		TGDHandleData gd_pack{ handle_id , false };
-		db_clientdesc->DBPacket(HEADER_GD_MOBI_LOAD, 0, gd_pack);
-
 		newd->m_dwHandle = handle_id;
+		newd->m_bHandshaking = false;
 		newd->SetPong(true);
+		newd->m_stHost = "1";
 		newd->is_mobile_request = true;
+		newd->last_activity = std::chrono::steady_clock::now();
 
 		desc_manager.m_map_handle.emplace(handle_id, newd);
 		desc_manager.m_set_pkDesc.emplace(newd);
-		//++desc_manager.m_iSocketsConnected; //diger kullanici girislerini etkilememelidir.
+		//login name map'ine otomatik olarak eklenecektir.
+
+		++desc_manager.m_iSocketsConnected;
 		//=============================== EOF SETUP
+		return newd;
+	}
+#endif
 
+	//====================================================== AUTH BEGIN
+	ELoadChResult CMobiCharManager::CharacterLoad(TMobiLoginInfo&& info, const std::string& pw) {
+		uint32_t pid = info.pid;
+		if (auto* mobi_ptr = descs_.FindByKey(pid))/*auth'da desc hala duruyorsa*/ {
+			LOG_TRACE("Same request received for pid(?), already loading.", pid);
+			return ELoadChResult::LOADING;
+		}
 
-		//=============================== LOGIN
+#if __BUILD_FOR_GAME__
+		//LoginSuccess'dan sonraki islemler icin tum core'lar arasinda arama yap.
+		if (CCI * p2p_found = P2P_MANAGER::instance().FindByPID(pid)) {
+			p2p_found->dwPID = 0;
+			mobileInstance.sendChLoadStatus(pid, p2p_found->is_mobile_request ? EMobiLoad::SUCCESS : EMobiLoad::INGAME_REAL);
+
+			if (!p2p_found->is_mobile_request) {
+				LOG_TRACE("Pid(?) found in another core but it's normal login, skipping to load character", pid);
+				return ELoadChResult::IN_GAME;
+			}
+			else {
+				LOG_TRACE("Character(?) already loaded for mobile", pid); 
+				return ELoadChResult::ALREADY_FOR_MOBILE;
+			}
+		}
+
+		auto* newd = CreateDesc();
+		if (!newd) {
+			LOG_TRACE("Memory allocation error for desc(pid:?).", pid);
+			return ELoadChResult::SYSTEM_ERR;
+		}
+
+		//=============================== PREPARE LOGIN PACK
 		TPacketCGLogin3 LoginPacket{}; //it will also initialize adwClientKey with zero
 		LoginPacket.header = HEADER_CG_LOGIN3;
-		strncpy(LoginPacket.login, info.login, ID_MAX_NUM);
-		strncpy(LoginPacket.passwd, pw, PASS_MAX_NUM);
-		LoginPacket.login[ID_MAX_NUM] = '\0';
-		LoginPacket.passwd[PASS_MAX_NUM] = '\0';
+		TMP_BUFFER::str_copy(LoginPacket.login, LOGIN_MAX_LEN, info.login.c_str());
+		TMP_BUFFER::str_copy(LoginPacket.passwd, PASSWD_MAX_LEN, pw.c_str());
+		LoginPacket.login[LOGIN_MAX_LEN] = '\0';
+		LoginPacket.passwd[PASSWD_MAX_LEN] = '\0';
+
+
+		descs_.Emplace(pid, std::move(info), newd->GetHandle());
+
+		//=============================== LOGIN
+		LOG_TRACE("Id(?), pw(?) trying to login for mobile", LoginPacket.login, LoginPacket.passwd);
 
 		newd->SetPhase(PHASE_AUTH);
-		newd->m_inputAuth.Login(newd, LoginPacket);
+		newd->m_inputAuth.Login(newd, reinterpret_cast<const char*>(&LoginPacket));
 		//=============================== EOF LOGIN
-
-		CharacterEmplace(std::move(info), newd, nullptr);
-		/*
-			TPlayerLoadPacket pack{};
-			pack.player_id = pid;
-			pack.account_id = acc_id;
-			pack.account_index = 0;
-
-			LOG_TRACE("Load request sent to db, pid(?), acc_id(?)", pid, acc_id);
-
-			db_clientdesc->DBPacket(HEADER_GD_PLAYER_LOAD, 0, &pack, sizeof(TPlayerLoadPacket));	
-		*/
-
+#endif
 		return ELoadChResult::LOADING;
 	}
 
-	bool CMobiCharManager::CharacterSetPhase(uint32_t pid, int phase) {
-		TMobiCharacter* ptr = MobiGetByPID(pid);
-		if (!ptr) {
-			LOG_TRACE("Mobi character(?) not exists", pid);
-			return false;
-		}
-
-		if (!ptr->desc) {
-			LOG_TRACE("Character(?) desc not exists", pid);
-			return false;
-		}
-
-		const DESC& desc = *ptr->desc;
-
-		if (desc.IsPhase(phase)) {
-			LOG_TRACE("Character(?) is already in phase(?)", pid, phase);
-			return false;
-		}
-
-		desc.SetPhase(phase);
-		//TODO: playerload vs islemlerinden sonra status'u guncelle.
-
-		if (ptr->status != EMobiChStatus::LOADING) return true;
-
-		switch (phase) {
-		case PHASE_LOGIN: {
-			LOG_TRACE("Login key is ?" desc.GetLoginKey());
-
-			TPacketCGLogin2 pack{};
-			pack.header = HEADER_CG_LOGIN2;
-			pack.dwLoginKey = desc.GetLoginKey();
-			strncpy(pack.login, ptr->info.login, sizeof(pack.name) - 1);
-			pack.login[ID_MAX_NUM] = '\0';
-
-			desc.m_inputLogin.LoginByKey(desc, pack);
-			break;
-		}
-
-		case PHASE_SELECT: {
-			int ch_idx = desc.GetAccountTable().GetIndexByPID(ptr->info.pid);
-			if (ch_idx == -1) {
-				LOG_TRACE("Index not found for pid(?)", ptr->info.pid);
-				break;
-			}
-
-			TPacketCGPlayerSelect pack{}; //other members will initialize default
-			pack.header = HEADER_CG_CHARACTER_SELECT;
-			pack.index = ch_idx;
-			desc.m_inputLogin.CharacterSelect(desc, pack);
-			break;
-		}
-		case PHASE_LOADING: {
-			desc.m_inputLogin.Entergame(desc, nullptr);
-			break;
-		}
-		default:
-			break;
-		}
-
-		return true;
-	}
-
-	bool CharacterSetStatus(uint32_t pid, EMobiChStatus status) {
-		TMobiCharacter* ptr = MobiGetByPID(pid);
-		if (!ptr) {
-			LOG_TRACE("Mobi character(?) not exists", pid);
-			return false;
-		}
-
-		if (ptr->status == status) {
-			LOG_TRACE("Ch has same status(?)", status);
-			return false;
-		}
-
-		ptr->status = status;
-		return true;
-	}
-
-	void CMobiCharManager::CharacterAdd(CHARACTER* ch) {
-		if (!ch) return;
-
-		uint32_t pid = ch->GetPlayerID();
-
-		auto* ptr = MobiGetByPID(pid);
-		if (!ptr) {
-			LOG_TRACE("Pid(?) doesn't exists as mobi skipping", pid);
+#if __BUILD_FOR_GAME__
+	void CMobiCharManager::SendMobiLogin(LPDESC d) {
+		if (!d) return;
+		if (!d->is_mobile_request) {
+			LOG_TRACE("Desc(hid: ?) is not for mobile, skipping", d->GetHandle());
 			return;
 		}
 
-		if (ptr->ch) {
-			LOG_TRACE("Mobi_ch has already character data overwriting, pid(?)", pid);
+		if (!g_bAuthServer) {
+			LOG_TRACE("Channel(id:?, port:?) is not auth server.", g_bChannel, mother_port);
+			return;
 		}
 
-		ch->is_mobile_request = true;
-		ptr->ch = ch;
-		ptr->status = EMobiChStatus::READY;
+		auto* ptr = MobiGetByHandleID(d->GetHandle());
+		if (!ptr) {
+			LOG_TRACE("MobiData is nullptr for handle_id(?)", d->GetHandle());
+			return;
+		}
+		uint32_t pid = ptr->info.pid;
 
-		//handle id sil.
-		TGDHandleData gd_pack{ handle_id , true };
-		db_clientdesc->DBPacket(HEADER_GD_MOBI_LOAD, 0, gd_pack);
+		TMobiGD pack{};
+		pack.pid = pid;
+		pack.login_key = d->GetLoginKey();
+		db_clientdesc->DBPacket(HEADER_GD_MOBI_LOGIN, 0, pack); //en uygun core bulunup loginKey ile giris yapilir.
+
+		HandleLogout(pid);
 	}
 
+	void CMobiCharManager::SendMobiWarp(LPDESC d, int32_t addr, uint16_t port) {
+		if (!d) return;
+		if (!d->is_mobile_request) {
+			LOG_TRACE("Desc(hid: ?) is not for mobile, skipping", d->GetHandle());
+			return;
+		}
+		d->last_activity = std::chrono::steady_clock::now();
+
+		if (g_bAuthServer) {
+			LOG_TRACE("You cannot warp in auth server.");
+			return;
+		}
+
+		auto* ptr = MobiGetByHandleID(d->GetHandle());
+		if (!ptr) {
+			LOG_TRACE("MobiData is nullptr for handle_id(?)", d->GetHandle());
+			return;
+		}
+		uint32_t pid = ptr->info.pid;
+
+		TMobiGDWarp pack{};
+		pack.info.pid = pid;
+		pack.info.login_key = d->GetLoginKey();
+		pack.addr = addr;
+		pack.port = port;
+		db_clientdesc->DBPacket(HEADER_GD_MOBI_WARP, 0, pack); //hedef core'a giris
+
+		HandleLogout(pid);
+	}
+
+	void CMobiCharManager::HandleLoginResult(DESC* d, bool res) {
+		if (!d) return;
+
+		if (!d->is_mobile_request) {
+			LOG_TRACE("Desc(hid: ?) is not loading for mobile", d->GetHandle());
+			return;
+		}
+		LOG_TRACE("EOF AUTH: Login result for hid(?): ?", d->GetHandle(), res);
+
+		mobileChInstance.NotifyStatus(d, res ? EMobiLoad::LOADING : EMobiLoad::WRONG_PWD);
+
+		if (!res) return;
+
+		uint32_t hid = d->GetHandle();
+		auto desc = DESC_MANAGER::instance().FindByHandle(hid);
+		if (!desc) {
+			LOG_TRACE("Desc couldn't found by hid: ?", hid);
+			return;
+		}
+
+		LOG_TRACE("Desc(hid: ?) found in auth", hid);
+		SendMobiLogin(d);
+	}
+	//====================================================== EOF AUTH 
+
+
+	//g_pkAuthMasterDesc, db_clientdesc
+	//====================================================== LOGIN BEGIN
+	//this function running in most avail core for logging to game
+	//HEADER_DG_MOBI_LOGIN tetikler.
+	void CMobiCharManager::SendLoginRequest(const char* data) {
+		LOG_TRACE("Login request received to channel(?)", g_bChannel);
+		auto* received = reinterpret_cast<const TMobiDGLogin*>(data);
+		LOG_TRACE("Inside of packet: login(?), key(?), pid(?)", received->login, received->login_key, received->pid);
+
+		auto* newd = CreateDesc();
+		if (!newd) {
+			return;
+		}
+		LOG_TRACE("Created new desc in game: handle id(?)", newd->GetHandle());
+		descs_.Emplace(received->pid, TMobiLoginInfo{ received->pid, received->login }, newd->GetHandle());
+
+		TPacketCGLogin2 pack{};
+		pack.header = HEADER_CG_LOGIN2;
+		pack.dwLoginKey = received->login_key;
+		TMP_BUFFER::str_copy(pack.login, LOGIN_MAX_LEN, received->login);
+		pack.login[LOGIN_MAX_LEN] = '\0';
+
+		newd->SetPhase(PHASE_LOGIN);
+		newd->m_inputLogin.LoginByKey(newd, reinterpret_cast<const char*>(&pack));
+	}
+
+	void CMobiCharManager::CharacterSelect(DESC* d) {
+		if (!d) return;
+		if (!d->is_mobile_request) {
+			LOG_TRACE("Character is not loaded for mobi, skipping");
+			return;
+		}
+
+		LOG_TRACE("Selecting character for desc(hid: ?, login_key: ?)", d->GetHandle(), d->GetLoginKey());
+		auto* ptr = MobiGetByHandleID(d->GetHandle());
+		if (!ptr) {
+			LOG_TRACE("MobiData is nullptr for handle_id(?)", d->GetHandle());
+			return;
+		}
+
+		int ch_idx = d->GetAccountTable().GetIndexByPID(ptr->info.pid);
+		if (ch_idx == -1) {
+			LOG_TRACE("Index not found for pid(?)", ptr->info.pid);
+			return;
+		}
+
+		TPacketCGPlayerSelect pack{}; //other members will initialize default
+		pack.header = HEADER_CG_CHARACTER_SELECT;
+		pack.index = ch_idx;
+
+		d->last_activity = std::chrono::steady_clock::now();
+		d->SetPhase(PHASE_SELECT);
+		d->m_inputLogin.CharacterSelect(d, reinterpret_cast<const char*>(&pack));
+	}
+
+	void CMobiCharManager::Entergame(DESC* d) {
+		if (!d) return;
+		if (!d->is_mobile_request) {
+			LOG_TRACE("Character is not loaded for mobi, skipping");
+			return;
+		}
+		d->last_activity = std::chrono::steady_clock::now();
+		d->SetPhase(PHASE_LOADING);
+		d->m_inputLogin.Entergame(d, nullptr);
+		LOG_TRACE("MobiCh(hid: ?) loggined to game", d->GetHandle());
+		NotifyStatus(d, EMobiLoad::SUCCESS);
+	}
+
+	bool CMobiCharManager::HandleLogout(uint32_t pid) {
+		if (!descs_.EraseByKey(pid)) {
+			LOG_TRACE("Ch(?) already removed", pid);
+			return false;
+		}
+		LOG_TRACE("Desc(pid: ?) removed from channel(id:?, port:?).", pid, g_bChannel, mother_port);
+		mobileInstance.sendChLoadStatus(pid, EMobiLoad::LOGOUT);
+		return true;
+	}
+
+	//====================================================== EOF LOGIN
+#endif
+
+
 	void CMobiCharManager::Process() {
+		static constexpr auto ACTIVITY_TIMEOUT = std::chrono::minutes(15);
 		auto now = std::chrono::steady_clock::now();
 		if (now - last_cleanup < CH_CLEANER_INTERVAL) return;
-
+		last_cleanup = now;
+#if __BUILD_FOR_GAME__
 		size_t removed_count = 0;
 
-		auto it = character_vec_.begin();
-		while (it != character_vec_.end()) {
-			bool need_remove{ false };
-			auto* ptr = it->get();
+		std::vector<uint32_t> remove_vec;
 
-			if (!ptr){
-				need_remove = true;
-			}
-			else if(ptr->IsActivityTimeout() || ptr->status == EMobiChStatus::NONE) {
-				need_remove = true;
-			}
-			else if (ptr->IsLoadTimeout()) {
-				//notify to db
-				if (auto* desc = ptr->desc) {
-					TGDHandleData gd_pack{ desc->GetHandle() , true};
-					db_clientdesc->DBPacket(HEADER_GD_MOBI_LOAD, 0, gd_pack);
-				}
-				else {
-					LOG_TRACE("Desc not adjusted yet for pid(?)", ptr->info.pid);
-				}
+		descs_.ForEach([&remove_vec, &now](TMobiCharacter& mobi) -> void {
+			bool need_remove{ true };
+			uint32_t pid = mobi.info.pid;
 
-				need_remove = true;
+			auto* desc = DESC_MANAGER::Instance().FindByHandle(mobi.handle_id);
+			if (!desc) {
+				LOG_TRACE("Desc not exists in core(pid: ?)", pid);
+			}
+			else if (now - desc->last_activity > ACTIVITY_TIMEOUT) {
+				LOG_TRACE("Desc(hid: ?) will remove due to activity timeout", desc->GetHandle());
+			}
+			else {
+				need_remove = false;
 			}
 
 			if (need_remove) {
-				it = character_vec_.erase(it);
-				removed_count++;
-				continue;
+				remove_vec.emplace_back(pid);
 			}
-			++it;
+		});
+
+		for (const auto& pid : remove_vec) {
+			if (!descs_.EraseByKey(pid)) continue;
+			++removed_count;
+			mobileInstance.sendChLoadStatus(pid, EMobiLoad::NO_ACTIVITY);
 		}
 
 		if (removed_count > 0) {
 			LOG_TRACE("? mobi_ch removed", removed_count);
 		}
+#endif
 	}
 }
 

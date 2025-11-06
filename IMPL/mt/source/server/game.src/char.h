@@ -1,12 +1,10 @@
-
-class CHARACTER : ...
+class CHARACTER : public ...
 {
-
 	...
-
 #if __MOBICORE__
-public:
-	bool is_mobile_request{ false };
+	private:
+		bool m_destroyed{ false };
+	public:
+		void GoToSafePosition();
 #endif
-
-}
+};

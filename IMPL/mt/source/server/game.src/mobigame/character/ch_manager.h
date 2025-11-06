@@ -5,9 +5,14 @@
 #include <chrono>
 
 #include <singleton.h>
+#include <Utility/container.h>
 
+#include "constants/packets.h"
+
+#if __BUILD_FOR_GAME__
 class CHARACTER;
 class DESC;
+#endif
 
 enum class ELoadChResult : uint8_t {
 	LOADING, //loading for mobile
@@ -15,89 +20,58 @@ enum class ELoadChResult : uint8_t {
 	IN_GAME, //character is in-game actively
 	SYSTEM_ERR,
 };
+struct TMobiEnterGame;
 
 namespace mobi_game {
 
 	//using as temporary parameter
 	struct TMobiLoginInfo {
-		uint32_t pid{}, acc_id{};
+		uint32_t pid{};
 		std::string login{};
-	};
-
-	enum class EMobiChStatus {
-		LOADING,
-		READY,
-		NONE,
 	};
 
 	//Bu depolama sinifi core bazli calisacak yani
 	//Bu core'dan cikildiginda kaynaklar otomatik temizlenmelidir. HEADER_GG gonderilen yerler vb(ben simdilik gondermeyecegim)
 	//Cunku oyuna sokup isinlamiyoruz.
+	//Ek olarak process icerisinde otomatik kontrol edilip temizlenecektir.
 
-	struct TMobiCharacter {
+	//Auth'a ait veri
+	struct TMobiCharacter final {
 		TMobiLoginInfo info{};
-		DESC* desc{ nullptr };
-		CHARACTER* ch{ nullptr };
-		EMobiChStatus status{ EMobiChStatus::LOADING };
-		std::chrono::steady_clock::time_point last_activity{};
-		std::chrono::steady_clock::time_point load_begin{};
+		uint32_t handle_id{};
 
-		explicit TMobiCharacter(TMobiLoginInfo&& info, DESC* d, CHARACTER* ch) : pid(pid), desc(d), ch(ch) {
-			load_begin = std::chrono::steady_clock::now();
+		explicit TMobiCharacter(TMobiLoginInfo&& info, uint32_t hid) 
+			: info(std::move(info)), handle_id(hid) {
 		}
-
 		~TMobiCharacter() noexcept;
-		
-		//TODO: herhangi bir islem gerceklestiginde bunu calistir.
-		void UpdateActivity() {
-			last_activity = std::chrono::steady_clock::now();
-		}
-
-		static constexpr auto ACTIVITY_TIMEOUT_MIN = std::chrono::minutes(20);
-		static constexpr auto LOAD_TIMEOUT_MIN = std::chrono::minutes(5);
-		bool IsTimeout(const std::chrono::steady_clock::time_point& now) const {
-			bool is_activity_timeout = now - last_activity > ACTIVITY_TIMEOUT_MIN;
-			bool is_load_timeout = status == EMobiChStatus::LOADING && (now - load_begin > LOAD_TIMEOUT_MIN);
-			return is_activity_timeout || is_load_timeout;
-		}
 	};
-
-	class CMobiCharP2P {
-		bool P2PAdd(uint32_t hid, uint32_t pid) {
-			return handles_.try_emplace(hid, pid).second;
-		}
-	private:
-		std::unordered_map<uint32_t, uint32_t> handles_;//handle_id to pid
-	};
-
 
 	class CMobiCharManager : public CSingleton<CMobiCharManager> {
 	public:
-		~CMobiCharManager() noexcept override;
-	public:
-		ELoadChResult CharacterLoad(TMobiLoginInfo&& info, const std::string& pw);
-
-		bool CharacterSetPhase(uint32_t pid, int phase);
-		bool CharacterSetStatus(uint32_t pid, EMobiChStatus status);
-		TMobiCharacter* MobiGetByPID(uint32_t pid);
-
-		bool IsLoadingForMobi(DESC* d) const;
-
-		void CharacterAdd(CHARACTER* ch);
-	public:
+		~CMobiCharManager() noexcept;
 		void Process(); //cleanups etc.
+#if __BUILD_FOR_GAME__
+		void NotifyStatus(DESC* d, EMobiLoad code);
+#endif
 	private:
-		template<typename ... Args>
-		TMobiCharacter* CharacterEmplace(Args&& ... args) {
-			auto& added = character_vec_.emplace_back(std::make_unique<TMobiCharacter>(std::forward<Args>(args)...));
-			TMobiCharacter* ptr = added.get();
-			character_map_.try_emplace(added->pid, ptr);
-			return ptr;
-		}
-		bool CharacterRemove(uint32_t pid);
+		TMobiCharacter* MobiGetByHandleID(uint32_t hid) const;
+#if __BUILD_FOR_GAME__
+		DESC* CreateDesc() const;
+	public: //Auth
+		void HandleLoginResult(DESC* d, bool res);
+		ELoadChResult CharacterLoad(TMobiLoginInfo&& info, const std::string& pw);
 	private:
-		std::unordered_map<uint32_t, TMobiCharacter*> character_map_; //once map tanimlanmalidir.
-		std::vector<std::unique_ptr<TMobiCharacter>> character_vec_; //iterasyonlarin mapi invalidate etmemesi icin unique.
+		void SendMobiLogin(LPDESC d);
+
+	public: //game
+		void SendLoginRequest(const char* data);
+		void CharacterSelect(DESC* d);
+		void Entergame(DESC* d);
+		bool HandleLogout(uint32_t pid);
+		void SendMobiWarp(LPDESC d, int32_t addr, uint16_t port);
+#endif
+	private:
+		improved::Container<uint32_t/*pid*/, TMobiCharacter> descs_{};
 		
 		static constexpr auto CH_CLEANER_INTERVAL = std::chrono::minutes(15); //15 dakikada bir cache temizlenir
 		std::chrono::steady_clock::time_point last_cleanup{};

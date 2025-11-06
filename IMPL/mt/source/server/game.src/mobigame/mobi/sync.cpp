@@ -14,8 +14,10 @@
 #include <Singletons/log_manager.h>
 
 #include "client/client_base.h"
+#include "admin/admin_data_manager.h"
 
 #include "constants/packets.h"
+
 
 using namespace network;
 
@@ -136,13 +138,13 @@ namespace mobi_game {
 	}
 
 	std::pair<TSIZE, uint32_t> MobiClient::WriteMobiCh(TMP_BUFFER& buf) const noexcept {
-		std::vector<uint32_t> mobis{};
+		std::vector<uint32_t> pids{};
 		const auto& cl_desc = DESC_MANAGER::instance().GetClientSet();
 		for (const auto& d : cl_desc) {
 			if (!d) continue;
 			auto ch = d->GetCharacter();
 			if (!ch) continue;
-			if (!ch->is_mobile_request) continue;
+			if (!d->is_mobile_request) continue;
 			uint32_t pid = ch->GetPlayerID();
 			LOG_TRACE("MobiCh(?) will be sync.", pid);
 			pids.emplace_back(pid);

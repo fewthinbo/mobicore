@@ -24,7 +24,6 @@ namespace mobi_game {
 	MobiClient::MobiClient()
 		: client_impl_(std::make_unique<GameClientBase>()) {
 		if (client_impl_) {
-			LOG_TRACE("member variables initialized successfully");
 			auto ptr = client_impl_.get();
 			message_helper_ = std::make_unique<CMessageHelper>(ptr);
 			unprocessed_helper_ = std::make_unique<CUnprocessedHelper>(ptr);
@@ -79,7 +78,6 @@ namespace mobi_game {
 			LOG_TRACE("header(?) sent successfully", header);
 			return true;
 		case ESendResult::NOT_CONNECTED:
-			LOG_TRACE("header(?) couldn't sent, adding to unprocessed queue", header);
 			unprocessed_helper_->unprocessed_add(data, encrypt);
 			return false;
 		default:
