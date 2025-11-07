@@ -3,9 +3,10 @@ set -eu
 
 #constants
 DB_USER=mobicore
-SCRIPT=/usr/mobile/scripts/secondary/update-json.py
-JSON_FILE=/usr/mobile/info.json
 PY=/usr/local/bin/python3
+PY_SCRIPT_JSON_UPDATE=/usr/mobile/scripts/secondary/update-json.py
+PY_SCRIPT_DETECT_IP=/usr/mobile/scripts/secondary/detect-ip.py
+JSON_FILE=/usr/mobile/info.json
 
 # helper: simple yes/no prompt. returns 0 for yes, 1 for no
 ask_yesno() {
@@ -172,19 +173,27 @@ else
   exit 1
 fi
 
-# ensure python script is present and executable
-if [ ! -f "$SCRIPT" ]; then
-  echo "Please create $SCRIPT (put the python code there) and make it executable."
+
+if [ ! -f "$PY_SCRIPT_DETECT_IP" ]; then
+  echo "Please create $PY_SCRIPT_DETECT_IP (put the python code there) and make it executable."
   exit 1
 fi
-chmod +x "$SCRIPT"
+chmod +x "$PY_SCRIPT_DETECT_IP"
+DETECTED_IP=$("$PY" "$PY_SCRIPT_DETECT_IP")
+
+# ensure python script is present and executable
+if [ ! -f "$PY_SCRIPT_JSON_UPDATE" ]; then
+  echo "Please create $PY_SCRIPT_JSON_UPDATE (put the python code there) and make it executable."
+  exit 1
+fi
+chmod +x "$PY_SCRIPT_JSON_UPDATE"
 
 # call python updater
-"$PY" "$SCRIPT" --file "$JSON_FILE" --bridge-ip "$YOUR_MOBI_BRIDGE_SERVER_IP" --db-pass "$RANDOM_STRONG_PASS" --db-user "$DB_USER" --db-port "$DB_PORT"
+"$PY" "$PY_SCRIPT_JSON_UPDATE" --file "$JSON_FILE" --field server_bridge.host:"$YOUR_MOBI_BRIDGE_SERVER_IP" --field db.host:"$DETECTED_IP:$DB_PORT" --field db.user:"$DB_USER" --field db.pass:"$RANDOM_STRONG_PASS"
 RET=$?
 if [ $RET -ne 0 ]; then
-  echo "Updater script failed with exit code $RET"
-  exit $RET
+  echo "[ERROR] $PY_SCRIPT_JSON_UPDATE failed with exit code $RET"
+  echo "You need to adjust $JSON_FILE 'db' fields manually"
 fi
 
 echo "Done."

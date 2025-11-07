@@ -20,6 +20,9 @@
 #include "../../../common/tables.h"
 #include "../../../common/length.h"
 #include "db.h"
+#if __OFFSHOP__
+#include "ikarus_shop_manager.h"
+#endif
 #endif
 
 #include <Singletons/log_manager.h>
@@ -33,6 +36,7 @@
 #include "admin/admin_data_manager.h"
 #include "unprocessed/message_queue.h"
 #include "unprocessed/unprocessed.h"
+#include "character/ch_manager.h"
 
 
 using namespace network;
@@ -101,35 +105,29 @@ namespace mobi_game {
 		auto* sm = reinterpret_cast<const SMMessage*>(data.data());
 		const char* message = reinterpret_cast<const char*>(data.data() + sizeof(SMMessage));
 
-		LOG_TRACE("Pm from mobile: message(?), sender_name(?), receiver_pid(?)", message, sm->name, sm->receiver_pid);
+		LOG_TRACE("Pm from mobile: message(?), sender_name(?), receiver_acc_id(?)", message, sm->name, sm->receiver_acc_id);
 #if __BUILD_FOR_GAME__
-		LPDESC desc = nullptr;
-
-		//desc bul
-		if (auto ch = CHARACTER_MANAGER::instance().FindByPID(sm->receiver_pid)) {
-			desc = ch->GetDesc();
-		}
-		else if (auto peer = P2P_MANAGER::instance().FindByPID(sm->receiver_pid)) {
-			desc = peer->pkDesc;
-		}
+		LPDESC desc = DESC_MANAGER::instance().FindByAccountID(sm->receiver_acc_id);
 
 		if (!desc){
-			LOG_TRACE("? desc not found for receiver_pid(?)", sm->receiver_pid);
+			LOG_TRACE("? desc not found for receiver_acc_id(?)", sm->receiver_acc_id);
 			return false;
 		}
 
+		TSIZE msg_len = sm->size - sizeof(SMMessage);
+
 		TPacketGCWhisper pack{};
 		pack.bHeader = HEADER_GC_WHISPER;
-		pack.wSize = sizeof(TPacketGCWhisper) + sm->size;
+		pack.wSize = sizeof(TPacketGCWhisper) + msg_len;
 		pack.bType = WHISPER_TYPE_MOBILE;
 		strlcpy(pack.szNameFrom, sm->name, sizeof(pack.szNameFrom));
 
 		TEMP_BUFFER tmpbuf{};
 		tmpbuf.write(&pack, sizeof(pack));
-		tmpbuf.write(message, sm->size);
+		tmpbuf.write(message, msg_len);
 
 		desc->Packet(tmpbuf.read_peek(), tmpbuf.size());
-		desc->SetRelay("");
+		LOG_TRACE("Pm sent to client(accID: ?)", sm->receiver_acc_id);
 		return true;
 #endif
 
@@ -331,46 +329,50 @@ namespace mobi_game {
 		return false;
 	}
 
+	bool MobiClient::SendLoginResponse(uint32_t acc_id, bool is_valid) {
+		TMP_BUFFER buf(sizeof(MSValidateMobileLogin));
+		MSValidateMobileLogin res{};
+		res.is_valid = is_valid;
+		res.acc_id = acc_id;
+		buf.write(&res, sizeof(MSValidateMobileLogin));
+		return SendPacket(buf.get());
+	}
+
 	bool MobiClient::HandleValidateLogin(TDataRef data) {
+		auto* pack = reinterpret_cast<const SMValidateMobileLogin*>(data.data());
 		auto* login = reinterpret_cast<const char*>(data.data() + sizeof(SMValidateMobileLogin));
 		auto* pw = reinterpret_cast<const char*>(login + strlen(login) + 1);
-		LOG_TRACE("Login credentials of account(id: ?, pw: ?) received", login, pw); //TODO: remove this log
 #if __BUILD_FOR_GAME__
-		uint32_t acc_id{};
-		bool is_valid{ false };
-
 		std::string query = loggerInstance.WriteBuf(
 			"SELECT id FROM ?.account WHERE login='?' AND password = PASSWORD(?) LIMIT 1", SCHEMA_ACCOUNT, login, pw);
 
 		std::unique_ptr<SQLMsg> ret(DBManager::instance().DirectQuery(query.c_str()));
 		if (!ret) {
 			LOG_TRACE("Sql response is nullptr");
-			return false;
+			return SendLoginResponse(pack->acc_id, false);
 		}
+		
 		SQLResult* sql_res = ret->Get();
 		if (!sql_res) {
 			LOG_TRACE("Weird stuff line(?)", __LINE__);
-			return false;
+			return SendLoginResponse(pack->acc_id, false);
 		}
-		if (sql_res->uiNumRows == 0)
+		else if (sql_res->uiNumRows == 0)
 		{
 			LOG_TRACE("Login(?): username or pw wrong.", login);
-			return false;
+			return SendLoginResponse(pack->acc_id, false);
 		}
 
+		uint32_t sql_accID{};
 		MYSQL_ROW row = mysql_fetch_row(sql_res->pSQLResult);
-		str_to_number(acc_id, row[0]);
-		is_valid = true;
+		str_to_number(sql_accID, row[0]);
+		if (sql_accID == 0) {
+			LOG_TRACE("AccountID in sql is not valid: ?", sql_accID);
+			return SendLoginResponse(pack->acc_id, false);
+		}
+
 		LOG_TRACE("Login(?) successful", login);
-
-		TMP_BUFFER buf(sizeof(MSValidateMobileLogin));
-
-		MSValidateMobileLogin res{};
-		res.is_valid = is_valid;
-		res.acc_id = acc_id;
-		buf.write(&res, sizeof(MSValidateMobileLogin));
-
-		return SendPacket(buf.get());
+		return SendLoginResponse(pack->acc_id, true);
 #else
 		return true;
 #endif
@@ -421,5 +423,118 @@ namespace mobi_game {
 	}
 #endif
 
+#if __OFFSHOP__ && __BUILD_FOR_GAME__
+	bool MobiClient::HandleOffshop(TDataRef data) {
+		/*bu paket dogrudan islemi yapan karakterin bulundugu porta gonderilir, karakter bulunmalidir.*/
+		auto* pkt = reinterpret_cast<const SMOffshop*>(data.data());
+		auto sub_header = static_cast<ESubOffshop>(pkt->sub_id);
+		LOG_TRACE("Offshop modify packet(sub_id: ?) received: shop_pid(?), sender_pid(?)", sub_header, pkt->shop_pid, pkt->sender_pid);
+
+		if (sub_header != ESubOffshop::ITEM_BUY && pkt->shop_pid != pkt->sender_pid) /*impossible case*/ {
+			LOG_TRACE("Pid(?) trying to modify another character's(?) offshop.", pkt->sender_pid, pkt->shop_pid);
+			return false;
+		}
+
+		LPCHARACTER sender_ch = CHARACTER_MANAGER::instance().FindByPID(pkt->sender_pid);
+		if (!sender_ch) {
+			LOG_TRACE("Sender(?) is not online for mobile doing things to shop(?) from mobile.", pkt->sender_pid, pkt->shop_pid);
+			sendShopOpResponse(pkt->sender_pid, EResponseShopOperation::NOT_EXISTS_CH);
+			return false;
+		}
+
+		LPDESC sender_desc = sender_ch->GetDesc();
+		if (!sender_desc || !sender_desc->is_mobile_request) {
+			LOG_TRACE("Desc of sender(pid: ?) is not created for mobile.", pkt->sender_pid);
+			sendShopOpResponse(pkt->sender_pid, EResponseShopOperation::INGAME_REAL);
+			return false;
+		}
+
+		sender_desc->last_activity = std::chrono::steady_clock::now();
+
+		auto& ikaInstance = ikashop::GetManager();
+		
+		LOG_TRACE("Sub header(?) processing", sub_header);
+
+		switch (sub_header)
+		{
+		case ESubOffshop::ITEM_REMOVE: {
+			auto* pkt_sec = reinterpret_cast<const offshop::TItemRemove*>(data.data() + sizeof(SMOffshop));
+			return ikaInstance.RecvShopRemoveItemClientPacket(sender_ch, pkt_sec->vid);
+		}
+		case ESubOffshop::ITEM_BUY:  {
+			auto* pkt_sec = reinterpret_cast<const offshop::SMItemBuy*>(data.data() + sizeof(SMOffshop));
+			long long seenprice = pkt_sec->seen_price.GetTotalAsYang(EMisc::YANG_PER_CHEQUE);
+			LOG_TRACE("Item buy will work now: ch(?), shop_pid(?), item_vid(?), seen_price(?), channel(?)", sender_ch, pkt->shop_pid, pkt_sec->vid, seenprice, g_bChannel);
+			return ikaInstance.RecvShopBuyItemClientPacket(sender_ch, pkt->shop_pid, pkt_sec->vid, false, seenprice);
+		}
+		case ESubOffshop::ITEM_UPDATE_POS: {
+			auto* pkt_sec = reinterpret_cast<const offshop::TItemUpdatePos*>(data.data() + sizeof(SMOffshop));
+			std::shared_ptr<ikashop::CShop> shop = ikaInstance.GetShopByOwnerID(pkt->shop_pid);
+			if (!shop) {
+				LOG_TRACE("Shop(pid: ?) not exist, sender_pid(?)", pkt->shop_pid, pkt->sender_pid);
+				sendShopOpResponse(pkt->sender_pid, EResponseShopOperation::NOT_EXISTS_SHOP);
+				return false;
+			}
+
+#ifdef EXTEND_IKASHOP_PRO
+			if (shop->GetDuration() == 0) {
+				LOG_TRACE("Shop(?) has no duration", pkt->shop_pid);
+				sendShopOpResponse(pkt->sender_pid, EResponseShopOperation::NOT_EXISTS_SHOP);
+				return false;
+			}
+#endif
+			auto shopItem = shop->GetItem(pkt_sec->vid);
+			if (!shopItem) {
+				LOG_TRACE("Item(vid:?) not exists in shop(?)", pkt_sec->vid, pkt->shop_pid);
+				sendShopOpResponse(pkt->sender_pid, EResponseShopOperation::NOT_EXISTS_ITEM);
+				return false;
+			}
+			ikaInstance.RecvShopMoveItemClientPacket(sender_ch, shopItem->GetInfo().pos, pkt_sec->pos_uptodate);
+			return true;
+		}
+		case ESubOffshop::ITEM_UPDATE_PRICE: {
+			auto* pkt_sec = reinterpret_cast<const offshop::TItemUpdatePrice*>(data.data() + sizeof(SMOffshop));
+			return ikaInstance.RecvShopEditItemClientPacket(sender_ch, pkt_sec->vid, 
+				ikashop::TPriceInfo{ pkt_sec->price.yang, static_cast<int>(pkt_sec->price.cheque)});
+		}
+		default:
+			break;
+		}
+
+		return false;
+	}
+#endif
+
+	bool MobiClient::HandleModifyCharacter(TDataRef data) {
+		auto* pkt = reinterpret_cast<const SMModifyCharacter*>(data.data());
+		auto sub_header = static_cast<ESubModifyCharacter>(pkt->sub_id);
+		switch (sub_header)
+		{
+		case ESubModifyCharacter::DISCONNECT: {
+			auto ch = CHARACTER_MANAGER::instance().FindByPID(pkt->pid);
+			if (!ch) {
+				LOG_TRACE("Character(?) not found.", pkt->pid);
+				return false;
+			}
+			auto desc = ch->GetDesc();
+			if (!desc) {
+				LOG_TRACE("Desc of ch(?) not found.", pkt->pid);
+				return false;
+			}
+			DESC_MANAGER::instance().DestroyLoginKey(desc);
+			DESC_MANAGER::instance().DestroyDesc(desc);
+			return true;
+		}
+		case ESubModifyCharacter::LOAD_CH: {
+			//This packet received by auth mt core directly! So we are in the auth core.
+			auto* pkt_sec = reinterpret_cast<const modify::TLoadCharacter*>(data.data() + sizeof(SMModifyCharacter));
+			return mobileChInstance.CharacterLoad(
+				TMobiLoginInfo{ pkt->pid, pkt_sec->login }, pkt_sec->pw) == ELoadChResult::LOADING;
+		}
+		default:
+			break;
+		}
+		return false;
+	}
 }
 #endif

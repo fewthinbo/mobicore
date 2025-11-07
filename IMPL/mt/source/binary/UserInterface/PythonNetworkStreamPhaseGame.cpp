@@ -33,14 +33,12 @@ bool CPythonNetworkStream::RecvWhisperPacket()
 	if (CPythonChat::WHISPER_TYPE_MOBILE == whisperPacket.bType)
 	{
 		std::string converted = ConvertUtf8ToCodePage(buf);
-		if (converted.empty()) {
-			TraceError("Utf8 conversion failed to code_page(%d)\n", LocaleService_GetCodePage());
-			_snprintf(line, sizeof(line), "[M] %s : %s", whisperPacket.szNameFrom, buf);
-		}
-		else {
-			_snprintf(line, sizeof(line), "[M] %s : %s", whisperPacket.szNameFrom, converted.c_str());
-		}
-		PyCallClassMemberFunc(m_apoPhaseWnd[PHASE_WINDOW_GAME], "OnRecvMobileWhisper", Py_BuildValue("(iss)", whisperPacket.bType, whisperPacket.szNameFrom, line));
+		_snprintf(line, sizeof(line), "[M] %s : %s", whisperPacket.szNameFrom, converted.empty() ? buf : converted.c_str());
+#if defined(__BL_MULTI_LANGUAGE_PREMIUM__)
+		PyCallClassMemberFunc(m_apoPhaseWnd[PHASE_WINDOW_GAME], "OnRecvWhisper", Py_BuildValue("(issis)", (int)whisperPacket.bType, whisperPacket.szNameFrom, line, whisperPacket.bEmpire, whisperPacket.szCountry));
+#else
+		PyCallClassMemberFunc(m_apoPhaseWnd[PHASE_WINDOW_GAME], "OnRecvWhisper", Py_BuildValue("(iss)", whisperPacket.bType, whisperPacket.szNameFrom, line));
+#endif
 		return true;
 	}
 #endif

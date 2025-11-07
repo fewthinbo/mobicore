@@ -5,6 +5,7 @@
 *.rar
 *.tmp
 
+.gitignore
 .vs
 out/
 build/

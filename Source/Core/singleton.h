@@ -5,8 +5,8 @@
 template <class T>
 class CSingletonShared {
 private:
-	static std::mutex singleton_mutex_; // singleton mutex
-	static std::shared_ptr<T> instance_; // conv. to shared_ptr because of enable_shared_from_this classes
+	static inline std::mutex singleton_mutex_{}; // singleton mutex
+	static inline std::shared_ptr<T> instance_{ nullptr }; // conv. to shared_ptr because of enable_shared_from_this classes
 public:
 	static std::shared_ptr<T> getInstance() {
 		if (!instance_) {
@@ -17,6 +17,11 @@ public:
 		}
 		return instance_;
 	}
+	void ResetSingleton() noexcept {
+		if (!instance_) return;
+		std::lock_guard<std::mutex> lock(singleton_mutex_);
+		instance_.reset();
+	}
 public:
 	CSingletonShared()=default;
 	CSingletonShared& operator=(CSingletonShared&& other) = delete;
@@ -25,18 +30,11 @@ public:
 	CSingletonShared& operator=(const CSingletonShared&) = delete;
 };
 
-template <typename T> 
-std::shared_ptr<T> CSingletonShared<T>::instance_ = nullptr;
-
-template <typename T>
-std::mutex CSingletonShared<T>::singleton_mutex_{};
-
-
 template <class T>
 class CSingleton {
 private:
-	static std::mutex singleton_mutex_; // singleton mutex
-	static std::unique_ptr<T> instance_; // conv. to shared_ptr because of enable_shared_from_this classes
+	static inline std::mutex singleton_mutex_{}; // singleton mutex
+	static inline std::unique_ptr<T> instance_{ nullptr }; // conv. to shared_ptr because of enable_shared_from_this classes
 public:
 	static T& getInstance() {	
 		if (!instance_) {
@@ -47,6 +45,11 @@ public:
 		}
 		return *instance_;
 	}
+	void ResetSingleton() noexcept {
+		if (!instance_) return;
+		std::lock_guard<std::mutex> lock(singleton_mutex_);
+		instance_.reset();
+	}
 public:
 	CSingleton()=default;
 	CSingleton& operator=(CSingleton&& other) = delete;
@@ -54,10 +57,3 @@ public:
 	CSingleton(const CSingleton&) = delete;
 	CSingleton& operator=(const CSingleton&) = delete;
 };
-
-
-template <typename T> 
-std::unique_ptr<T> CSingleton<T>::instance_ = nullptr;
-
-template <typename T>
-std::mutex CSingleton<T>::singleton_mutex_{};

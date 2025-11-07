@@ -72,7 +72,15 @@ namespace mobi_game {
 #endif
 #if	__OFFSHOP__
 		HEADER_MS_OFFSHOP,
+		HEADER_SM_OFFSHOP,
 #endif
+
+		HEADER_SM_CHARACTER, //ara sunucudan mt'ye karakter komutlari
+
+#if	__OFFSHOP__
+		HEADER_MS_SHOP_OP_RESPONSE,
+#endif
+
 		HEADER_MAX
 	};
 
@@ -87,25 +95,27 @@ namespace mobi_game {
 		NOTIFICATION,
 	};
 
+	//bridge to mt
+	enum class ESubModifyCharacter : uint8_t {
+		DISCONNECT,
+		LOAD_CH, //ENTER THE GAME !
+		MANAGE_CH, //Move and many more
+	};
+
 	enum class ESubCharacter : uint8_t {
 		CHANGE_RACE,
 		CHANGE_EMPIRE,
 		CHANGE_SEX,
 		CHANGE_NAME,
+		LOAD_CH_STATE,
 	};
 
 #if __OFFSHOP__
-	enum class EOffshopStatus : uint8_t {
-		NONE, //offshop yok
-		ACTIVE, //pazar acik
-		CLOSED, // pazar kapali
-	};
 	//to bridge server & mobile
 	enum class ESubOffshop : uint8_t {
 		SHOP_INFO,  //Detayli shop bilgisi -itemler vs-
 		SHOP_OPEN,
 		SHOP_CLOSE,
-		SHOP_UPDATE_DURATION,
 		SHOP_UPDATE_SLOT_COUNT,
 		ITEM_ADD,
 		ITEM_REMOVE,
@@ -142,6 +152,7 @@ namespace mobi_game {
 	struct SMValidateMobileLogin {
 		THEADER header = HEADER_SM_VALIDATE_LOGIN;
 		TSIZE size{}; //id(char), pw(char)
+		uint32_t acc_id{};
 	};
 
 	struct MSValidateMobileLogin {
@@ -218,7 +229,7 @@ namespace mobi_game {
 		THEADER header = HEADER_SM_MESSAGE;
 		TSIZE size{}; // message character count : 40
 		char name[consts::CHARACTER_NAME_MAX_LENGTH + 1]{};
-		uint32_t receiver_pid{};
+		uint32_t receiver_acc_id{};
 	};
 
 	struct TKeyExchange {
@@ -269,6 +280,7 @@ namespace mobi_game {
 		THEADER header = HEADER_MS_LOGIN;
 		uint32_t pid{};
 		uint32_t map_idx{};
+		bool is_mobile_request{ false };
 	};
 
 	struct MSLogout {
@@ -422,6 +434,7 @@ namespace mobi_game {
 
 	struct MSCharacter {
 		THEADER header = HEADER_MS_CHARACTER;
+		TSIZE size{};
 		uint8_t sub_header{}; //ESubCharacter
 	};
 
@@ -445,11 +458,17 @@ namespace mobi_game {
 		char name[consts::CHARACTER_NAME_MAX_LENGTH + 1]{};
 	};
 
+	struct MSLoadCharacter {
+		uint32_t pid{};
+		uint8_t response_code{}; //EMobiLoad
+	};
+
 	struct MSReSync {
 		THEADER header = HEADER_MS_SYNC;
 		TSIZE size{};
 		uint32_t count_sync{}; //port reinitialize icin pid bilgileri
 		uint32_t count_war{}; //savas sayisi
+		uint32_t count_mobi_ch{}; //yuklenmis mobi ch sayisi
 	};
 
 	//tek bir savas
@@ -494,6 +513,14 @@ namespace mobi_game {
 		uint32_t owner_pid{};
 	};
 
+	struct SMOffshop {
+		THEADER header = HEADER_SM_OFFSHOP;
+		TSIZE size{};
+		uint8_t sub_id{};
+		uint32_t sender_pid{};
+		uint32_t shop_pid{};
+	};
+
 	struct TAttr {
 		int16_t type{}; // efsun tipi
 		int16_t value{}; // efsun degeri
@@ -507,34 +534,40 @@ namespace mobi_game {
 			uint32_t yang{};
 			uint32_t cheque{};
 			// TPriceInfo için operator+ ve operator- fonksiyonlarını friend olarak ve global scope'ta tanımlayın
-			friend TPriceInfo operator+(const TPriceInfo& l, const TPriceInfo& r) {
+			friend TPriceInfo operator+(const TPriceInfo& l, const TPriceInfo& r) noexcept {
 				return { l.yang + r.yang, l.cheque + r.cheque };
 			}
-			friend TPriceInfo operator-(const TPriceInfo& l, const TPriceInfo& r) {
+			friend TPriceInfo operator-(const TPriceInfo& l, const TPriceInfo& r) noexcept {
 				return { l.yang - r.yang, l.cheque - r.cheque };
 			}
 
-			TPriceInfo& operator+=(const TPriceInfo& r) {
+			TPriceInfo& operator+=(const TPriceInfo& r) noexcept {
 				yang += r.yang;
 				cheque += r.cheque;
 				return *this;
 			}
-			TPriceInfo& operator-=(const TPriceInfo& r) {
+			TPriceInfo& operator-=(const TPriceInfo& r) noexcept {
 				yang -= r.yang;
 				cheque -= r.cheque;
 				return *this;
 			}
-			bool operator==(const TPriceInfo& other) const {
+			bool operator==(const TPriceInfo& other) const noexcept {
 				return other.yang == yang && other.cheque == cheque;
+			}
+
+			long long GetTotalAsYang(uint32_t yang_per_cheque) const {
+				long long total = yang;
+				total += static_cast<long long>(yang_per_cheque * cheque);
+				return total;
 			}
 		};
 
 		struct TShopCreate {
-			uint32_t duration{};
 			uint32_t slot_count{};
 		};
 
 		struct TItemAdd {
+			uint32_t vid{};
 			uint32_t vnum{};
 			uint32_t pos{};
 			uint32_t count{};
@@ -544,25 +577,53 @@ namespace mobi_game {
 		};
 
 		struct TItemRemove {
-			uint32_t pos{};
+			uint32_t vid{};
 		};
 
 		struct TItemUpdatePos {
-			uint32_t pos{};
+			uint32_t vid{};
 			uint32_t pos_uptodate{};
 		};
 
 		struct TItemUpdatePrice {
-			uint32_t pos{};
+			uint32_t vid{};
 			TPriceInfo price{};
 		};
 
 		struct TItemBuy {
 			uint32_t buyer_pid{};
-			uint32_t pos{};
+			uint32_t vid{};
+		};
+
+		struct SMItemBuy {
+			uint32_t vid{};
+			TPriceInfo seen_price{};
+		};
+
+		//mobilden yapilan islemlere cevap: mobile forward edilir
+		struct MSResponseOperation {
+			THEADER header = HEADER_MS_SHOP_OP_RESPONSE;
+			uint32_t to_pid{};
+			uint8_t response{};//EResponseShopOperation
+		};
+
+	}
+
+#endif
+
+	struct SMModifyCharacter {
+		THEADER header = HEADER_SM_CHARACTER;
+		TSIZE size{};
+		uint8_t sub_id{}; //ESubModifyCharacter
+		uint32_t pid{};
+	};
+
+	namespace modify {
+		struct TLoadCharacter {
+			char login[consts::USERNAME_MAX_LENGTH + 1];
+			char pw[consts::PASSWORD_MAX_LENGTH + 1];
 		};
 	}
-#endif
 
 #pragma pack(pop) 
 

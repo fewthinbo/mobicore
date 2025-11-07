@@ -41,17 +41,18 @@ namespace mobi_game {
 		auto total_budget = intensity_part_budget * intensity;
 		size_t write_counter = 0;
 
+		constexpr auto arr_size = pid_arr.size();
 		LOG_WARN("Waiting other tasks to finish");
 		{
 			STimer timer("Write Part");
 
 			while (std::chrono::steady_clock::now() - time_start < total_budget) {
-				for (size_t i = 0; i < pid_arr.size(); ++i) {
-					const auto& pid = pid_arr[i];
+				for (size_t i = 0; i < arr_size; ++i) {
+					auto pid = pid_arr[i];
 					sendShout(pid, one_hundred_bytes, test_code_page);
 					sendMessage(pid, receiver_pid, one_hundred_bytes, test_code_page);
 				}
-				write_counter += 8;
+				write_counter += arr_size*2;
 			}
 		}
 		LOG_WARN("Total bytes written(~?)", write_counter * 100);

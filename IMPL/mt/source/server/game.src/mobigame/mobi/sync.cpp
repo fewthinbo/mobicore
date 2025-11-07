@@ -14,8 +14,10 @@
 #include <Singletons/log_manager.h>
 
 #include "client/client_base.h"
+#include "admin/admin_data_manager.h"
 
 #include "constants/packets.h"
+
 
 using namespace network;
 
@@ -25,6 +27,7 @@ namespace mobi_game {
 	void MobiClient::SendSync() {
 		if (sync_packet_sent_) return;
 		if (!bridge_cache_ready_) return;
+		if (admin_data_manager_ && !admin_data_manager_->HasAuthority(EAuthorityType::P2P_MANAGER)) return;
 
 		std::vector<uint8_t> data{};
 		GetSyncData(data);
@@ -55,6 +58,10 @@ namespace mobi_game {
 		LOG_TRACE("sync packet sent successfully");
 		sync_packet_sent_ = true;
 	}
+
+	/*FIXME:
+	* karakterler sync ile load edilirken
+	*/
 
 #if __BUILD_FOR_GAME__
 	std::pair<TSIZE, uint32_t> MobiClient::WritePids(TMP_BUFFER& buf) const noexcept {
@@ -129,6 +136,25 @@ namespace mobi_game {
 		CWarMapManager::instance().for_each(std::move(get_list));
 		return { total_size, war_count };
 	}
+
+	std::pair<TSIZE, uint32_t> MobiClient::WriteMobiCh(TMP_BUFFER& buf) const noexcept {
+		std::vector<uint32_t> pids{};
+		const auto& cl_desc = DESC_MANAGER::instance().GetClientSet();
+		for (const auto& d : cl_desc) {
+			if (!d) continue;
+			auto ch = d->GetCharacter();
+			if (!ch) continue;
+			if (!d->is_mobile_request) continue;
+			uint32_t pid = ch->GetPlayerID();
+			LOG_TRACE("MobiCh(?) will be sync.", pid);
+			pids.emplace_back(pid);
+		}
+
+		auto pid_count = pids.size();
+		auto total_size = sizeof(uint32_t) * pid_count;
+		buf.write(pids.data(), total_size);
+		return { total_size, pid_count };
+	}
 #endif
 
 	/*optimizasyon dolayisiyla, paketler sadece oyuncunun bulundugu port'a gonderilir.
@@ -142,6 +168,7 @@ namespace mobi_game {
 		TMP_BUFFER buf_data{};
 		std::pair<TSIZE, uint32_t> pid_data = WritePids(buf_data);
 		std::pair<TSIZE, uint32_t> war_data = WriteWars(buf_data);
+		std::pair<TSIZE, uint32_t> mobich_data = WriteMobiCh(buf_data);
 		if (buf_data.get().empty()) return;
 
 		MSReSync packet{};
@@ -149,6 +176,7 @@ namespace mobi_game {
 		packet.size = pid_data.first + war_data.first;
 		packet.count_sync = pid_data.second;
 		packet.count_war = war_data.second;
+		packet.count_mobi_ch = mobich_data.second;
 
 		TMP_BUFFER buf(packet.size);
 		buf.write(&packet, sizeof(MSReSync));

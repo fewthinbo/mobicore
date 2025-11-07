@@ -88,8 +88,8 @@ namespace NSingletons {
 
 		std::stringstream ss{};
 		ss << log_base_dir << "/";
-		
-		if (level_dirs.find(level) != level_dirs.end()){
+
+		if (level_dirs.find(level) != level_dirs.end()) {
 			ss << level_dirs.at(level);
 		}
 		if (!fs::exists(ss.str())) {
@@ -116,12 +116,12 @@ namespace NSingletons {
 		else {
 			log_file.file.open(filepath, std::ios::app);
 			if (bInit) {
-				log_file.file << "Log file created at " << GetCurrentTimestamp() << "\n";
+				log_file.file << "Log file created at " << GetCurrentTimestamp(true) << "\n";
 				log_file.file.close();
 			}
 			else {
 				if (!log_file.file.is_open()) {
-					printf("CRITICAL: Failed to open log file: %s", filepath.c_str());
+					error("CRITICAL: Failed to open log file: ?", filepath.c_str());
 				}
 			}
 			return log_file;

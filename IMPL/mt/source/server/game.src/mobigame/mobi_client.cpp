@@ -21,13 +21,14 @@ using namespace network;
 
 namespace mobi_game {
 	using namespace consts;
-	bool MobiClient::sendLogin(uint32_t pid, uint32_t map_idx) {
+	bool MobiClient::sendLogin(uint32_t pid, uint32_t map_idx, bool is_mobile_request) {
 		if (pid == 0) return false;
 
 		MSLogin packet{};
 		packet.header = HEADER_MS_LOGIN;
 		packet.pid = pid;
 		packet.map_idx = map_idx;
+		packet.is_mobile_request = is_mobile_request;
 		TMP_BUFFER buf(sizeof(packet));
 		buf.write(&packet, sizeof(packet));
 		return SendPacket(buf.get());
@@ -513,15 +514,16 @@ namespace mobi_game {
 	bool MobiClient::sendChangeRace(uint32_t pid, uint8_t race) {
 		if (pid == 0) return false;
 
-		MSCharacter packet{};
-		packet.header = HEADER_MS_CHARACTER;
-		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_RACE);
-		
 		MSChangeRace s_packet{};
 		s_packet.pid = pid;
 		s_packet.race = race;
 
-		TMP_BUFFER buf(sizeof(MSCharacter) + sizeof(MSChangeRace));
+		MSCharacter packet{};
+		packet.header = HEADER_MS_CHARACTER;
+		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_RACE);
+		packet.size = sizeof(packet) + sizeof(s_packet);
+
+		TMP_BUFFER buf(packet.size);
 		buf.write(&packet, sizeof(packet));
 		buf.write(&s_packet, sizeof(s_packet));
 
@@ -531,15 +533,35 @@ namespace mobi_game {
 	bool MobiClient::sendChangeSex(uint32_t pid, uint8_t sex) {
 		if (pid == 0) return false;
 
-		MSCharacter packet{};
-		packet.header = HEADER_MS_CHARACTER;
-		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_SEX);
-
 		MSChangeSex s_packet{};
 		s_packet.pid = pid;
 		s_packet.sex = sex;
 
-		TMP_BUFFER buf(sizeof(MSCharacter) + sizeof(MSChangeSex));
+		MSCharacter packet{};
+		packet.header = HEADER_MS_CHARACTER;
+		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_SEX);
+		packet.size = sizeof(packet) + sizeof(s_packet);
+
+		TMP_BUFFER buf(packet.size);
+		buf.write(&packet, sizeof(packet));
+		buf.write(&s_packet, sizeof(s_packet));
+
+		return SendPacket(buf.get());
+	}
+
+	bool MobiClient::sendChLoadStatus(uint32_t pid, EMobiLoad code) {
+		if (pid == 0) return false;
+
+		MSLoadCharacter s_packet{};
+		s_packet.pid = pid;
+		s_packet.response_code = static_cast<std::underlying_type_t<EMobiLoad>>(code);
+
+		MSCharacter packet{};
+		packet.header = HEADER_MS_CHARACTER;
+		packet.sub_header = static_cast<std::underlying_type_t<ESubCharacter>>(ESubCharacter::LOAD_CH_STATE);
+		packet.size = sizeof(packet) + sizeof(s_packet);
+
+		TMP_BUFFER buf(packet.size);
 		buf.write(&packet, sizeof(packet));
 		buf.write(&s_packet, sizeof(s_packet));
 
@@ -549,15 +571,16 @@ namespace mobi_game {
 	bool MobiClient::sendChangeEmpire(uint32_t pid, uint8_t empire) {
 		if (pid == 0) return false;
 
-		MSCharacter packet{};
-		packet.header = HEADER_MS_CHARACTER;
-		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_EMPIRE);
-
 		MSChangeEmpire s_packet{};
 		s_packet.pid = pid;
 		s_packet.empire = empire;
 
-		TMP_BUFFER buf(sizeof(MSCharacter) + sizeof(MSChangeEmpire));
+		MSCharacter packet{};
+		packet.header = HEADER_MS_CHARACTER;
+		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_EMPIRE);
+		packet.size = sizeof(packet) + sizeof(s_packet);
+
+		TMP_BUFFER buf(packet.size);
 		buf.write(&packet, sizeof(packet));
 		buf.write(&s_packet, sizeof(s_packet));
 
@@ -567,15 +590,16 @@ namespace mobi_game {
 	bool MobiClient::sendChangeName(uint32_t pid, const std::string& name) {
 		if (pid == 0 || name.empty()) return false;
 
+		MSChangeName s_packet{};
+		s_packet.pid = pid;
+		TMP_BUFFER::str_copy(s_packet.name, sizeof(s_packet.name), name.c_str());
+
 		MSCharacter packet{};
 		packet.header = HEADER_MS_CHARACTER;
 		packet.sub_header = static_cast<uint8_t>(ESubCharacter::CHANGE_NAME);
+		packet.size = sizeof(packet) + sizeof(s_packet);
 
-		MSChangeName s_packet{};
-		s_packet.pid = pid;
-		network::TMP_BUFFER::str_copy(s_packet.name, sizeof(s_packet.name), name.c_str());
-
-		TMP_BUFFER buf(sizeof(MSCharacter) + sizeof(MSChangeName));
+		TMP_BUFFER buf(packet.size);
 		buf.write(&packet, sizeof(packet));
 		buf.write(&s_packet, sizeof(s_packet));
 
@@ -589,7 +613,7 @@ namespace mobi_game {
 		packet.header = HEADER_MS_MOBILE_NOTIFY;
 		packet.size = message.size() + 1;
 		packet.pid = pid;
-		packet.type = static_cast<uint8_t>(channel);
+		packet.type = static_cast<std::underlying_type_t<ENotificationChannels>>(channel);
 
 		TMP_BUFFER buf(sizeof(MSMobileNotification) + packet.size);
 		buf.write(&packet, sizeof(packet));
@@ -603,7 +627,6 @@ namespace mobi_game {
 		if (!IsCoreP2PManager()) return true;
 
 		offshop::TShopCreate pack_sec{};
-		pack_sec.duration = info.duration;
 		pack_sec.slot_count = info.lock_index;
 
 		MSOffshop pack{};
@@ -651,6 +674,7 @@ namespace mobi_game {
 			pack_sec.attrs[i].value = item.aAttr[i].sValue;
 		}
 		std::memcpy(pack_sec.sockets, item.alSockets, MAX_SOCKETS_COUNT);
+		pack_sec.vid = item.id;
 		pack_sec.count = item.count;
 		pack_sec.pos = item.pos;
 		pack_sec.price.cheque = item.price.cheque;
@@ -668,10 +692,10 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 #endif
-	bool MobiClient::sendShopItemRemove(uint32_t owner_pid, uint32_t pos){
+	bool MobiClient::sendShopItemRemove(uint32_t owner_pid, uint32_t vid_item){
 		if (!IsCoreP2PManager()) return true;
 		offshop::TItemRemove pack_sec{};
-		pack_sec.pos = pos;
+		pack_sec.vid = vid_item;
 
 		MSOffshop pack{};
 		pack.size = sizeof(MSOffshop) + sizeof(pack_sec);
@@ -684,10 +708,10 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 #if __BUILD_FOR_GAME__
-	bool MobiClient::sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t pos, const ikashop::TPriceInfo& price) {
+	bool MobiClient::sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t vid_item, const ikashop::TPriceInfo& price) {
 		if (!IsCoreP2PManager()) return true;
 		offshop::TItemUpdatePrice pack_sec{};
-		pack_sec.pos = pos;
+		pack_sec.vid = vid_item;
 		pack_sec.price.yang = price.yang;
 		pack_sec.price.cheque = price.cheque;
 
@@ -702,10 +726,10 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 #endif
-	bool MobiClient::sendShopItemUpdatePos(uint32_t owner_pid, uint32_t pos, uint32_t uptodate) {
+	bool MobiClient::sendShopItemUpdatePos(uint32_t owner_pid, uint32_t vid_item, uint32_t uptodate) {
 		if (!IsCoreP2PManager()) return true;
 		offshop::TItemUpdatePos pack_sec{};
-		pack_sec.pos = pos;
+		pack_sec.vid = vid_item;
 		pack_sec.pos_uptodate = uptodate;
 
 		MSOffshop pack{};
@@ -718,11 +742,11 @@ namespace mobi_game {
 		buf.write(&pack_sec, sizeof(pack_sec));
 		return SendPacket(buf.get());
 	}
-	bool MobiClient::sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t pos) {
+	bool MobiClient::sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t vid_item) {
 		if (!IsCoreP2PManager()) return true;
 		offshop::TItemBuy pack_sec{};
 		pack_sec.buyer_pid = buyer_id;
-		pack_sec.pos = pos;
+		pack_sec.vid = vid_item;
 
 		MSOffshop pack{};
 		pack.size = sizeof(MSOffshop) + sizeof(pack_sec);
@@ -732,6 +756,19 @@ namespace mobi_game {
 		TMP_BUFFER buf(pack.size);
 		buf.write(&pack, sizeof(pack));
 		buf.write(&pack_sec, sizeof(pack_sec));
+		return SendPacket(buf.get());
+	}
+
+	bool MobiClient::sendShopOpResponse(uint32_t to_pid, EResponseShopOperation response) {
+		if (!IsCoreP2PManager()) return true;
+		offshop::MSResponseOperation pack{};
+		pack.to_pid = to_pid;
+		pack.response = static_cast<std::underlying_type_t<EResponseShopOperation>>(response);
+
+		constexpr auto res_pack_size = sizeof(offshop::MSResponseOperation);
+
+		TMP_BUFFER buf(res_pack_size);
+		buf.write(&pack, res_pack_size);
 		return SendPacket(buf.get());
 	}
 

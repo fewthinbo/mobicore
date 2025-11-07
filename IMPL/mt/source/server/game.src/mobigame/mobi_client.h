@@ -15,9 +15,7 @@
 
 #include "constants/consts.h"
 #include "constants/packet_constants.h"
-#if PLATFORM_WINDOWS
 #include "constants/packets.h"
-#endif
 
 #if __BUILD_FOR_GAME__
 	#if !__MT_DB_INFO__
@@ -66,6 +64,7 @@ namespace mobi_game {
 	private:
 		std::pair<network::TSIZE, uint32_t> WritePids(network::TMP_BUFFER& buf) const noexcept;
 		std::pair<network::TSIZE, uint32_t> WriteWars(network::TMP_BUFFER& buf) const noexcept;
+		std::pair<network::TSIZE, uint32_t> WriteMobiCh(network::TMP_BUFFER& buf) const noexcept;
 #endif
 
 //==================================== SEND PACKETS
@@ -73,7 +72,7 @@ namespace mobi_game {
 		using TDataRef = const std::vector<uint8_t>&;
 		bool SendPacket(std::vector<uint8_t>& data, bool encrypt = true); //non-const because of encryption processes etc.
 	public:
-		bool sendLogin(uint32_t pid, uint32_t map_idx);
+		bool sendLogin(uint32_t pid, uint32_t map_idx, bool is_mobile_request);
 		bool sendLogout(uint32_t pid);
 		bool sendMessage(uint32_t sender_pid, uint32_t receiver_pid, const std::string& message, uint16_t code_page = consts::DEFAULT_CODEPAGE);
 		bool sendShout(uint32_t pid, const std::string& message, uint16_t code_page = consts::DEFAULT_CODEPAGE);
@@ -122,6 +121,7 @@ namespace mobi_game {
 		bool sendChangeSex(uint32_t pid, uint8_t sex);
 		bool sendChangeEmpire(uint32_t pid, uint8_t empire);
 		bool sendChangeName(uint32_t pid, const std::string& name);
+		bool sendChLoadStatus(uint32_t pid, EMobiLoad code);
 
 		//use wherever you want for send mobile notification to a player.
 		//Example: send when sold player's item in offshop
@@ -129,9 +129,9 @@ namespace mobi_game {
 
 #if __OFFSHOP__
 	public: //offshop
-		bool sendShopItemUpdatePos(uint32_t owner_pid, uint32_t pos, uint32_t uptodate);
+		bool sendShopItemUpdatePos(uint32_t owner_pid, uint32_t vid_item, uint32_t uptodate);
 #if __BUILD_FOR_GAME__
-		bool sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t pos, const ikashop::TPriceInfo& price);
+		bool sendShopItemUpdatePrice(uint32_t owner_pid, uint32_t vid_item, const ikashop::TPriceInfo& price);
 		bool sendShopCreate(const ikashop::TShopInfo& info);
 #endif
 		bool sendShopClose(uint32_t owner_pid);
@@ -139,9 +139,12 @@ namespace mobi_game {
 #if __BUILD_FOR_GAME__
 		bool sendShopItemAdd(uint32_t owner_pid, const ikashop::TShopItem& item);
 #endif
-		bool sendShopItemRemove(uint32_t owner_pid, uint32_t pos);
-		bool sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t pos);
+		bool sendShopItemRemove(uint32_t owner_pid, uint32_t vid_item);
+		bool sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t vid_item);
+
+		bool sendShopOpResponse(uint32_t to_pid, EResponseShopOperation response);
 #endif
+		bool SendLoginResponse(uint32_t acc_id, bool is_valid);
 //==================================== EOF SEND PACKETS
 
 
@@ -165,6 +168,10 @@ namespace mobi_game {
 #if !__MT_DB_INFO__
 		bool HandleGetCache(TDataRef data); //yeni acc kaydini senkronize et
 #endif
+#if __OFFSHOP__
+		bool HandleOffshop(TDataRef data);
+#endif
+		bool HandleModifyCharacter(TDataRef data);
 //==================================== EOF HANDLERS
 	private:
 		std::unique_ptr<CAdminDataManager> admin_data_manager_;

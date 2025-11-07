@@ -1,0 +1,1 @@
+You can find and download latest AppBridge from github releases
