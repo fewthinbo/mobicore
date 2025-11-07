@@ -1,4 +1,5 @@
 #!/bin/sh
+
 set -eu
 
 echo "=== FreeBSD build environment setup starting ==="
@@ -62,7 +63,7 @@ ensure_export() {
     echo "export $VAR_NAME=\"$VAR_VALUE\"" >> "$PROFILE_FILE"
   else
     # güncelle
-    sed -i '' "s|^export $VAR_NAME=.*$|export $VAR_NAME=\"$VAR_VALUE\"|" "$PROFILE_FILE"
+    sed "s|^export $VAR_NAME=.*$|export $VAR_NAME=\"$VAR_VALUE\"|" "$PROFILE_FILE" > "$PROFILE_FILE.tmp" && mv "$PROFILE_FILE.tmp" "$PROFILE_FILE"
   fi
 }
 

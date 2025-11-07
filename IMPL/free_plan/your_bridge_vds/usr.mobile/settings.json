@@ -1,13 +1,13 @@
 {
-	"mt": {
-		"this_port": 32000,
-		"remote_host": "xx.xx.xx.xx"
-	},
-	"license": {
-		"remote_port": 35000,
-		"remote_host": "mobicore-phone.com"
-	},
-	"mobile_ws": {
-		"domain": "mobicore-test.com"
-	}
+    "mt": {
+        "this_port": 32000,
+        "remote_host": "78.135.111.112"
+    },
+    "license": {
+        "remote_port": 35000,
+        "remote_host": "mobicore-phone.com"
+    },
+    "mobile_ws": {
+        "domain": "mobicore-test.com"
+    }
 }

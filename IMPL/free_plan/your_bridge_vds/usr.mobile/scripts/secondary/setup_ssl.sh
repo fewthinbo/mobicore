@@ -1,8 +1,24 @@
 #!/bin/sh
 
+set -eu
+
 PY=/usr/local/bin/python3
 PY_SCRIPT_JSON_UPDATE=/usr/mobile/scripts/secondary/update-json.py
 SETTINGS_FILE=/usr/mobile/settings.json
+
+# helper: simple yes/no prompt. returns 0 for yes, 1 for no
+ask_yesno() {
+  prompt="$1"
+  while :; do
+    printf "%s [y/n]: " "$prompt"
+    read ans
+    case "$ans" in
+      [Yy]|[Yy][Ee][Ss]) return 0 ;;
+      [Nn]|[Nn][Oo]) return 1 ;;
+      *) printf "Please answer y or n.\n" ;;
+    esac
+  done
+}
 
 #domaini ogren
 while :; do
@@ -15,6 +31,7 @@ while :; do
 done
 
 "$PY" "$PY_SCRIPT_JSON_UPDATE" --file "$SETTINGS_FILE" --field mobile_ws.domain:"$DOMAIN_NAME"
+
 RET=$?
 if [ $RET -ne 0 ]; then
   echo "[ERROR] $PY_SCRIPT_JSON_UPDATE failed with exit code $RET"
@@ -61,7 +78,7 @@ sockstat -4l | grep ':80' && echo "Port 80 in use!" || echo "Port 80 free."
 # geçici python http server'ı başlat
 echo "Starting temporary Python HTTP server for domain verification..."
 mkdir -p "$WEBROOT"
-python -m http.server 80 --directory "$WEBROOT" &
+$PY -m http.server 80 --directory "$WEBROOT" &
 PY_PID=$!
 
 sleep 3

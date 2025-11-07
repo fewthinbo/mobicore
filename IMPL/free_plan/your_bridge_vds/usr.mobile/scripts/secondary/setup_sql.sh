@@ -1,10 +1,10 @@
 #!/bin/sh
+
 set -eu
 
 DB_NAME="ws_database"
 PY=/usr/local/bin/python3
 PY_SCRIPT_JSON_UPDATE=/usr/mobile/scripts/secondary/update-json.py
-PY_SCRIPT_DETECT_IP=/usr/mobile/scripts/secondary/detect-ip.py
 JSON_FILE=/usr/mobile/config.json
 
 # helper: simple yes/no prompt. returns 0 for yes, 1 for no
@@ -109,13 +109,6 @@ SQL
 
 echo "Database '$DB_NAME' created successfully."
 
-if [ ! -f "$PY_SCRIPT_DETECT_IP" ]; then
-  echo "Please create $PY_SCRIPT_DETECT_IP (put the python code there) and make it executable."
-  exit 1
-fi
-chmod +x "$PY_SCRIPT_DETECT_IP"
-DETECTED_IP=$("$PY" "$PY_SCRIPT_DETECT_IP")
-
 # ensure python script is present and executable
 if [ ! -f "$PY_SCRIPT_JSON_UPDATE" ]; then
   echo "Please create $PY_SCRIPT_JSON_UPDATE (put the python code there) and make it executable."
@@ -124,7 +117,7 @@ fi
 chmod +x "$PY_SCRIPT_JSON_UPDATE"
 
 # call python updater
-"$PY" "$PY_SCRIPT_JSON_UPDATE" --file "$JSON_FILE" --field db.host:"$DETECTED_IP:3306" --field db.user:"root" --field db.pass:"$RANDOM_STRONG_PASS"
+"$PY" "$PY_SCRIPT_JSON_UPDATE" --file "$JSON_FILE" --field db.host:"localhost:3306" --field db.user:"root" --field db.password:"$RANDOM_STRONG_PASS"
 RET=$?
 if [ $RET -ne 0 ]; then
   echo "[ERROR] $PY_SCRIPT_JSON_UPDATE failed with exit code $RET"

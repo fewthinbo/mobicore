@@ -12,6 +12,29 @@ SSH_PORT=${SSH_PORT:-22}
 ROLLBACK_SEC=${ROLLBACK_SEC:-20}
 RULE_FILE="/etc/ipfw.rules"
 
+# -------------------------
+# Check and load ipfw kernel module
+# -------------------------
+echo "Checking ipfw kernel module..."
+if ! kldstat | grep -q ipfw; then
+  echo "Loading ipfw kernel module..."
+  echo "WARNING: This will temporarily block all traffic!"
+  echo "Adding emergency SSH rule immediately after loading..."
+  
+  kldload ipfw || {
+    echo "Failed to load ipfw module. Make sure you're running as root."
+    exit 1
+  }
+  
+  # Immediately add emergency SSH rule to prevent lockout
+  echo "Adding emergency SSH access rule..."
+  ipfw -q add 100 allow tcp from any to me $SSH_PORT
+  ipfw -q add 110 allow tcp from me to any established
+  ipfw -q add 120 allow all from any to 127.0.0.1
+  ipfw -q add 130 allow all from 127.0.0.1 to any
+  echo "Emergency SSH rule added. Connection should be restored."
+fi
+
 PY=/usr/local/bin/python3
 PY_SCRIPT_GET_FIELD="/usr/mobile/scripts/secondary/jsonfield-value.py"
 
@@ -27,6 +50,8 @@ PORT_1=$("$PY" "$PY_SCRIPT_GET_FIELD" --file "/usr/mobile/settings.json" --field
 ALLOW_HOST_TO_PORT_1=$("$PY" "$PY_SCRIPT_GET_FIELD" --file "/usr/mobile/settings.json" --field mt.remote_host)
 PUBLIC_PORT=$("$PY" "$PY_SCRIPT_GET_FIELD" --file "/usr/mobile/config.json" --field port_mobile)
 
+echo "PORT_1: $PORT_1, ALLOW_HOST_TO_PORT_1: $ALLOW_HOST_TO_PORT_1, PUBLIC_PORT: $PUBLIC_PORT"
+
 echo "Preparing minimal ipfw rules (SSH port: $SSH_PORT)."
 
 # -------------------------
@@ -41,7 +66,8 @@ ipfw -q add 1010 allow all from 127.0.0.1 to any
 ipfw -q add 1020 allow tcp from any to me $SSH_PORT in setup keep-state
 ipfw -q add 1030 allow tcp from me to any established
 ipfw -q add 1040 allow ip from me to any out keep-state
-ipfw -q add 1050 allow icmp from any to any
+ipfw -q add 1050 allow icmp from any to any icmptypes 0,8 icmptypes 8,0 limit src-addr 10
+ipfw -q add 1060 allow tcp from $ALLOW_HOST_TO_PORT_1 to me $PORT_1
 ipfw -q add 1060 allow tcp from $ALLOW_HOST_TO_PORT_1 to me $PORT_1
 ipfw -q add 1070 allow tcp from any to me $PUBLIC_PORT
 ipfw -q add 65534 deny ip from any to any
@@ -60,10 +86,10 @@ done
 echo "Runtime rules added. Not yet persisted to boot."
 
 # -------------------------
-# Start ipfw service if needed
+# Note: We don't start the ipfw service here as it would load default rules
+# Our custom rules are already applied above
 # -------------------------
-echo "Starting ipfw service..."
-service ipfw onestart || service ipfw start || true
+echo "Custom ipfw rules are now active."
 
 # -------------------------
 # Rollback timer
@@ -95,22 +121,56 @@ case "$ANSWER" in
     echo "$IPFW_RULES" > "$RULE_FILE"
     chmod +x "$RULE_FILE"
 
-    # rc.conf setup
-    if ! grep -q '^firewall_enable=' /etc/rc.conf 2>/dev/null; then
-      echo 'firewall_enable="YES"' >> /etc/rc.conf
-    else
-      sed -i '' 's/^firewall_enable=.*$/firewall_enable="YES"/' /etc/rc.conf
-    fi
+	# Enable ipfw in rc.conf for boot persistence
+	if ! grep -q '^firewall_enable=' /etc/rc.conf 2>/dev/null; then
+		echo 'firewall_enable="YES"' >> /etc/rc.conf
+		echo "Added firewall_enable to rc.conf"
+	fi
 
+    # rc.conf setup for firewall script
     if ! grep -q '^firewall_script=' /etc/rc.conf 2>/dev/null; then
       echo "firewall_script=\"$RULE_FILE\"" >> /etc/rc.conf
     else
-      sed -i '' "s|^firewall_script=.*$|firewall_script=\"$RULE_FILE\"|" /etc/rc.conf
+      sed "s|^firewall_script=.*$|firewall_script=\"$RULE_FILE\"|" /etc/rc.conf > /etc/rc.conf.tmp && mv /etc/rc.conf.tmp /etc/rc.conf
     fi
 
-    # Restart service to apply persistent rules
-    service ipfw restart || service ipfw onestart || true
-    echo "Rules persisted. ipfw active and will persist on boot."
+    # Note: We don't restart the service as it would override our custom rules
+    echo "Rules persisted to $RULE_FILE and will load on boot."
+    
+    # Install and configure fail2ban for SSH protection
+    echo "Installing fail2ban for SSH brute-force protection..."
+    if ! pkg info fail2ban >/dev/null 2>&1; then
+      pkg install -y py311-fail2ban || pkg install -y fail2ban || {
+        echo "Warning: Could not install fail2ban. You may install it manually later."
+      }
+    fi
+    
+    # Configure fail2ban if installed
+    if command -v fail2ban-server >/dev/null 2>&1; then
+      # Create basic jail.local config
+      cat > /usr/local/etc/fail2ban/jail.local <<EOF
+[DEFAULT]
+bantime = 3600
+findtime = 600
+maxretry = 5
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log
+maxretry = 3
+bantime = 3600
+EOF
+      
+      # Enable and start fail2ban
+      if ! grep -q '^fail2ban_enable=' /etc/rc.conf 2>/dev/null; then
+        echo 'fail2ban_enable="YES"' >> /etc/rc.conf
+      fi
+      
+      service fail2ban start 2>/dev/null || service fail2ban onestart 2>/dev/null || true
+      echo "Fail2ban configured and started for SSH protection."
+    fi
     ;;
 
   *)

@@ -1,11 +1,11 @@
 {
-	"port_mobile": 17000,
-	"db": {
-		"host": "localhost:3306",
-		"user": "root",
-		"password": "password"
-	},
-	"data": {
-		"image_path": "images"
-	}
+    "port_mobile": 17000,
+    "db": {
+        "host": "89.144.20.7:3306",
+        "user": "root",
+        "password": "WbxMmT7MHB9gaNumi+ewPbTP"
+    },
+    "data": {
+        "image_path": "images"
+    }
 }

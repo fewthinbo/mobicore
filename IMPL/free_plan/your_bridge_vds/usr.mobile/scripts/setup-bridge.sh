@@ -1,4 +1,5 @@
 #!/bin/sh
+
 set -eu
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -6,19 +7,35 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
+
+#update mt ip for ipfw rules etc.
+PY=/usr/local/bin/python3
+PY_SCRIPT_JSON_UPDATE=/usr/mobile/scripts/secondary/update-json.py
+SETTINGS_FILE=/usr/mobile/settings.json
+
+while :; do
+  printf "Enter your mt server vds ip (example: xx.xx.xxx.xxx): "
+  read READ_MT_HOST
+  if ask_yesno "You entered '$READ_MT_HOST'. Confirm?"; then
+    MT_HOST="$READ_MT_HOST"
+    break
+  fi
+done
+
+"$PY" "$PY_SCRIPT_JSON_UPDATE" --file "$SETTINGS_FILE" --field mt.remote_host:"$MT_HOST"
+
+
 SCRIPT_SEC="secondary"
 
-SCRIPTS=(
-  "$SCRIPT_SEC/setup_env.sh"
-  "$SCRIPT_SEC/setup_ssl.sh"
-  "$SCRIPT_SEC/setup_cron.sh"
-  "$SCRIPT_SEC/setup_sql.sh"
-  "$SCRIPT_SEC/setup_ipfw.sh"
-)
+SCRIPTS="$SCRIPT_SEC/setup_env.sh \
+$SCRIPT_SEC/setup_ssl.sh \
+$SCRIPT_SEC/setup_cron.sh \
+$SCRIPT_SEC/setup_sql.sh \
+$SCRIPT_SEC/setup_ipfw.sh"
 
 echo "=== Setup sequence started ==="
 
-for SCRIPT in "${SCRIPTS[@]}"; do
+for SCRIPT in $SCRIPTS; do
   NAME=$(basename "$SCRIPT")
 
   echo "[$NAME] running..."
@@ -35,10 +52,13 @@ done
 echo "=== All setup steps completed successfully ==="
 
 
-CMD_BRIDGE_START=./usr/mobile/bridge/App_Bridge
+PATH_APP_EXECUTABLE=/usr/mobile/bridge/App_Bridge
+CMD_BRIDGE_START= "cd /usr/mobile/bridge/ && ./App_Bridge"
 PID_FILE="/usr/mobile/bridge/App_Bridge.pid"
 ALIAS_BRIDGE_START="bridge_start"
 ALIAS_BRIDGE_STOP="bridge_stop"
+
+chmod +x "$PATH_APP_EXECUTABLE"
 
 echo "Updating /root/.shrc with mobi aliases..."
 if ! grep -q "bridge_start" /root/.shrc; then
@@ -91,7 +111,12 @@ else
 fi
 
 echo "Reloading /root/.shrc..."
-. /root/.shrc
+# Only source .shrc if running in interactive mode to avoid bind errors
+if [ -t 0 ]; then
+  . /root/.shrc 2>/dev/null || echo "Note: .shrc contains interactive-only commands"
+else
+  echo "Non-interactive mode: .shrc will be loaded on next login"
+fi
 
 # Başlangıçta App_Bridge’i otomatik başlat ve PID kaydet
 echo "Starting App_Bridge automatically..."
