@@ -122,6 +122,7 @@ namespace mobi_game {
 		ITEM_BUY,
 		ITEM_UPDATE_POS,
 		ITEM_UPDATE_PRICE,
+		DURATION_RESTORE,
 	};
 #endif
 
@@ -153,12 +154,14 @@ namespace mobi_game {
 		THEADER header = HEADER_SM_VALIDATE_LOGIN;
 		TSIZE size{}; //id(char), pw(char)
 		uint32_t acc_id{};
+		uint32_t request_id{};
 	};
 
 	struct MSValidateMobileLogin {
 		THEADER header = HEADER_MS_VALIDATE_LOGIN;
 		bool is_valid{};
 		uint32_t acc_id{};
+		uint32_t request_id{};
 	};
 
 #if !__MT_DB_INFO__

@@ -37,7 +37,7 @@ bool CShopManager::RecvShopEditItemClientPacket(LPCHARACTER ch, DWORD itemid, co
 #if __MOBICORE__ && __OFFSHOP__
 	if (!ch) return false;
 	if (!ch->GetIkarusShop()) {
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_EXISTS_SHOP);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_EXISTS_SHOP);
 		return false;
 	}
 #else
@@ -49,14 +49,14 @@ bool CShopManager::RecvShopEditItemClientPacket(LPCHARACTER ch, DWORD itemid, co
 
 	if(!ch->IkarusShopFloodCheck(SHOP_ACTION_WEIGHT_EDIT_ITEM)) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::FLOOD);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::FLOOD);
 #endif
 		return false;
 	}
 
 	if (!IsGoodSalePrice(price)) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::INVALID_SALE_PRICE);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::INVALID_SALE_PRICE);
 #endif
 		return false;
 	}
@@ -65,7 +65,7 @@ bool CShopManager::RecvShopEditItemClientPacket(LPCHARACTER ch, DWORD itemid, co
 	auto shopItem = shop->GetItem(itemid);
 	if(!shopItem) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
 #endif
 		return false;
 	}
@@ -101,6 +101,17 @@ bool CShopManager::RecvShopForceCloseDBPacket(DWORD pid) {
 #if __MOBICORE__ && __OFFSHOP__
 		mobileInstance.sendShopClose(pid);
 #endif
+}
+
+bool CShopManager::RecvShopExpiredDBPacket(DWORD pid)
+{
+	...
+	if (!shop)
+		return false;
+#if __MOBICORE__ && __OFFSHOP__
+	mobileInstance.sendShopClose(pid);
+#endif
+	...
 }
 
 bool CShopManager::RecvShopCreateNewDBPacket(const TShopInfo& info)
@@ -139,6 +150,51 @@ void CShopManager::RecvShopUnlockCellDBPacket(DWORD owner, int lockIndex)
 #endif
 }
 
+bool CShopManager::RecvShopCreateNewClientPacket(LPCHARACTER ch)
+{
+	...
+
+	if (!ch->IkarusShopFloodCheck(SHOP_ACTION_WEIGHT_CREATE_NEW)) {
+#if __MOBICORE__ && __OFFSHOP__
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::FLOOD);
+#endif
+		return false;
+	}
+
+	if (!CheckCharacterActions(ch))
+	{
+		...
+#if __MOBICORE__ && __OFFSHOP__
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::CHARACTER_ACTIONS);
+#endif
+		return true;
+	}
+
+	...
+
+	if (ch->GetGold() < OFFLINESHOP_RESTORE_DURATION_COST) {
+#if __MOBICORE__ && __OFFSHOP__
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_ENOUGH_MONEY);
+#endif
+		return true;
+	}
+
+
+	...
+#ifdef ENABLE_IKASHOP_ENTITIES
+	if (!ch->GetIkarusShop() && !ALLOWED_SPAWN_MAPS.contains(ch->GetMapIndex()))
+	{
+		SendPopupMessage(ch, "IKASHOP_SERVER_POPUP_MESSAGE_CANNOT_CREATE_SHOP_ON_WRONG_PLACE");
+#if __MOBICORE__ && __OFFSHOP__
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::OTHERS);
+#endif
+		return false;
+	}
+#endif
+
+	...
+}
+
 
 bool CShopManager::RecvShopBuyItemClientPacket(LPCHARACTER ch, DWORD ownerid, DWORD itemid, bool searching, long long seenprice)  //patch seen price check
 {
@@ -148,7 +204,7 @@ bool CShopManager::RecvShopBuyItemClientPacket(LPCHARACTER ch, DWORD ownerid, DW
 	
 	if (!ch->IkarusShopFloodCheck(SHOP_ACTION_WEIGHT_BUY_ITEM)) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::FLOOD);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::FLOOD);
 #endif
 		return false;
 	}
@@ -158,7 +214,7 @@ bool CShopManager::RecvShopBuyItemClientPacket(LPCHARACTER ch, DWORD ownerid, DW
 	{
 		...
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::CHARACTER_ACTIONS);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::CHARACTER_ACTIONS);
 #endif
 		return true;
 	}
@@ -172,7 +228,7 @@ bool CShopManager::RecvShopBuyItemClientPacket(LPCHARACTER ch, DWORD ownerid, DW
 	if(!shop){
 		...
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_EXISTS_SHOP);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_EXISTS_SHOP);
 #endif
 		return false;
 	}
@@ -180,7 +236,7 @@ bool CShopManager::RecvShopBuyItemClientPacket(LPCHARACTER ch, DWORD ownerid, DW
 #ifdef EXTEND_IKASHOP_PRO
 	if(shop->GetDuration() == 0) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_EXISTS_SHOP);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_EXISTS_SHOP);
 #endif
 		return false;
 	}
@@ -191,7 +247,7 @@ bool CShopManager::RecvShopBuyItemClientPacket(LPCHARACTER ch, DWORD ownerid, DW
 	if(!pitem){
 		...
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
 #endif
 		return false;
 	}
@@ -200,7 +256,7 @@ bool CShopManager::RecvShopBuyItemClientPacket(LPCHARACTER ch, DWORD ownerid, DW
 	{
 		...
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_ENOUGH_MONEY);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_ENOUGH_MONEY);
 #endif
 		return false;
 	}
@@ -210,7 +266,7 @@ bool CShopManager::RecvShopBuyItemClientPacket(LPCHARACTER ch, DWORD ownerid, DW
 	{
 		...
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::PRICE_MISMATCH);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::PRICE_MISMATCH);
 #endif
 		return false;
 	}
@@ -229,14 +285,14 @@ bool CShopManager::RecvShopRemoveItemClientPacket(LPCHARACTER ch, DWORD itemid)
 
 	if (!ch->IkarusShopFloodCheck(SHOP_ACTION_WEIGHT_REMOVE_ITEM)) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::FLOOD);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::FLOOD);
 #endif
 		return false;
 	}
 
 	if (!CheckSafeboxSize(ch)) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_ENOUGH_SAFEBOX_SPACE);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_ENOUGH_SAFEBOX_SPACE);
 #endif
 		return false;
 	}
@@ -245,7 +301,7 @@ bool CShopManager::RecvShopRemoveItemClientPacket(LPCHARACTER ch, DWORD itemid)
 
 	if(!shop->GetItem(itemid)) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
 #endif
 		return false;
 	}
@@ -260,14 +316,14 @@ void CShopManager::RecvShopMoveItemClientPacket(LPCHARACTER ch, int srcPos, int 
 	auto shop = ch->GetIkarusShop();
 	if (!shop) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_EXISTS_SHOP);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_EXISTS_SHOP);
 #endif
 		return;
 	}
 
 	if (!ch->IkarusShopFloodCheck(SHOP_ACTION_WEIGHT_SHOP_MOVE_ITEM)) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::FLOOD);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::FLOOD);
 #endif
 		return;
 	}
@@ -275,7 +331,7 @@ void CShopManager::RecvShopMoveItemClientPacket(LPCHARACTER ch, int srcPos, int 
 	...
 	if (iter == shop->GetItems().end()) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
 #endif
 		return;
 	}
@@ -284,14 +340,14 @@ void CShopManager::RecvShopMoveItemClientPacket(LPCHARACTER ch, int srcPos, int 
 
 	if(!table) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_EXISTS_ITEM);
 #endif
 		return;
 	}
 
 	if (!shop->ReserveSpace(destPos, table->bSize)) {
 #if __MOBICORE__ && __OFFSHOP__
-		mobileInstance.sendShopOpResponse(ch->GetPlayerID(), mobi_game::EResponseShopOperation::NOT_ENOUGH_SAFEBOX_SPACE);
+		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::NOT_ENOUGH_SAFEBOX_SPACE);
 #endif
 		return;
 	}

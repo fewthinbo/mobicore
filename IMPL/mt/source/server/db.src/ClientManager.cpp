@@ -12,11 +12,11 @@ void CClientManager::ProcessPackets(CPeer * peer)
 				break;
 #if __MOBICORE__
 			case HEADER_GD_MOBI_LOGIN: {
-				MobiLogin(data);
+				MobiLogin(peer, data);
 				break;
 			}
 			case HEADER_GD_MOBI_WARP: {
-				MobiWarp(data);
+				MobiWarp(peer, data);
 				break;
 			}
 #endif
@@ -31,15 +31,28 @@ static void SendMobiDGLogin(CPeer& target, CLoginData& login_data, const TMobiGD
 	res.pid = info.pid;
 	trim_and_lower(login_data.GetAccountRef().login, res.login, sizeof(res.login));
 
-	sys_err("Data sent to channel(%d): login(%s), login_key(%d), pid(%d)",
+	sys_err("SendMobiDGLogin: sent to channel(%d): login(%s), login_key(%d), pid(%d)",
 		target.GetChannel(), res.login, res.login_key, res.pid);
 
 	//Send directly to game
-	target.EncodeHeader(HEADER_DG_MOBI_LOGIN, 0, sizeof(TMobiDGLogin));
+	target.EncodeHeader(HEADER_DG_MOBI_LOGIN, 0, sizeof(res));
 	target.Encode(res);
 }
 
-void CClientManager::MobiLogin(const char* data) {
+static void SendMobiDGLogout(CPeer& target, uint32_t pid) {
+	TMobiDGLogout res{};
+	res.pid = pid;
+
+	sys_err("SendMobiDGLogout: sent to channel(%d): pid(%d)",
+		target.GetChannel(), pid);
+
+	//Send directly to game
+	target.EncodeHeader(HEADER_DG_MOBI_LOGOUT, 0, sizeof(res));
+	target.Encode(res);
+}
+
+void CClientManager::MobiLogin(CPeer* pr, const char* data) {
+	if (!pr) return;
 	auto* pack = (TMobiGD*)data;
 
 	auto* login_data = GetLoginData(pack->login_key);
@@ -54,10 +67,18 @@ void CClientManager::MobiLogin(const char* data) {
 		return;
 	}
 
+	SendMobiDGLogout(*pr, pack->pid);
+
+	/*if (pr == found_peer) {
+		sys_err("Login packet received for same port(%d), cleaned", found_peer->GetPort());
+		return;
+	}*/
+
 	SendMobiDGLogin(*found_peer, *login_data, *pack);
 }
 
-void CClientManager::MobiWarp(const char* data) {
+void CClientManager::MobiWarp(CPeer* pr, const char* data) {
+	if (!pr) return;
 	auto* pack = (TMobiGDWarp*)data;
 	const auto& info = pack->info;
 
@@ -81,6 +102,14 @@ void CClientManager::MobiWarp(const char* data) {
 		sys_err("Target peer doesn't exists: host(%s:%d)", pack->addr, pack->port);
 		return;
 	}
+
+	SendMobiDGLogout(*pr, info.pid);
+
+	/*if (pr == target) {
+		sys_err("Warp packet received for same port(%d), cleaned", pack->port);
+		return;
+	}*/
+
 	SendMobiDGLogin(*target, *login_data, info);
 }
 

@@ -206,6 +206,11 @@ int CInputDB::Analyze(LPDESC d, BYTE bHeader, const char * c_pData)
 	case HEADER_DG_MOBI_LOGIN:
 		mobileChInstance.SendLoginRequest(c_pData);
 		break;
+	case HEADER_DG_MOBI_LOGOUT: {
+		auto* received = reinterpret_cast<const TMobiDGLogout*>(c_pData);
+		mobileChInstance.HandleLogout(received->pid);
+		break;
+	}
 #endif
 	}
 }

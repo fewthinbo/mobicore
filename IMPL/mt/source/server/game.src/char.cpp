@@ -13,9 +13,9 @@ void CHARACTER::Destroy()
 		if (!d->is_mobile_request) {
 			mobileInstance.sendLogout(GetPlayerID());
 		}
-		else {
+		/*else {
 			mobileChInstance.HandleLogout(GetPlayerID());
-		}
+		}*/
 	}
 #endif
 
@@ -198,9 +198,18 @@ void CHARACTER::PointChange(BYTE type, long long amount, bool bAmount, bool bBro
 
 bool CHARACTER::WarpSet(long x, long y, long lPrivateMapIndex)
 {
-	...
+	if (!IsPC())
+		return false;
 #if __MOBICORE__
 	auto* desc = GetDesc();
+	if (desc && desc->is_mobile_request && !this->can_mobi_warp) {
+		sys_log(0, "MobiPlayer(%d) cannot warp itself", this->GetPlayerID());
+		return false;
+	}
+#endif
+
+	...
+#if __MOBICORE__
 	if (desc && desc->is_mobile_request) {
 		mobileChInstance.SendMobiWarp(desc, lAddr, wPort);
 	}

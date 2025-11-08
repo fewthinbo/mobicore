@@ -13,7 +13,8 @@
 	...
 	
 #if __MOBICORE__ 
-	HEADER_DG_MOBI_LOGIN = 250, //adjust this number: should be unique
+	HEADER_DG_MOBI_LOGIN = 249, //adjust this number: should be unique
+	HEADER_DG_MOBI_LOGOUT = 250, //adjust this number: should be unique
 #endif
 	HEADER_DG_MAP_LOCATIONS			= 0xfe,
 }
@@ -24,6 +25,9 @@ struct TMobiDGLogin {
 	uint32_t pid{};
 	uint32_t login_key{};
 	char login[LOGIN_MAX_LEN + 1]{};
+};
+struct TMobiDGLogout {
+	uint32_t pid{};
 };
 struct TMobiGD {
 	uint32_t pid{};

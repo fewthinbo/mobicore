@@ -329,11 +329,12 @@ namespace mobi_game {
 		return false;
 	}
 
-	bool MobiClient::SendLoginResponse(uint32_t acc_id, bool is_valid) {
+	bool MobiClient::SendLoginResponse(const SMValidateMobileLogin& pack, bool is_valid) {
 		TMP_BUFFER buf(sizeof(MSValidateMobileLogin));
 		MSValidateMobileLogin res{};
 		res.is_valid = is_valid;
-		res.acc_id = acc_id;
+		res.acc_id = pack.acc_id;
+		res.request_id = pack.request_id;
 		buf.write(&res, sizeof(MSValidateMobileLogin));
 		return SendPacket(buf.get());
 	}
@@ -349,18 +350,18 @@ namespace mobi_game {
 		std::unique_ptr<SQLMsg> ret(DBManager::instance().DirectQuery(query.c_str()));
 		if (!ret) {
 			LOG_TRACE("Sql response is nullptr");
-			return SendLoginResponse(pack->acc_id, false);
+			return SendLoginResponse(*pack, false);
 		}
 		
 		SQLResult* sql_res = ret->Get();
 		if (!sql_res) {
 			LOG_TRACE("Weird stuff line(?)", __LINE__);
-			return SendLoginResponse(pack->acc_id, false);
+			return SendLoginResponse(*pack, false);
 		}
 		else if (sql_res->uiNumRows == 0)
 		{
 			LOG_TRACE("Login(?): username or pw wrong.", login);
-			return SendLoginResponse(pack->acc_id, false);
+			return SendLoginResponse(*pack, false);
 		}
 
 		uint32_t sql_accID{};
@@ -368,11 +369,11 @@ namespace mobi_game {
 		str_to_number(sql_accID, row[0]);
 		if (sql_accID == 0) {
 			LOG_TRACE("AccountID in sql is not valid: ?", sql_accID);
-			return SendLoginResponse(pack->acc_id, false);
+			return SendLoginResponse(*pack, false);
 		}
 
 		LOG_TRACE("Login(?) successful", login);
-		return SendLoginResponse(pack->acc_id, true);
+		return SendLoginResponse(*pack, true);
 #else
 		return true;
 #endif
@@ -497,11 +498,33 @@ namespace mobi_game {
 			return ikaInstance.RecvShopEditItemClientPacket(sender_ch, pkt_sec->vid, 
 				ikashop::TPriceInfo{ pkt_sec->price.yang, static_cast<int>(pkt_sec->price.cheque)});
 		}
+		case ESubOffshop::DURATION_RESTORE: {
+			return ikaInstance.RecvShopCreateNewClientPacket(sender_ch);
+		}
 		default:
 			break;
 		}
 
 		return false;
+	}
+
+	bool MobiClient::sendShopOpResponse(uint32_t to_pid, EResponseShopOperation response) {
+		offshop::MSResponseOperation pack{};
+		pack.to_pid = to_pid;
+		pack.response = static_cast<std::underlying_type_t<EResponseShopOperation>>(response);
+
+		constexpr auto res_pack_size = sizeof(offshop::MSResponseOperation);
+
+		TMP_BUFFER buf(res_pack_size);
+		buf.write(&pack, res_pack_size);
+		return SendPacket(buf.get());
+	}
+
+	bool MobiClient::sendShopOpResponse(CHARACTER* ch, EResponseShopOperation response) {
+		if (!ch) return false;
+		auto* desc = ch->GetDesc();
+		if (!desc || !desc->is_mobile_request) return false;
+		return sendShopOpResponse(ch->GetPlayerID(), response);
 	}
 #endif
 

@@ -23,6 +23,7 @@
 		struct TSimplePlayer;
 	#endif
 	#if __OFFSHOP__
+		class CHARACTER;
 		namespace ikashop {
 			struct TPriceInfo;
 			struct TShopInfo;
@@ -142,9 +143,15 @@ namespace mobi_game {
 		bool sendShopItemRemove(uint32_t owner_pid, uint32_t vid_item);
 		bool sendShopItemBuy(uint32_t owner_pid, uint32_t buyer_id, uint32_t vid_item);
 
+#if __BUILD_FOR_GAME__
+	private:
 		bool sendShopOpResponse(uint32_t to_pid, EResponseShopOperation response);
+	public:
+		bool sendShopOpResponse(CHARACTER* ch, EResponseShopOperation response);
 #endif
-		bool SendLoginResponse(uint32_t acc_id, bool is_valid);
+		bool sendShopDurationRestore(uint32_t owner_pid);
+#endif
+		bool SendLoginResponse(const SMValidateMobileLogin& pack, bool is_valid);
 //==================================== EOF SEND PACKETS
 
 

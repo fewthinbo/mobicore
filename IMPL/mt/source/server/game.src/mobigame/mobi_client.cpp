@@ -758,20 +758,17 @@ namespace mobi_game {
 		buf.write(&pack_sec, sizeof(pack_sec));
 		return SendPacket(buf.get());
 	}
-
-	bool MobiClient::sendShopOpResponse(uint32_t to_pid, EResponseShopOperation response) {
+	bool MobiClient::sendShopDurationRestore(uint32_t owner_pid) {
 		if (!IsCoreP2PManager()) return true;
-		offshop::MSResponseOperation pack{};
-		pack.to_pid = to_pid;
-		pack.response = static_cast<std::underlying_type_t<EResponseShopOperation>>(response);
+		MSOffshop pack{};
+		pack.size = sizeof(MSOffshop);
+		pack.sub_id = static_cast<uint8_t>(ESubOffshop::DURATION_RESTORE);
+		pack.owner_pid = owner_pid;
 
-		constexpr auto res_pack_size = sizeof(offshop::MSResponseOperation);
-
-		TMP_BUFFER buf(res_pack_size);
-		buf.write(&pack, res_pack_size);
+		TMP_BUFFER buf(pack.size);
+		buf.write(&pack, sizeof(pack));
 		return SendPacket(buf.get());
 	}
-
 #endif
 }
 

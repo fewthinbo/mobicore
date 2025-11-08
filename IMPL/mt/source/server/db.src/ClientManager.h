@@ -5,7 +5,7 @@ class CClientManager : public CNetBase, public singleton<CClientManager>
 #if __MOBICORE__
 public:
 	CPeer* GetMostAvailCore() const;
-	void MobiLogin(const char* data);
-	void MobiWarp(const char* data);
+	void MobiLogin(CPeer* pr, const char* data);
+	void MobiWarp(CPeer* pr, const char* data);
 #endif
 }
