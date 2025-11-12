@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <Singletons/json_loader.h>
+#include <Singletons/log_manager.h>
 #include <Network/buffer.h>
 
 #include "constants/packets.h"

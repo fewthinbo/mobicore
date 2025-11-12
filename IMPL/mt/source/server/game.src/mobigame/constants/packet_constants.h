@@ -116,6 +116,12 @@ namespace mobi_game {
 		OTHERS, //you can use this one for extra failure types
 	};
 
+	enum class EResponseModify : uint8_t {
+		SUCCESS,
+		NOT_EXISTS_CH,
+		OTHERS,
+	};
+
 #if __OFFSHOP__
 	enum class EResponseShopOperation : uint8_t {
 		SUCCESS,

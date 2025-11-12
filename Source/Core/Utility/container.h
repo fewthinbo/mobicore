@@ -94,14 +94,12 @@ namespace improved {
         auto begin() const noexcept { return vec_.begin(); }
         auto end() const noexcept { return vec_.end(); }
 
-        // Bilgi fonksiyonları.
         size_t Size() const noexcept { return vec_.size(); }
         bool Empty() const noexcept { return vec_.empty(); }
 
-        // Tüm container’ı temizler.
         void Clear() noexcept {
-            map_.clear();
-            vec_.clear();
+            MapType{}.swap(map_);
+            VecType{}.swap(vec_);
         }
     private:
         MapType map_;

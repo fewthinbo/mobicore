@@ -108,6 +108,7 @@ namespace mobi_game {
 		CHANGE_SEX,
 		CHANGE_NAME,
 		LOAD_CH_STATE,
+		RESPONSE_DISCONNECT,
 	};
 
 #if __OFFSHOP__
@@ -464,6 +465,11 @@ namespace mobi_game {
 	struct MSLoadCharacter {
 		uint32_t pid{};
 		uint8_t response_code{}; //EMobiLoad
+	};
+
+	struct MSModify {
+		uint32_t pid{};
+		uint8_t response_code{}; //EResponseModify
 	};
 
 	struct MSReSync {

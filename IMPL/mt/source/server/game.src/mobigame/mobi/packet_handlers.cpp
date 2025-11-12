@@ -537,15 +537,18 @@ namespace mobi_game {
 			auto ch = CHARACTER_MANAGER::instance().FindByPID(pkt->pid);
 			if (!ch) {
 				LOG_TRACE("Character(?) not found.", pkt->pid);
+				sendModifyResponse(pkt->pid, EResponseModify::NOT_EXISTS_CH);
 				return false;
 			}
 			auto desc = ch->GetDesc();
 			if (!desc) {
 				LOG_TRACE("Desc of ch(?) not found.", pkt->pid);
+				sendModifyResponse(pkt->pid, EResponseModify::NOT_EXISTS_CH);
 				return false;
 			}
 			DESC_MANAGER::instance().DestroyLoginKey(desc);
 			DESC_MANAGER::instance().DestroyDesc(desc);
+			sendModifyResponse(pkt->pid, EResponseModify::SUCCESS);
 			return true;
 		}
 		case ESubModifyCharacter::LOAD_CH: {
