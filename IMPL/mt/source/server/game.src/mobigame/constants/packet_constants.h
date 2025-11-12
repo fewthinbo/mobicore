@@ -53,10 +53,11 @@ namespace mobi_game {
 		enum ITEM_MAXS {
 			MAX_SOCKETS_COUNT = 3, // max tas veya cevher slotu
 			MAX_ATTR_COUNT = 5 + 2, // max efsun sayisi
-			MAX_ITEM_COUNT = 200, // max item sayisi
-			MAX_INVENTORY_PAGE_SLOT = 45,
-			MAX_INVENTORY_PAGE_COUNT = 5,
+			/*MAX_INVENTORY_PAGE_SLOT = 45,
+			MAX_INVENTORY_PAGE_COUNT = 5,*/
 		};
+
+		static constexpr const uint8_t MAX_CHARACTER_COUNT = 4;
 
 		enum class ENotificationSubHeader : uint8_t {
 			ADD,
@@ -114,6 +115,12 @@ namespace mobi_game {
 		LOGOUT,
 		NO_ACTIVITY,
 		OTHERS, //you can use this one for extra failure types
+	};
+
+	enum class EResponseModify : uint8_t {
+		SUCCESS,
+		NOT_EXISTS_CH,
+		OTHERS,
 	};
 
 #if __OFFSHOP__

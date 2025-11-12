@@ -97,8 +97,8 @@ void MessengerManagerEnhanced::SendStatusUpdate(keyA account, keyA companion, ui
 	if (!d || !d->GetCharacter())
 		return;
 
-	if (ch->GetGMLevel() == GM_PLAYER && gm_get_level(companion.c_str()) != GM_PLAYER)
-		return;
+	/*if (ch->GetGMLevel() == GM_PLAYER && gm_get_level(companion.c_str()) != GM_PLAYER)
+		return;*/
 
 	// Use optimized packet format for all status updates
 	TPacketGCMessenger pack{};

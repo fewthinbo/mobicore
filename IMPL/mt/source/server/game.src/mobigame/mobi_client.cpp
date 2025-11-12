@@ -549,6 +549,26 @@ namespace mobi_game {
 		return SendPacket(buf.get());
 	}
 
+	bool MobiClient::sendModifyResponse(uint32_t pid, EResponseModify code) {
+		return true;
+		/*if (pid == 0) return false;
+
+		MSModify s_packet{};
+		s_packet.pid = pid;
+		s_packet.response_code = static_cast<std::underlying_type_t<EResponseModify>>(code);
+
+		MSCharacter packet{};
+		packet.header = HEADER_MS_CHARACTER;
+		packet.sub_header = static_cast<std::underlying_type_t<ESubCharacter>>(ESubCharacter::RESPONSE_DISCONNECT);
+		packet.size = sizeof(packet) + sizeof(s_packet);
+
+		TMP_BUFFER buf(packet.size);
+		buf.write(&packet, sizeof(packet));
+		buf.write(&s_packet, sizeof(s_packet));
+
+		return SendPacket(buf.get());*/
+	}
+
 	bool MobiClient::sendChLoadStatus(uint32_t pid, EMobiLoad code) {
 		if (pid == 0) return false;
 

@@ -11,7 +11,7 @@
 #endif
 
 #include <Singletons/json_loader.h>
-
+#include <Singletons/log_manager.h>	
 #include "client/client_base.h"
 
 #include "notification.h"

@@ -9,14 +9,12 @@ void CHARACTER::Destroy()
 #if __MOBICORE__
 	if (m_destroyed) return;
 	m_destroyed = true;
-	if (auto* d = GetDesc()) {
-		if (!d->is_mobile_request) {
-			mobileInstance.sendLogout(GetPlayerID());
-		}
-		/*else {
+	mobileInstance.sendLogout(GetPlayerID());
+	/*if (auto* d = GetDesc()) {
+		if (d->is_mobile_request) {
 			mobileChInstance.HandleLogout(GetPlayerID());
-		}*/
-	}
+		}
+	}*/
 #endif
 
 	CloseMyShop();

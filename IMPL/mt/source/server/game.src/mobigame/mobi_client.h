@@ -122,6 +122,7 @@ namespace mobi_game {
 		bool sendChangeSex(uint32_t pid, uint8_t sex);
 		bool sendChangeEmpire(uint32_t pid, uint8_t empire);
 		bool sendChangeName(uint32_t pid, const std::string& name);
+		bool sendModifyResponse(uint32_t pid, EResponseModify code);
 		bool sendChLoadStatus(uint32_t pid, EMobiLoad code);
 
 		//use wherever you want for send mobile notification to a player.
