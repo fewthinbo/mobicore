@@ -20,7 +20,7 @@
 #include "../../../common/tables.h"
 #include "../../../common/length.h"
 #include "db.h"
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 #include "ikarus_shop_manager.h"
 #endif
 #endif
@@ -424,7 +424,7 @@ namespace mobi_game {
 	}
 #endif
 
-#if __OFFSHOP__ && __BUILD_FOR_GAME__
+#if __OFFSHOP__ == 1 && __BUILD_FOR_GAME__
 	bool MobiClient::HandleOffshop(TDataRef data) {
 		/*bu paket dogrudan islemi yapan karakterin bulundugu porta gonderilir, karakter bulunmalidir.*/
 		auto* pkt = reinterpret_cast<const SMOffshop*>(data.data());

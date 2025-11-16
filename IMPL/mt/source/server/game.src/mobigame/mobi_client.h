@@ -22,7 +22,7 @@
 		class CGuild;
 		struct TSimplePlayer;
 	#endif
-	#if __OFFSHOP__
+	#if __OFFSHOP__ == 1
 		class CHARACTER;
 		namespace ikashop {
 			struct TPriceInfo;
@@ -129,7 +129,7 @@ namespace mobi_game {
 		//Example: send when sold player's item in offshop
 		bool sendMobileNotification(uint32_t pid, const std::string& message, ENotificationChannels channel = ENotificationChannels::SYSTEM);
 
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 	public: //offshop
 		bool sendShopItemUpdatePos(uint32_t owner_pid, uint32_t vid_item, uint32_t uptodate);
 #if __BUILD_FOR_GAME__
@@ -176,7 +176,7 @@ namespace mobi_game {
 #if !__MT_DB_INFO__
 		bool HandleGetCache(TDataRef data); //yeni acc kaydini senkronize et
 #endif
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 		bool HandleOffshop(TDataRef data);
 #endif
 		bool HandleModifyCharacter(TDataRef data);

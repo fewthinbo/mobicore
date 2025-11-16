@@ -641,7 +641,7 @@ namespace mobi_game {
 
 		return SendPacket(buf.get());
 	}
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 #if __BUILD_FOR_GAME__
 	bool MobiClient::sendShopCreate(const ikashop::TShopInfo& info){
 		if (!IsCoreP2PManager()) return true;

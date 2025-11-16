@@ -23,7 +23,7 @@ namespace mobi_game {
 		client_impl_->packet_register_dynamic(HEADER_SM_MESSAGE, sizeof(SMMessage), offsetof(SMMessage, size));
 		client_impl_->packet_register_dynamic(HEADER_SM_FORWARD, sizeof(SMForward), offsetof(SMForward, size));
 		client_impl_->packet_register_dynamic(HEADER_SM_VALIDATE_LOGIN, sizeof(SMValidateMobileLogin), offsetof(SMValidateMobileLogin, size));
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 		client_impl_->packet_register_dynamic(HEADER_SM_OFFSHOP, sizeof(SMOffshop), offsetof(SMOffshop, size));
 #endif
 		client_impl_->packet_register_dynamic(HEADER_SM_CHARACTER, sizeof(SMModifyCharacter), offsetof(SMModifyCharacter, size));
@@ -98,7 +98,7 @@ namespace mobi_game {
 				result = HandleModifyCharacter(data);
 				break;
 			}
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 			case HEADER_SM_OFFSHOP: {
 				result = HandleOffshop(data);
 				break;

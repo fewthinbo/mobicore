@@ -180,7 +180,7 @@ add_compile_definitions(__MOBICORE__=1)
 add_compile_definitions(__MT_DB_INFO__=1)
 add_compile_definitions(__MOBI_PACKET_ENCRYPTION__=1)
 add_compile_definitions(__FIGHTER_SCORE_SYNC__=0)
-add_compile_definitions(__OFFSHOP__=1)
+add_compile_definitions(__OFFSHOP__=1) #packet_constants.h -> EOffshopType
 
 # Set output directories
 if(PLATFORM_WINDOWS)

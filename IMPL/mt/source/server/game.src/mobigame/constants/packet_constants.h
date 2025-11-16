@@ -42,7 +42,7 @@ namespace mobi_game {
 			DRAGON_SOUL_INVENTORY,
 			BELT_INVENTORY,
 			GROUND,
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 			IKASHOP_OFFLINESHOP,
 			IKASHOP_SAFEBOX,
 			IKASHOP_AUCTION,
@@ -91,6 +91,12 @@ namespace mobi_game {
 			NOT_EXIST,
 		};
 	}
+	
+	//TODO select it for your offshop and update macro in Makefile or CMakeLists.txt
+	enum class EOffshopType : uint8_t {
+		NONE = 0,
+		IKARUS = 1,
+	};
 
 	enum class EMobiLoad : uint8_t {
 		SUCCESS,
@@ -123,7 +129,7 @@ namespace mobi_game {
 		OTHERS,
 	};
 
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 	enum class EResponseShopOperation : uint8_t {
 		SUCCESS,
 		INGAME_REAL,

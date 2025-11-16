@@ -111,7 +111,7 @@ namespace mobi_game {
 		RESPONSE_DISCONNECT,
 	};
 
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 	//to bridge server & mobile
 	enum class ESubOffshop : uint8_t {
 		SHOP_INFO,  //Detayli shop bilgisi -itemler vs-
@@ -514,7 +514,7 @@ namespace mobi_game {
 		uint8_t type{};
 		uint32_t pid{};
 	};
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 	struct MSOffshop {
 		THEADER header = HEADER_MS_OFFSHOP;
 		TSIZE size{};

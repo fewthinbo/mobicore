@@ -4,7 +4,7 @@
 #include <sstream>
 
 namespace mobi_game {
-#if __OFFSHOP__
+#if __OFFSHOP__ == 1
 	static constexpr const char* SCHEMA_ACCOUNT = "srv1_account";
 	static constexpr const char* SCHEMA_PLAYER = "srv1_player";
 	static constexpr const char* SCHEMA_COMMON = "srv1_common";
