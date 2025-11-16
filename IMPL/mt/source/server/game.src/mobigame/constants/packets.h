@@ -70,14 +70,14 @@ namespace mobi_game {
 #if !__MT_DB_INFO__
 		HEADER_SM_GET_CACHE, //sadece yeni acc kayitlari getirmek ve cache senkronizasyonu icin kullanilir.
 #endif
-#if	__OFFSHOP__
+#if	__OFFSHOP__ == 1
 		HEADER_MS_OFFSHOP,
 		HEADER_SM_OFFSHOP,
 #endif
 
 		HEADER_SM_CHARACTER, //ara sunucudan mt'ye karakter komutlari
 
-#if	__OFFSHOP__
+#if	__OFFSHOP__ == 1
 		HEADER_MS_SHOP_OP_RESPONSE,
 #endif
 
@@ -529,6 +529,7 @@ namespace mobi_game {
 		uint32_t sender_pid{};
 		uint32_t shop_pid{};
 	};
+#endif
 
 	struct TAttr {
 		int16_t type{}; // efsun tipi
@@ -538,6 +539,7 @@ namespace mobi_game {
 		~TAttr() noexcept = default;
 	};
 
+#if __OFFSHOP__ == 1
 	namespace offshop {
 		struct TPriceInfo {
 			uint32_t yang{};

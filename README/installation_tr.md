@@ -1,7 +1,11 @@
 **🌐 Dil**: **Türkçe (seçildi)** | [English](./installation_en.md)
 # 🔧 mobi-core - Kurulum Rehberi
 
-## Lisans Kayıt Formu
+## Ücretsiz Plan Kurulumu
+- [Lisans kayıt sürecini](#lisans-kayıt-süreci) doğrudan atlayacağız.
+- Ücretsiz plan kurulumu için önce [buraya tıklayın](./installation_free_tr.md)
+
+## Lisans Kayıt Süreci
 - [Formu](https://forms.gle/bPyfbgr4cestykzFA) doldurduktan sonra lisans işleminiz hızlıca tamamlanacaktır.
 - Ödeme için size bir bağlantı gönderilecektir.
 - Sistem hazır olduğunda bir e-mail alacaksınız ardından [teknik kurulum](#teknik-kurulum)'a geçebilirsiniz..

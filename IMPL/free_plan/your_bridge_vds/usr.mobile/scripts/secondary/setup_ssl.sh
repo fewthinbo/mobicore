@@ -65,11 +65,20 @@ $ACME_SH --version
 # Let's Encrypt kullan
 $ACME_SH --set-default-ca --server letsencrypt
 
+while :; do
+  printf "Enter your e-mail for registration for lets encrypt(example: banana@gmail.com): "
+  read EMAIL_READ
+  if ask_yesno "You entered '$EMAIL_READ'. Confirm?"; then
+    MY_EMAIL="$EMAIL_READ"
+    break
+  fi
+done
+
 # Hesap kayıtlı mı kontrol et (yoksa kayıt et)
 ACCOUNT_PATH="/root/.acme.sh/account.conf"
 if [ ! -f "$ACCOUNT_PATH" ]; then
-  echo "Registering new account with email mobicore.io@gmail.com"
-  $ACME_SH --register-account -m mobicore.io@gmail.com
+  echo "Registering new account with email $MY_EMAIL"
+  $ACME_SH --register-account -m $MY_EMAIL
 fi
 
 echo "Checking port 80 availability..."
