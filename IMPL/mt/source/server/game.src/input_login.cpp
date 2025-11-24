@@ -139,8 +139,7 @@ void CInputLogin::Entergame(LPDESC d, const char * data)
 	}
 	
 	...
-
-#ifdef __MOBICORE__
+#if __MOBICORE__
 	if (!d->is_mobile_request) {
 #endif
 	if (ch->GetMapIndex() >= ...)
@@ -159,7 +158,7 @@ void CInputLogin::Entergame(LPDESC d, const char * data)
 	{
 		...
 	}
-#ifdef __MOBICORE__
+#if __MOBICORE__
 	}
 	else {
 		ch->GoToSafePosition();

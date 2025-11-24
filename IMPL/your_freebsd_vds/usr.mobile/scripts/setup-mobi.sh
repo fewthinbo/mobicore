@@ -1,7 +1,11 @@
 #!/bin/sh
 
+CUR_PATH=$(pwd)
+
 echo "Running prerequisite script..."
-secondary/setup_env.sh || { echo "Script failed!"; exit 1; }
+chmod +x "secondary/setup_env.sh"
+sed -i '' 's/\r$//' "secondary/setup_env.sh"
+sh "secondary/setup_env.sh" || { echo "Script failed!"; exit 1; }
 
 echo "Updating /root/.shrc with mobi aliases..."
 if ! grep -q "mobi_clean_rel" /root/.shrc; then
@@ -26,5 +30,8 @@ echo "Reloading /root/.shrc..."
 echo "Mobicore installing..."
 mobi_install_rel
 
+cd $CUR_PATH
 echo "Running script..."
-secondary/setup_sql.sh || { echo "Script failed!"; exit 1; }
+chmod +x "secondary/setup_sql.sh"
+sed -i '' 's/\r$//' "secondary/setup_sql.sh"
+sh "secondary/setup_sql.sh" || { echo "Script failed!"; exit 1; }

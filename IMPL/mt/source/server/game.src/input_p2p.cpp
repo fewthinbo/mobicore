@@ -1,6 +1,5 @@
 #if __MOBICORE__
 #include "mobi_client.h"
-#include "character/ch_manager.h"
 #endif
 
 int CInputP2P::Analyze(LPDESC d, BYTE bHeader, const char * c_pData)

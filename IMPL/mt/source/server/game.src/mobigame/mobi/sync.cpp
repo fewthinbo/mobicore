@@ -20,7 +20,6 @@
 
 
 using namespace network;
-
 namespace mobi_game {
 	using namespace consts;
 
@@ -101,20 +100,17 @@ namespace mobi_game {
 
 			war_pack.scores[0] = team1.iScore;
 			war_pack.scores[1] = team2.iScore;
-#if __FIGHTER_SCORE_SYNC__
 			war_pack.team_size[0] = team1.iMemberCount * sizeof(TWarFighter);
 			war_pack.team_size[1] = team2.iMemberCount * sizeof(TWarFighter);
-#endif
 			buf.write(&war_pack, sizeof(TWarElem));
 
 			total_size += sizeof(TWarElem);
 			war_count++;
 
-#if __FIGHTER_SCORE_SYNC__
 			auto write_fighters = [&buf, war, &total_size](uint32_t gid) {
 				for (const auto& pair : war) {
 					uint32_t pid = pair.first;
-					const TMemberStats* stats = pair.second;
+					const CWarMap::TMemberStats* stats = pair.second.get();
 					if (!stats) continue;
 
 					if (stats->dwGuildId != gid) continue;
@@ -127,10 +123,8 @@ namespace mobi_game {
 					total_size += sizeof(TWarFighter);
 				}
 			};
-			//once team1'in fightlar ini yaz
 			write_fighters(team1.dwID);
 			write_fighters(team2.dwID);
-#endif
 		};
 
 		CWarMapManager::instance().for_each(std::move(get_list));

@@ -1,6 +1,6 @@
 **🌐 Language**: [Türkçe](./installation_free_tr.md) | **English (selected)**
 # 🔧 mobi-core - Free Plan Installation Guide
-- Fill out the [form](https://forms.gle/EFNjrpuXF558PkKL8), your registration will be complated for free plan.
+- You need to be sure filling out the form and select free plan option.
 - There is only one restriction on the free plan, which is the number of accounts limit (130 for now).
 
 | **Requirements**                                 |

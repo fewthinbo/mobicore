@@ -1,19 +1,29 @@
 ################################ NOTES ##################################
-#IF YOU HAVE External/library/libssl.a External/library/libcrypto.a /NOT CRYPTOPP/
+#IF YOU ARE IN THE X32 MACHINE AND HAVE External/library/libssl.a External/library/libcrypto.a /NOT CRYPTOPP/
 #or something in your makefile, use system libs instead of them:
 #LIBS += /usr/lib/libssl.a
 #LIBS += /usr/lib/libcrypto.a
 ##########
-#NOTE: IF YOU ARE USING EXTERNAL BOOST LIBRARY WITH VENDOR APPROACH, DELETE THEM AND USE SYSTEM ONES
+#IF YOU ARE IN THE X32 MACHINE AND USING EXTERNAL BOOST LIBRARY WITH VENDOR APPROACH, DELETE THEM AND USE SYSTEM ONES
 #DELETE THAT LINE IF YOU'VE SOMETHING LIKE THIS
 #INCDIR += -I../../../Extern/include/boost
+#INCDIR += -I../../../Extern/include/openssl
+##########
+#IF YOU ARE IN THE X64 MACHINE AND TRYING TO BUILD X32 GAME SERVER:
+#search PLEASE_PROVIDE_YOUR_EXTERN_FOLDER in this file and fill out.
+#Then you must be sure about you've libssl.a and libcrypto.a files in your external folder
+#If you don't have follow these steps:
+#Execute "uname -m -v" command on your freebsd and check out your current freebsd version with 
+#Find and install x32 version of your freebsd (Must be same architecture and version)
+#Run "pkg install -y openssl libiconv" then enter the /usr/local/lib folder copy libiconv.a file to your external folder.
+#Enter the /usr/lib and copy those files to your external folder: libssl.a, libcrypto.a
+#You've done.
 ################################ EOF NOTES ##################################
 
 ...
 
 #===================================================Mobile======================================================
 #==========INCLUDE DIRS==========#
-#INCDIR += -I/root/vcpkg_projects/mt_side_vcpkg_installed/x86-freebsd/include
 INCDIR += -I/usr/local/include/MobileClient/Core -I/usr/local/include/MobileClient/Raw
 INCDIR += -Imobigame
 INCDIR += -I.
@@ -27,7 +37,16 @@ LIBDIR += -L/usr/lib
 LIBDIR += -L/usr/local/lib
 endif
 
-LINK_FLAGS = -Wl,-Bstatic -lMobileClient -liconv -Wl,-Bdynamic
+LINK_FLAGS = -Wl,-Bstatic -lMobileClient -Wl,-Bdynamic
+
+ifeq ($(LBITS), 64)
+EXTERNAL_FOLDER=PLEASE_PROVIDE_YOUR_EXTERN_FOLDER
+LIBS += $(EXTERNAL_FOLDER)/libssl.a
+LIBS += $(EXTERNAL_FOLDER)/libcrypto.a
+LIBS += $(EXTERNAL_FOLDER)/libiconv.a
+else
+LINK_FLAGS += -Wl,-Bstatic -liconv -Wl,-Bdynamic
+endif
 
 #==========DEFINE FLAGS==========# (should be synced with cmakelists.txt in mobicore lib)
 CFLAGS += -D__MOBICORE__=1
@@ -37,7 +56,6 @@ CFLAGS += -D__BUILD_FOR_GAME__=1
 CFLAGS += -D__MT_DB_INFO__=1
 CFLAGS += -D__MOBI_PACKET_ENCRYPTION__=1
 CFLAGS += -D__OFFSHOP__=1
-CFLAGS += -D__FIGHTER_SCORE_SYNC__=0
 
 #==========SOURCE FILES==========#
 CPPFILE += $(shell find mobigame -name '*.cpp')

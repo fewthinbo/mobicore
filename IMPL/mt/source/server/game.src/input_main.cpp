@@ -13,9 +13,7 @@ int CInputMain::Chat(LPCHARACTER ch, const char * data, size_t uiBytes)
 
 		ch->SetLastShoutPulse(thecore_heart->pulse);
 #if __MOBICORE__
-		if (ch) {
-			mobileInstance.sendShout(ch->GetPlayerID(), buf, pinfo->code_page);
-		}
+		mobileInstance.sendShout(ch->GetPlayerID(), buf, pinfo->code_page);
 #endif
 
 		...

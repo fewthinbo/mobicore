@@ -3,7 +3,24 @@
 #endif
 
 #if __MOBICORE__
-const TeamData& CWarMap::GetTeamData(BYTE bIdx) const {
+CWarMap::TMemberStats* CWarMap::RegisterMemberStats(CHARACTER* ch)
+{
+	if (!ch) return nullptr;
+	CGuild* pGuild = ch->GetGuild();
+	if (!pGuild) return nullptr;
+
+	auto pair = map_MemberStats.try_emplace(ch->GetPlayerID(), std::make_unique<TMemberStats>(pGuild->GetID(), 0, 0));
+	return pair.second ? pair.first->second.get() : nullptr;
+}
+
+CWarMap::TMemberStats* CWarMap::GetMemberStats(CHARACTER* ch)
+{
+	if (!ch) return nullptr;
+	auto found = map_MemberStats.find(ch->GetPlayerID());
+	return found != map_MemberStats.end() ? found->second.get() : nullptr;
+}
+
+const CWarMap::TeamData& CWarMap::GetTeamData(BYTE bIdx) const {
 	if (bIdx >= 2) {
 		bIdx = 0;
 	}
@@ -25,24 +42,32 @@ bool CWarMap::SetEnded()
 void CWarMap::IncMember(LPCHARACTER ch)
 {
 	...
+	if (isWarMember)
+	{
+		...
+		event_cancel(&m_pkTimeoutEvent);
 #if __MOBICORE__
-	if (ch) {
-		mobileInstance.sendGuildWarPlayerJoin(gid, ch->GetPlayerID());
-	}
+		if (ch) {
+			mobileInstance.sendGuildWarPlayerJoin(gid, ch->GetPlayerID());
+		}
 #endif
-	SendWarPacket(d);
+		...
+	}
 	...
 }
 
 void CWarMap::DecMember(LPCHARACTER ch)
 {
 	...
+	if (!ch->IsObserverMode())
+	{
+		ch->SetQuestFlag("war.is_war_member", 0);
 #if __MOBICORE__
-	if (ch) {
-		mobileInstance.sendGuildWarPlayerLeave(gid, ch->GetPlayerID());
-	}
+		if (ch) {
+			mobileInstance.sendGuildWarPlayerLeave(gid, ch->GetPlayerID());
+		}
 #endif
-	m_set_pkChr.erase(ch);
+	}
 	...
 }
 
@@ -57,18 +82,19 @@ void CWarMap::Notice(const char * psz)
 void CWarMap::OnKill(LPCHARACTER killer, LPCHARACTER ch)
 {
 	...
+	if (!GetTeamIndex(dwDeadGuild, idx))
+		return;
+
 #if __MOBICORE__
 	if (ch && killer) {
 		mobileInstance.sendGuildWarPlayerKill(dwKillerGuild, dwDeadGuild, killer->GetPlayerID(), ch->GetPlayerID());
+		if (TMemberStats* stats = GetMemberStats(killer)) {
+			stats->dwKills++;
+		}
+		if (TMemberStats* stats = GetMemberStats(ch)) {
+			stats->dwDeaths++;
+		}
 	}
 #endif
-
-	switch (m_kMapInfo.bType)
-	{
-		case WAR_MAP_TYPE_NORMAL:
-			SendGuildWarScore(dwKillerGuild, dwDeadGuild, 1, ch->GetLevel());
-			break;
-			...
-	}
 	...
 }

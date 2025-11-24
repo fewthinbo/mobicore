@@ -13,19 +13,15 @@ bool CShopManager::RecvShopBuyDBPacket(DWORD buyerid, DWORD ownerid, DWORD itemi
 				...
 			}
 #if __MOBICORE__ && __OFFSHOP__
-			if (shopItem) {
-				mobileInstance.sendShopItemBuy(ownerid, buyerid, shopItem->GetInfo().pos);
-			}
+			mobileInstance.sendShopItemBuy(ownerid, buyerid, shopItem->GetID());
 #endif
 		}
 		else
 		{
 			...
 #if __MOBICORE__ && __OFFSHOP__
-			if (shopItem) {
-				mobileInstance.sendShopItemBuy(ownerid, buyerid, shopItem->GetID());
-			}
-#endif		
+			mobileInstance.sendShopItemBuy(ownerid, buyerid, shopItem->GetID());
+#endif
 			shop->BuyItem(shopItem->GetID());
 		}
 
@@ -78,9 +74,7 @@ bool CShopManager::RecvShopRemoveItemDBPacket(DWORD ownerid, DWORD itemid, bool 
 {
 	...
 #if __MOBICORE__ && __OFFSHOP__
-	if (shopItem) {
-		mobileInstance.sendShopItemRemove(ownerid, shopItem->GetInfo().pos);
-	}
+	mobileInstance.sendShopItemRemove(ownerid, itemid);
 #endif
 	shop->RemoveItem(itemid);
 	...
@@ -216,7 +210,7 @@ bool CShopManager::RecvShopBuyItemClientPacket(LPCHARACTER ch, DWORD ownerid, DW
 #if __MOBICORE__ && __OFFSHOP__
 		mobileInstance.sendShopOpResponse(ch, mobi_game::EResponseShopOperation::CHARACTER_ACTIONS);
 #endif
-		return true;
+		return false;
 	}
 
 	if (!CheckGMLevel(ch)) {

@@ -12,7 +12,9 @@ void CInputDB::LoginSuccess(DWORD dwHandle, const char *data)
 		...
 		LoginFailure(d, pTab->status);
 #if __MOBICORE__
-		mobileChInstance.NotifyStatus(d, mobi_game::EMobiLoad::INVALID_STATUS);
+		if (d && d->is_mobile_request) {
+			mobileChInstance.NotifyStatus(d, mobi_game::EMobiLoad::INVALID_STATUS);
+		}
 #endif
 		return;
 	}
@@ -53,7 +55,6 @@ void CInputDB::PlayerCreateSuccess(LPDESC d, const char * data)
 	}
 #endif
 #endif
-	TPlayerItem t;
 	...
 }
 
@@ -96,7 +97,9 @@ void CInputDB::PlayerLoad(LPDESC d, const char * data)
 		...
 		d->SetPhase(PHASE_CLOSE);
 #if __MOBICORE__
-		mobileChInstance.NotifyStatus(d, EMobiLoad::INVALID_LOCATION);
+		if (d && d->is_mobile_request){
+			mobileChInstance.NotifyStatus(d, EMobiLoad::INVALID_LOCATION);
+		}
 #endif
 		...
 	}
@@ -144,7 +147,9 @@ void CInputDB::LoginAlready(LPDESC d, const char * c_pData)
 
 	LoginFailure(d, "ALREADY");
 #if __MOBICORE__
-	mobileChInstance.NotifyStatus(d, mobi_game::EMobiLoad::INGAME_REAL);
+	if (d->is_mobile_request){
+		mobileChInstance.NotifyStatus(d, mobi_game::EMobiLoad::INGAME_REAL);
+	}
 #endif
 }
 

@@ -1,14 +1,10 @@
 **🌐 Language**: [Türkçe](./installation_tr.md) | **English (selected)**
 # 🔧 mobi-core - Installation Guide
+- After filling out the  [form](https://forms.gle/bPyfbgr4cestykzFA) you'll receive an executable file which compatible with your game for your bridge vds.
+- You will receive an email when the system is ready, then you can proceed to [technical installation](#technical-installation).
 
 ## Free Plan Installation
-- We'll skip [license registration progress](#license-registration-progress) directly.
 - For free plan installation firstly [click this](./installation_free_en.md)
-
-## License Registration Progress
-- After filling out the [form](https://forms.gle/bPyfbgr4cestykzFA), your license -free or paid- process will be completed quickly.
-- A payment link will be sent to you.
-- You will receive an email when the system is ready, then you can proceed to [technical installation](#technical-installation).
 
 ## Technical Installation
 > 🥳 **Relax**: A flawless installation awaits you. Estimated installation time: **12 minutes**

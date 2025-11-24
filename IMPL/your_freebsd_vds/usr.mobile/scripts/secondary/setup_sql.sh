@@ -189,7 +189,7 @@ fi
 chmod +x "$PY_SCRIPT_JSON_UPDATE"
 
 # call python updater
-"$PY" "$PY_SCRIPT_JSON_UPDATE" --file "$JSON_FILE" --field server_bridge.host:"$YOUR_MOBI_BRIDGE_SERVER_IP" --field db.host:"$DETECTED_IP:$DB_PORT" --field db.user:"$DB_USER" --field db.pass:"$RANDOM_STRONG_PASS"
+"$PY" "$PY_SCRIPT_JSON_UPDATE" --file "$JSON_FILE" --field server_bridge.host:"$YOUR_MOBI_BRIDGE_SERVER_IP" --field db.host:"$DETECTED_IP:$DB_PORT" --field db.user:"$DB_USER" --field db.password:"$RANDOM_STRONG_PASS"
 RET=$?
 if [ $RET -ne 0 ]; then
   echo "[ERROR] $PY_SCRIPT_JSON_UPDATE failed with exit code $RET"

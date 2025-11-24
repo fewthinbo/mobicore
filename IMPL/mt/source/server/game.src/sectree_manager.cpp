@@ -22,4 +22,13 @@ bool SECTREE_MANAGER::GetCoordsOfSafeArea(long map_idx, DWORD related_x, DWORD r
 
 	return false;
 }
+bool SECTREE_MANAGER::IsAttackablePosition(long lMapIndex, long x, long y)
+{
+	LPSECTREE tree = SECTREE_MANAGER::instance().Get(lMapIndex, x, y);
+
+	if (!tree)
+		return false;
+
+	return (!tree->IsAttr(x, y, ATTR_BLOCK | ATTR_OBJECT | ATTR_BANPK));
+}
 #endif

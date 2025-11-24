@@ -1,6 +1,6 @@
 ################################ NOTES ##################################
-#IF YOU HAVE External/library/libssl.a External/library/libcrypto.a /NOT CRYPTOPP/
-#or something in your cmakelists.txt, use system libs instead of them:
+#IF YOU ARE IN THE X32 MACHINE AND HAVE External/library/libssl.a External/library/libcrypto.a /NOT CRYPTOPP/
+#in your cmakelists.txt, use system libs instead of them:
 #target_link_libraries(${TARGET_NAME} 
 #	PUBLIC
 #	Boost::system
@@ -9,11 +9,22 @@
 #	OpenSSL::SSL
 #)
 ##########
-#NOTE: IF YOU ARE USING EXTERNAL BOOST LIBRARY WITH VENDOR APPROACH, DELETE THEM AND USE SYSTEM ONES
+#IF YOU ARE IN THE X32 MACHINE AND USING EXTERNAL BOOST LIBRARY WITH VENDOR APPROACH, DELETE THEM AND USE SYSTEM ONES
 #DELETE THAT LINE IF YOU'VE SOMETHING LIKE THIS
 #target_include_directories(${TARGET_NAME} PUBLIC
 #	"Extern/include/boost"
+#	"Extern/include/openssl"
 #)
+##########
+#IF YOU ARE IN THE X64 MACHINE AND TRYING TO BUILD X32 GAME SERVER:
+#search PLEASE_PROVIDE_YOUR_EXTERN_FOLDER in this file and fill out.
+#Then you must be sure about you've libssl.a and libcrypto.a files in your external folder
+#If you don't have follow these steps:
+#Execute "uname -m -v" command on your freebsd and check out your current freebsd version with 
+#Find and install x32 version of your freebsd (Must be same architecture and version)
+#Run "pkg install -y openssl libiconv" then enter the /usr/local/lib folder copy libiconv.a file to your external folder.
+#Enter the /usr/lib and copy those files to your external folder: libssl.a, libcrypto.a
+#You've done.
 ################################ EOF NOTES ##################################
 
 #===================================================Mobile======================================================
@@ -36,7 +47,7 @@ target_include_directories(${TARGET_NAME} PUBLIC
 	"${CMAKE_CURRENT_SOURCE_DIR}/mobigame"
 	"${CMAKE_CURRENT_SOURCE_DIR}"
 )
--Wl,-Bstatic -liconv -Wl,-Bdynamic
+
 #==========LIBRARIES==========#
 if (IS_64_BIT)
 	target_link_directories(${TARGET_NAME} PUBLIC
@@ -51,7 +62,14 @@ else()
 endif()
 
 set(Iconv_IS_BUILT_IN FALSE CACHE BOOL "" FORCE)
-target_link_options(${TARGET_NAME} PUBLIC -Wl,-Bstatic -lMobileClient -liconv -Wl,-Bdynamic)
+target_link_options(${TARGET_NAME} PUBLIC -Wl,-Bstatic -lMobileClient -Wl,-Bdynamic)
+
+if (IS_64_BIT)
+	target_link_directories(${TARGET_NAME} PUBLIC "PLEASE_PROVIDE_YOUR_EXTERN_FOLDER")
+	target_link_libraries(${TARGET_NAME} PUBLIC iconv ssl crypto)
+else()
+	target_link_options(${TARGET_NAME} PUBLIC -Wl,-Bstatic -liconv -Wl,-Bdynamic)
+endif()
 
 #==========DEFINE FLAGS==========# (should be synced with cmakelists.txt in mobicore lib)
 target_compile_definitions(${TARGET_NAME} PRIVATE 
@@ -62,7 +80,6 @@ target_compile_definitions(${TARGET_NAME} PRIVATE
 	__MT_DB_INFO__=1
 	__MOBI_PACKET_ENCRYPTION__=1
 	__OFFSHOP__=1
-	__FIGHTER_SCORE_SYNC__=0
 )
 #===================================================Mobile======================================================
 

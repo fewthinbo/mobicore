@@ -97,9 +97,6 @@ void MessengerManagerEnhanced::SendStatusUpdate(keyA account, keyA companion, ui
 	if (!d || !d->GetCharacter())
 		return;
 
-	/*if (ch->GetGMLevel() == GM_PLAYER && gm_get_level(companion.c_str()) != GM_PLAYER)
-		return;*/
-
 	// Use optimized packet format for all status updates
 	TPacketGCMessenger pack{};
 	TPacketGCMessengerUserStatus userInfo{};
@@ -163,6 +160,10 @@ bool MessengerManagerEnhanced::IsMessageToMobile(keyA companion) const
 void MessengerManager::Login(MessengerManager::keyA account)
 {
 #if __MOBICORE__
+	DBManager::instance().EscapeString(__account, sizeof(__account), account.c_str(), account.size());
+	if (account.compare(__account))
+		return;
+
 	if (IsAccountInGame(account))
 		return;
 
@@ -171,7 +172,6 @@ void MessengerManager::Login(MessengerManager::keyA account)
 
 	SetAccountGameStatus(account, true);
 #else
-	
 	if (m_set_loginAccount.find(account) != m_set_loginAccount.end())
 		return;
 
@@ -194,17 +194,6 @@ void MessengerManager::LoadList(SQLMsg * msg)
 
 	for (it = m_InverseRelation[account].begin(); it != m_InverseRelation[account].end(); ++it)
 		SendLogin(*it, account);
-#endif
-}
-
-void MessengerManager::SendLogin(MessengerManager::keyA account, MessengerManager::keyA companion)
-{
-#if __MOBICORE__
-	if(!companion.size()) return;
-	auto companionStatus = GetUserStatus(companion);
-	SendStatusUpdate(account, companion, companionStatus);
-#else
-	...
 #endif
 }
 
@@ -236,16 +225,34 @@ void MessengerManager::Logout(MessengerManager::keyA account)
 #endif
 }
 
-void MessengerManager::SendLogout(MessengerManager::keyA account, MessengerManager::keyA companion)
+//or ::IsInFriendList
+bool MessengerManager::IsInList(MessengerManager::keyA account, MessengerManager::keyA companion) 
 {
 #if __MOBICORE__
-	if (!companion.size()) return;
+	auto relationIt = m_Relation.find(account);
+	if (relationIt == m_Relation.end())
+		return false;
 
-	auto companionStatus = GetUserStatus(companion);
-	SendStatusUpdate(account, companion, companionStatus);
+	if (relationIt->second.empty())
+		return false;
+
+	return relationIt->second.find(companion) != relationIt->second.end();
 #else
 	...
 #endif
+}
+
+bool MessengerManager::AuthToAdd(MessengerManager::keyA account, MessengerManager::keyA companion, bool bDeny)
+{
+	...
+	if (!bDeny)
+	{
+		...
+#if __MOBICORE__
+		mobileInstance.sendMessengerAdd(account, companion);
+#endif
+	}
+	...
 }
 
 void MessengerManager::__AddToList(MessengerManager::keyA account, MessengerManager::keyA companion)
@@ -273,19 +280,6 @@ void MessengerManager::__AddToList(MessengerManager::keyA account, MessengerMana
 #endif
 }
 
-bool MessengerManager::AuthToAdd(MessengerManager::keyA account, MessengerManager::keyA companion, bool bDeny)
-{
-	...
-	if (!bDeny)
-	{
-		...
-#if __MOBICORE__
-		mobileInstance.sendMessengerAdd(account, companion);
-#endif
-	}
-	...
-}
-
 void MessengerManager::AddToList(MessengerManager::keyA account, MessengerManager::keyA companion)
 {
 	...
@@ -302,29 +296,6 @@ void MessengerManager::AddToList(MessengerManager::keyA account, MessengerManage
 	...
 }
 
-#if ENABLE_PLAYER_BLOCK_SYSTEM
-void MessengerManager::__RemoveFromList(MessengerManager::keyA account, MessengerManager::keyA companion, bool isComp)
-{
-#if __MOBICORE__
-	auto relationIt = m_Relation.find(account);
-	if (relationIt != m_Relation.end())
-	{
-		relationIt->second.erase(companion);
-	}
-	
-	auto inverseIt = m_InverseRelation.find(companion);
-	if (inverseIt != m_InverseRelation.end())
-	{
-		inverseIt->second.erase(account);
-	}
-#else
-	m_Relation[account].erase(companion);
-	m_InverseRelation[companion].erase(account);
-#endif
-
-	...
-}
-#else
 void MessengerManager::__RemoveFromList(MessengerManager::keyA account, MessengerManager::keyA companion)
 {
 #if __MOBICORE__
@@ -344,28 +315,14 @@ void MessengerManager::__RemoveFromList(MessengerManager::keyA account, Messenge
 
 	...
 }
-#endif
-
-bool MessengerManager::IsInList(MessengerManager::keyA account, MessengerManager::keyA companion)
-{
-#if __MOBICORE__
-	auto relationIt = m_Relation.find(account);
-	if (relationIt == m_Relation.end())
-		return false;
-
-	if (relationIt->second.empty())
-		return false;
-
-	return relationIt->second.find(companion) != relationIt->second.end();
-#else
-	...
-#endif
-}
-
 
 void MessengerManager::RemoveAllList(keyA account)
 {
 #if __MOBICORE__
+	DBManager::instance().EscapeString(__account, sizeof(__account), account.c_str(), account.size());
+	if (account.compare(__account))
+		return;
+
 	auto relationIt = m_Relation.find(account);
 	if (relationIt == m_Relation.end())
 		return;
@@ -373,8 +330,7 @@ void MessengerManager::RemoveAllList(keyA account)
 	DBManager::instance().Query("DELETE FROM messenger_list%s WHERE account='%s' OR companion='%s'",
 			get_table_postfix(), account.c_str(), account.c_str());
 
-	for (const auto& friendName : relationIt->second)
-	{
+	for (const auto& friendName : relationIt->second){
 		this->RemoveFromList(account, friendName);
 	}
 #else
@@ -434,3 +390,25 @@ void MessengerManager::SendList(MessengerManager::keyA account)
 	d->Packet(buf.read_peek(), buf.size());
 }
 
+void MessengerManager::SendLogin(MessengerManager::keyA account, MessengerManager::keyA companion)
+{
+#if __MOBICORE__
+	if(companion.empty()) return;
+	auto companionStatus = GetUserStatus(companion);
+	SendStatusUpdate(account, companion, companionStatus);
+#else
+	...
+#endif
+}
+
+void MessengerManager::SendLogout(MessengerManager::keyA account, MessengerManager::keyA companion)
+{
+#if __MOBICORE__
+	if (!companion.size()) return;
+
+	auto companionStatus = GetUserStatus(companion);
+	SendStatusUpdate(account, companion, companionStatus);
+#else
+	...
+#endif
+}

@@ -19,6 +19,10 @@
 	HEADER_DG_MAP_LOCATIONS			= 0xfe,
 }
 
+...
+#pragma pack(1)
+
+...
 
 #if __MOBICORE__ 
 struct TMobiDGLogin {

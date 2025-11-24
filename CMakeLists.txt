@@ -179,7 +179,6 @@ endif()
 add_compile_definitions(__MOBICORE__=1)
 add_compile_definitions(__MT_DB_INFO__=1)
 add_compile_definitions(__MOBI_PACKET_ENCRYPTION__=1)
-add_compile_definitions(__FIGHTER_SCORE_SYNC__=0)
 add_compile_definitions(__OFFSHOP__=1) #packet_constants.h -> EOffshopType
 
 # Set output directories
@@ -256,7 +255,8 @@ if (PLATFORM_FREEBSD)
 		target_link_libraries(${TARGET_NAME} PUBLIC ${LINK_LIBRARIES})
 	else()
 		set(Iconv_IS_BUILT_IN FALSE CACHE BOOL "" FORCE)  #libiconv'ye gectim, Iconv::Iconv
-		find_package(Boost CONFIG REQUIRED COMPONENTS system thread)
+		set(Boost_NO_BOOST_CMAKE ON)
+		find_package(Boost REQUIRED COMPONENTS system thread)#CONFIG
 		find_package(nlohmann_json CONFIG REQUIRED)
 		find_package(OpenSSL REQUIRED)
 		find_package(ZLIB REQUIRED)
@@ -265,8 +265,9 @@ if (PLATFORM_FREEBSD)
 		
 		target_link_libraries(${TARGET_NAME} 
 			PUBLIC
-			Boost::system
-			Boost::thread
+			#Boost::system
+			#Boost::thread
+			${Boost_LIBRARIES}
 			nlohmann_json::nlohmann_json
 			OpenSSL::Crypto
 			OpenSSL::SSL

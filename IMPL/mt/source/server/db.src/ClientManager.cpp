@@ -36,7 +36,7 @@ static void SendMobiDGLogin(CPeer& target, CLoginData& login_data, const TMobiGD
 
 	//Send directly to game
 	target.EncodeHeader(HEADER_DG_MOBI_LOGIN, 0, sizeof(res));
-	target.Encode(res);
+	target.Encode(&res, sizeof(res));
 }
 
 static void SendMobiDGLogout(CPeer& target, uint32_t pid) {
@@ -48,7 +48,7 @@ static void SendMobiDGLogout(CPeer& target, uint32_t pid) {
 
 	//Send directly to game
 	target.EncodeHeader(HEADER_DG_MOBI_LOGOUT, 0, sizeof(res));
-	target.Encode(res);
+	target.Encode(&res, sizeof(res));
 }
 
 void CClientManager::MobiLogin(CPeer* pr, const char* data) {

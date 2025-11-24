@@ -1,6 +1,6 @@
 **🌐 Dil**: **Türkçe (seçildi)** | [English](./installation_free_en.md) 
 # 🔧 mobi-core - Ücretsiz Plan Kurulumu
-- [Formu](https://forms.gle/EFNjrpuXF558PkKL8) doldurun, ücretsiz plan için kaydınız yapılacaktır.
+- Formu doldurduğunuzdan ve ücretsiz planı seçtiğinizden emin olun.
 - Ücretsiz plandaki tek kısıtlama hesap sayısı limitidir (şimdilik 130).
 
 | **Gereklilikler**                                 |

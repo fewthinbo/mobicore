@@ -150,7 +150,7 @@ namespace mobi_game {
 
 #if __BUILD_FOR_GAME__
 		if (auto* desc_found = DESC_MANAGER::instance().FindByLoginName(info.login)) {
-			LOG_ERR("Desc(login: ?) already exists in this core(port: ?, host: ?), for_mobile(?)", info.login, mother_port, g_stProxyIP, desc_found->is_mobile_request);
+			LOG_ERR("Desc(login: ?) already exists in this core(port: ?, host: ?), for_mobile(?)", info.login, mother_port, g_szPublicIP, desc_found->is_mobile_request);
 			return desc_found->is_mobile_request ? ELoadChResult::ALREADY_FOR_MOBILE : ELoadChResult::IN_GAME;
 		}
 
@@ -221,7 +221,7 @@ namespace mobi_game {
 		TMobiGD pack{};
 		pack.pid = pid;
 		pack.login_key = d->GetLoginKey();
-		db_clientdesc->DBPacket(HEADER_GD_MOBI_LOGIN, 0, pack); //en uygun core bulunup loginKey ile giris yapilir.
+		db_clientdesc->DBPacket(HEADER_GD_MOBI_LOGIN, 0, &pack, sizeof(pack)); //en uygun core bulunup loginKey ile giris yapilir.
 	}
 
 	void CMobiCharManager::SendMobiWarp(LPDESC d, int32_t addr, uint16_t port) {
@@ -255,7 +255,7 @@ namespace mobi_game {
 		pack.info.login_key = d->GetLoginKey();
 		pack.addr = addr;
 		pack.port = port;
-		db_clientdesc->DBPacket(HEADER_GD_MOBI_WARP, 0, pack); //hedef core'a giris
+		db_clientdesc->DBPacket(HEADER_GD_MOBI_WARP, 0, &pack, sizeof(pack)); //hedef core'a giris
 	}
 
 	void CMobiCharManager::HandleLoginResult(DESC* d, bool res) {
@@ -302,10 +302,10 @@ namespace mobi_game {
 		LOG_TRACE("Inside of packet: login(?), key(?), pid(?)", received->login, received->login_key, received->pid);
 
 		if (descs_.EraseByKey(received->pid)) {
-			LOG_ERR("MobiDesc(pid: ?) existed & deleted in this core(port: ?, host: ?)", received->pid, mother_port, g_stProxyIP);
+			LOG_ERR("MobiDesc(pid: ?) existed & deleted in this core(port: ?, host: ?)", received->pid, mother_port, g_szPublicIP);
 		}
 		if (auto* desc_found = DESC_MANAGER::instance().FindByLoginKey(received->login_key)) {
-			LOG_ERR("Desc(hid: ?, pid: ?) already exists in this core(port: ?, host: ?), for_mobile(?)", desc_found->GetHandle(), received->pid, mother_port, g_stProxyIP, desc_found->is_mobile_request);
+			LOG_ERR("Desc(hid: ?, pid: ?) already exists in this core(port: ?, host: ?), for_mobile(?)", desc_found->GetHandle(), received->pid, mother_port, g_szPublicIP, desc_found->is_mobile_request);
 			if (!desc_found->is_mobile_request) return;
 			LOG_ERR("Desc(hid: ?, pid: ?) removing, will create newd", desc_found->GetHandle(), received->pid);
 			DESC_MANAGER::instance().DestroyDesc(desc_found);
@@ -391,9 +391,10 @@ namespace mobi_game {
 
 		d->last_activity = std::chrono::steady_clock::now();
 		d->SetPhase(PHASE_LOADING);
+		TPacketCGEnterGame pack{};
 		{
 			TScopeFlag controller(ch->can_mobi_warp);
-			d->m_inputLogin.Entergame(d, nullptr);
+			d->m_inputLogin.Entergame(d, reinterpret_cast<const char*>(&pack));
 		}
 
 		LOG_TRACE("MobiCh(hid: ?) loggined to game", d->GetHandle());

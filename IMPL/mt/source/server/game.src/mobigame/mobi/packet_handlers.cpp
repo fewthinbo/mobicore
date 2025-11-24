@@ -344,8 +344,13 @@ namespace mobi_game {
 		auto* login = reinterpret_cast<const char*>(data.data() + sizeof(SMValidateMobileLogin));
 		auto* pw = reinterpret_cast<const char*>(login + strlen(login) + 1);
 #if __BUILD_FOR_GAME__
+		if (test_server) /*no check*/ {
+			LOG_TRACE("Test server: Login(?) successful", login);
+			return SendLoginResponse(*pack, true);
+		}
+
 		std::string query = loggerInstance.WriteBuf(
-			"SELECT id FROM ?.account WHERE login='?' AND password = PASSWORD(?) LIMIT 1", SCHEMA_ACCOUNT, login, pw);
+			"SELECT id FROM ?.account WHERE login='?' AND password = PASSWORD(?) LIMIT 1", mobi_game::consts::SCHEMA_ACCOUNT, login, pw);
 
 		std::unique_ptr<SQLMsg> ret(DBManager::instance().DirectQuery(query.c_str()));
 		if (!ret) {

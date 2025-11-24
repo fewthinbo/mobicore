@@ -484,18 +484,14 @@ namespace mobi_game {
 	struct TWarElem {
 		uint32_t gids[2]{};
 		uint32_t scores[2]{};
-#if __FIGHTER_SCORE_SYNC__
 		TSIZE team_size[2]{}; //TWar Fighter list
-#endif
 	};
 
-#if __FIGHTER_SCORE_SYNC__
 	struct TWarFighter {
 		uint32_t pid{};
 		uint32_t kills{};
 		uint32_t deaths{};
 	};
-#endif
 
 	struct SMCacheStatus {
 		THEADER header = HEADER_SM_CACHE_STATUS;

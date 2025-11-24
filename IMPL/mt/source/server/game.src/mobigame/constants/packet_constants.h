@@ -2,6 +2,8 @@
 #if __MOBICORE__
 #include <cstdint>
 
+#include "ingame_constants.h"
+
 namespace mobi_game {
 	//should be synced with bridgeServer/Common/tables.h
 	enum class ENotificationChannels : uint8_t {
@@ -14,51 +16,6 @@ namespace mobi_game {
 	};
 
 	namespace consts {
-		enum ELenghts {
-			GUILD_NAME_MAX_LENGTH = 12,
-			CHARACTER_NAME_MAX_LENGTH = 24,
-			HOSTNAME_MAX_LENGTH = 21, //:$port eklenebilir
-			USERNAME_MAX_LENGTH = 32,
-			PASSWORD_MAX_LENGTH = 32,
-			LASTPLAY_MAX_LENGTH = 32,
-			EMAIL_MAX_LENGTH = 64,
-		};
-
-		enum EGMAuthorityLevel {
-			GM_PLAYER,
-			GM_LOW_WIZARD,
-			GM_WIZARD,
-			GM_HIGH_WIZARD,
-			GM_GOD,
-			GM_IMPLEMENTOR
-		};
-
-		enum class ItemWindows {
-			RESERVED_WINDOW,
-			INVENTORY,
-			EQUIPMENT,
-			SAFEBOX,
-			MALL,
-			DRAGON_SOUL_INVENTORY,
-			BELT_INVENTORY,
-			GROUND,
-#if __OFFSHOP__ == 1
-			IKASHOP_OFFLINESHOP,
-			IKASHOP_SAFEBOX,
-			IKASHOP_AUCTION,
-#endif
-			WINDOW_TYPE_MAX,
-		};
-
-		enum ITEM_MAXS {
-			MAX_SOCKETS_COUNT = 3, // max tas veya cevher slotu
-			MAX_ATTR_COUNT = 5 + 2, // max efsun sayisi
-			/*MAX_INVENTORY_PAGE_SLOT = 45,
-			MAX_INVENTORY_PAGE_COUNT = 5,*/
-		};
-
-		static constexpr const uint8_t MAX_CHARACTER_COUNT = 4;
-
 		enum class ENotificationSubHeader : uint8_t {
 			ADD,
 			REMOVE,
@@ -91,7 +48,7 @@ namespace mobi_game {
 			NOT_EXIST,
 		};
 	}
-	
+
 	//TODO select it for your offshop and update macro in Makefile or CMakeLists.txt
 	enum class EOffshopType : uint8_t {
 		NONE = 0,

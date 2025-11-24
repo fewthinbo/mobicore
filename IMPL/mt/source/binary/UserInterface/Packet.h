@@ -1,5 +1,6 @@
+#if __MOBICORE__
 #include <cstdint>
-
+#endif
 ...
 
 

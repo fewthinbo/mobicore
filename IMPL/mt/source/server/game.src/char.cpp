@@ -1,5 +1,4 @@
 #if __MOBICORE__
-#include "../../libgame/include/attribute.h"
 #include "mobi_client.h"
 #include "character/ch_manager.h"
 #endif
@@ -9,7 +8,9 @@ void CHARACTER::Destroy()
 #if __MOBICORE__
 	if (m_destroyed) return;
 	m_destroyed = true;
-	mobileInstance.sendLogout(GetPlayerID());
+	if (IsPC()){
+		mobileInstance.sendLogout(GetPlayerID());
+	}
 	/*if (auto* d = GetDesc()) {
 		if (d->is_mobile_request) {
 			mobileChInstance.HandleLogout(GetPlayerID());
@@ -267,6 +268,11 @@ void CHARACTER::GoToSafePosition() {
 
 	if (!d->is_mobile_request) {
 		sys_log(0, "Player(%d) trying to use mobiDesc funcs", GetPlayerID());
+		return;
+	}
+
+	if (!this->can_mobi_warp) {
+		sys_log(0, "MobiDesc(%d) tried to use GoToSafePosition but is not allowed", GetPlayerID());
 		return;
 	}
 

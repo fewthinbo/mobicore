@@ -11,7 +11,9 @@ void CInputAuth::Login(LPDESC d, const char * c_pData)
 		...
 		LoginFailure(d, "NOID");
 #if __MOBICORE__
-		mobileChInstance.NotifyStatus(d, mobi_game::EMobiLoad::ID_NOT_EXISTS);
+		if (d && d->is_mobile_request) {
+			mobileChInstance.NotifyStatus(d, mobi_game::EMobiLoad::ID_NOT_EXISTS);
+		}
 #endif
 		return;
 	}
@@ -19,7 +21,7 @@ void CInputAuth::Login(LPDESC d, const char * c_pData)
 	if (g_bNoMoreClient)
 	{
 #if __MOBICORE__
-		if (d->is_mobile_request) {
+		if (d && d->is_mobile_request) {
 			mobileChInstance.NotifyStatus(d, mobi_game::EMobiLoad::SHUTDOWN);
 			return;
 		}
@@ -31,7 +33,9 @@ void CInputAuth::Login(LPDESC d, const char * c_pData)
 	{
 		LoginFailure(d, "ALREADY");
 #if __MOBICORE__
-		mobileChInstance.NotifyStatus(d, mobi_game::EMobiLoad::INGAME_REAL);
+		if (d && d->is_mobile_request){
+			mobileChInstance.NotifyStatus(d, mobi_game::EMobiLoad::INGAME_REAL);
+		}
 #endif
 		return;
 	}
