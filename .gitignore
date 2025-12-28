@@ -5,6 +5,8 @@
 *.rar
 *.tmp
 
+*.DS_Store
+
 .gitignore
 .vs
 out/
