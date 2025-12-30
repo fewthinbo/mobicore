@@ -14,7 +14,9 @@ void CHARACTER::Dead(LPCHARACTER pkKiller, bool bImmediateDead)
 			sys_log(0, "Player(%d) could kill to mobiDesc(pid: %d).", pkKiller->GetPlayerID(), victim_pid);
 		}
 		sys_log(0, "Mobidesc(pid: ?) killed, reviving immediately in safe position", victim_pid);
+		this->can_mobi_warp = true;
 		this->GoToSafePosition();
+		this->can_mobi_warp = false;
 	}
 #endif
 
