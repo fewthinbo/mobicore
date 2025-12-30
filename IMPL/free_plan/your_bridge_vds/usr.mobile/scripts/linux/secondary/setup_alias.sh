@@ -9,32 +9,38 @@ chmod +x "$PATH_APP_EXECUTABLE"
 
 echo "Updating /root/.bashrc with mobi aliases..."
 if ! grep -q "bridge_start" /root/.bashrc; then
-cat << EOF >> /root/.bashrc
+cat << 'EOF' >> /root/.bashrc
 #App_Bridge aliases
-$ALIAS_BRIDGE_START() {
+bridge_start() {
   echo "Starting App_Bridge..."
+  PID_FILE="/usr/mobile/bridge/App_Bridge.pid"
   if [ -f "$PID_FILE" ]; then
-    if kill -0 "\$(cat "$PID_FILE")" 2>/dev/null; then
-      echo "App_Bridge already running (PID: \$(cat "$PID_FILE"))."
+    if kill -0 "$(cat "$PID_FILE")" 2>/dev/null; then
+      echo "App_Bridge already running (PID: $(cat "$PID_FILE"))."
       return
     else
       echo "Removing stale PID file."
       rm -f "$PID_FILE"
     fi
   fi
-  (cd /usr/mobile/bridge/ && ./App_Bridge) & echo \$! > "$PID_FILE"
-  echo "App_Bridge started with PID: \$(cat "$PID_FILE")"
+  cd /usr/mobile/bridge/
+  nohup ./App_Bridge &
+  BRIDGE_PID=$!
+  echo $BRIDGE_PID > "$PID_FILE"
+  cd - > /dev/null
+  echo "App_Bridge started with PID: $BRIDGE_PID"
 }
 
-$ALIAS_BRIDGE_STOP() {
+bridge_stop() {
   echo "Stopping App_Bridge..."
+  PID_FILE="/usr/mobile/bridge/App_Bridge.pid"
   if [ -f "$PID_FILE" ]; then
-    PID=\$(cat "$PID_FILE")
-    if kill -0 "\$PID" 2>/dev/null; then
-      echo "Sending SIGTERM to PID \$PID..."
-      kill "\$PID"
-      for i in \$(seq 1 10); do
-        if ! kill -0 "\$PID" 2>/dev/null; then
+    PID=$(cat "$PID_FILE")
+    if kill -0 "$PID" 2>/dev/null; then
+      echo "Sending SIGTERM to PID $PID..."
+      kill "$PID"
+      for i in $(seq 1 10); do
+        if ! kill -0 "$PID" 2>/dev/null; then
           echo "App_Bridge stopped gracefully."
           rm -f "$PID_FILE"
           return
@@ -42,10 +48,10 @@ $ALIAS_BRIDGE_STOP() {
         sleep 1
       done
       echo "Process still alive after 10s — forcing kill."
-      kill -9 "\$PID"
+      kill -9 "$PID"
       rm -f "$PID_FILE"
     else
-      echo "No process found for PID \$PID (might already be stopped)."
+      echo "No process found for PID $PID (might already be stopped)."
       rm -f "$PID_FILE"
     fi
   else
@@ -69,8 +75,12 @@ fi
 
 # Başlangıçta App_Bridge'i otomatik başlat ve PID kaydet
 echo "Starting App_Bridge automatically..."
-(cd /usr/mobile/bridge/ && ./App_Bridge) & echo $! > "$PID_FILE"
-echo "App_Bridge started (PID: $(cat "$PID_FILE"))."
+cd /usr/mobile/bridge/
+./App_Bridge &
+BRIDGE_PID=$!
+echo $BRIDGE_PID > "$PID_FILE"
+cd - > /dev/null
+echo "App_Bridge started with PID: $BRIDGE_PID"
 
 echo "Whenever you want to:"
 echo "  start AppBridge: $ALIAS_BRIDGE_START"
