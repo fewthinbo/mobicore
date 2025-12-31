@@ -4,7 +4,7 @@ import os
 import sys
 
 # Configuration
-languages = ["tr", "en"]
+languages = ["tr", "en", "de", "es", "pl", "pt", "it", "ro"]
 file_item_names = "item_names"
 file_mob_names = "mob_names"
 file_extension = ".txt"
