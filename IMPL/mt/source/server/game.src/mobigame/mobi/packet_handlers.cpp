@@ -58,8 +58,15 @@ namespace mobi_game {
 	bool MobiClient::HandleKeyExchange(TDataRef data) {
 		auto* sm = reinterpret_cast<const TKeyExchange*>(data.data());
 		std::vector<uint8_t> key(data.data() + sizeof(TKeyExchange), data.data() + sizeof(TKeyExchange) + sm->size);
-		LOG_TRACE("Key exchange packet received, size(?), key(?)", sm->size, reinterpret_cast<const char*>(key.data()), key.size());
-
+		LOG_TRACE("Key exchange packet received, size(?)"
+#if __BUILD_FOR_GAME__
+			", IsAuthChannel(?)"
+#endif
+			, sm->size
+#if __BUILD_FOR_GAME__
+			, g_bAuthServer
+#endif
+		);
 #if !__MOBI_PACKET_ENCRYPTION__
 		return false;
 #endif
